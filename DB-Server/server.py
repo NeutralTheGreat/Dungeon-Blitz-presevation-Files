@@ -29,6 +29,7 @@ def build_handshake_response(session_id):
     header = struct.pack(">HH", 0x12, len(payload))
     return header + payload
 
+
 def build_login_challenge(challenge_str):
     cbytes = challenge_str.encode('utf-8')
     payload = struct.pack(">H", len(cbytes)) + cbytes
@@ -65,6 +66,7 @@ def build_entity_packet(character, category="Player"):
         <EquippedGear>{equipped_gear if equipped_gear else ""}</EquippedGear>
     </EntType>"""
     return xml.replace('\n', '').replace('    ', '')
+
 
 #
 # ----------------------- BIT-PACKED READING -----------------------
@@ -113,6 +115,7 @@ class BitReader:
 
     def read_method_6(self, bit_count: int) -> int:
         return self.read_bits(bit_count)
+
 
 #
 # ----------------------- BIT-PACKED WRITING -----------------------
@@ -168,12 +171,13 @@ class BitBuffer:
         out = bytearray()
         for i in range(0, len(self.bits), 8):
             b = 0
-            for bit in self.bits[i:i+8]:
+            for bit in self.bits[i:i + 8]:
                 b = (b << 1) | bit
             out.append(b)
         return bytes(out)
 
     # this shows all the user characters in the character select list
+
 ############################################################################
 
 # we may have to update this since the character paper doll is not showing when login in
@@ -202,54 +206,54 @@ def build_login_character_list_bitpacked():
 
 
 #############################################################################
-def build_enter_game_packet_full(character):
+def Character_creation(character):
     # Unpack character details
     name, class_name, level, computed, extra1, extra2, extra3, extra4, \
         hair_color, skin_color, shirt_color, pant_color, equipped_gear = character
 
     buf = BitBuffer()
     # Write the seven strings (order must match what method_1170 reads)
-    buf.write_utf_string(name)         # _loc2_
-    buf.write_utf_string(class_name)     # _loc3_
-    buf.write_utf_string(computed)       # _loc5_
-    buf.write_utf_string(extra1)         # _loc6_
-    buf.write_utf_string(extra2)         # _loc7_
-    buf.write_utf_string(extra3)         # _loc8_
-    buf.write_utf_string(extra4)         # _loc9_
+    buf.write_utf_string(name)  # _loc2_
+    buf.write_utf_string(class_name)  # _loc3_
+    buf.write_utf_string(computed)  # _loc5_
+    buf.write_utf_string(extra1)  # _loc6_
+    buf.write_utf_string(extra2)  # _loc7_
+    buf.write_utf_string(extra3)  # _loc8_
+    buf.write_utf_string(extra4)  # _loc9_
 
     # Write the four color values (each using 24 bits)
-    buf.write_method_6(hair_color, 24)   # _loc10_
-    buf.write_method_6(skin_color, 24)   # _loc11_
+    buf.write_method_6(hair_color, 24)  # _loc10_
+    buf.write_method_6(skin_color, 24)  # _loc11_
     buf.write_method_6(shirt_color, 24)  # _loc12_
-    buf.write_method_6(pant_color, 24)   # _loc13_
+    buf.write_method_6(pant_color, 24)  # _loc13_
 
     # Write gear bits based on the character class.
     # Each gear value is written using 11 bits.
     class_lower = class_name.lower()
     if class_lower == "rogue":
         # For Rogue: these values are example gear IDs
-        buf.write_method_6(748, 11)   # e.g. Shield
-        buf.write_method_6(753, 11)   # e.g. Sword
-        buf.write_method_6(673, 11)   # e.g. Gloves
-        buf.write_method_6(765, 11)   # e.g. Helmet
-        buf.write_method_6(668, 11)   # e.g. Armor
-        buf.write_method_6(756, 11)   # e.g. Boots
+        buf.write_method_6(484, 11)  # e.g. Shield
+        buf.write_method_6(379, 11)  # e.g. Sword
+        buf.write_method_6(584, 11)  # e.g. Gloves
+        buf.write_method_6(676, 11)  # e.g. Helmet
+        buf.write_method_6(668, 11)  # e.g. Armor
+        buf.write_method_6(577, 11)  # e.g. Boots
     elif class_lower == "paladin":
         # For Paladin: these values are example gear IDs
-        buf.write_method_6(902, 11)    # e.g. Shield
-        buf.write_method_6(890, 11)     # e.g. Sword
+        buf.write_method_6(902, 11)  # e.g. Shield
+        buf.write_method_6(890, 11)  # e.g. Sword
         buf.write_method_6(912, 11)  # e.g. Gloves
         buf.write_method_6(916, 11)  # e.g. Helmet
-        buf.write_method_6(909, 11)    # e.g. Armor
-        buf.write_method_6(905, 11)    # e.g. Boots
+        buf.write_method_6(909, 11)  # e.g. Armor
+        buf.write_method_6(905, 11)  # e.g. Boots
     elif class_lower == "mage":
         # For Mage: these values are examples – adjust as needed
-        buf.write_method_6(63, 11)   # e.g. Staff
-        buf.write_method_6(151, 11)   # e.g. Offhand orb
-        buf.write_method_6(75, 11)   # e.g. Robe
-        buf.write_method_6(68, 11)   # e.g. focus
-        buf.write_method_6(77, 11)   # e.g. Gloves
-        buf.write_method_6(70, 11)   # e.g. Boots
+        buf.write_method_6(63, 11)  # e.g. Staff
+        buf.write_method_6(151, 11)  # e.g. Offhand orb
+        buf.write_method_6(75, 11)  # e.g. Robe
+        buf.write_method_6(68, 11)  # e.g. focus
+        buf.write_method_6(77, 11)  # e.g. Gloves
+        buf.write_method_6(70, 11)  # e.g. Boots
     else:
         # Default: no gear equipped
         for i in range(6):
@@ -259,36 +263,48 @@ def build_enter_game_packet_full(character):
     header = struct.pack(">HH", 0x1A, len(payload))
     return header + payload
 
-                   #enter world packets testing
+
+
+    # enter world packets testing
+
 ###################################################################
 
-def build_game_init_packet():
-    # Use the full level info string. Note how it includes the SWF name,
-    # the level symbol, and extra parameters.
-    level_info = "LevelsTut.swf/a_Level_TutorialBoat 1 1 true"
-
-    # Encode the string as UTF-8.
-    level_info_bytes = level_info.encode('utf-8')
-    # First, send the length as an unsigned short, then the bytes.
-    payload = struct.pack(">H", len(level_info_bytes)) + level_info_bytes
+ # i think the game expects a (Begin Transfer) transfer before (build_load_level_packet) is send
+def build_begin_transfer_packet():
+    buf = BitBuffer()
+    # Not clear if it needs any payload, but probably zero
+    payload = buf.to_bytes()
     header = struct.pack(">HH", 0x1B, len(payload))
     return header + payload
 
 
-def build_load_level_packet():
-    # Use the full compound level info string as expected.
-    level_info = "LevelsTut.swf/a_Level_TutorialBoat 1 1 true"
-    # Encode as UTF-8.
-    level_info_bytes = level_info.encode('utf-8')
-    # Prepend with a 16-bit length.
-    payload = struct.pack(">H", len(level_info_bytes)) + level_info_bytes
-    # Use packet type 0x1C for load level.
-    header = struct.pack(">HH", 0x1C, len(payload))
-    return header + payload
+def build_load_level_packet(map_name, map_level, base_level,
+                            internal_name, moment_params,
+                            alter_params, is_instanced):
+    """
+    Construct the 0x1C “load level” packet so the Flash client
+    will call Level.method_1853(...) and begin loading the world.
+    """
+    buf = BitBuffer()
+    # write the level name (16-bit length + UTF-8 bytes)
+    buf.write_utf_string(map_name)
+    # write mapLevel and baseLevel as simple 8-bit values
+    buf.write_method_393(map_level)
+    buf.write_method_393(base_level)
+    # write the internal SWF linkage name
+    buf.write_utf_string(internal_name)
+    # write the momentParams (e.g. "Normal,Tutorial", or "" for default)
+    buf.write_utf_string(moment_params)
+    # write the alterParams (e.g. "Hard", or "" for default)
+    buf.write_utf_string(alter_params)
+    # write instancing flag (0 or 1) as 8-bit
+    buf.write_method_393(1 if is_instanced else 0)
 
+    payload = buf.to_bytes()
+    # packet-type 0x1C, big-endian length
+    return struct.pack(">HH", 0x1C, len(payload)) + payload
 
 ###############################################################
-
 
 
 def handle_client(conn, addr):
@@ -334,8 +350,6 @@ def handle_client(conn, addr):
                 conn.sendall(pkt)
                 print("Sent login character list (0x15):", pkt.hex())
 
-
-
             elif pkt_type == 0x17:
                 print("Got character creation packet (0x17). Parsing creation data...")
                 payload = data[4:]
@@ -354,9 +368,8 @@ def handle_client(conn, addr):
                     pant_color = br.read_bits(24)
                     # Set default gear based on class
 
-
-                    #the default gear is already handled elsewhere at (build_enter_game_packet_full)
-                    #the reason im keeping this is because the server crashes without it
+                    # the default gear is already handled elsewhere at (Character_creation)
+                    # the reason im keeping this is because the server crashes without it
                     default_gear = """ """
 
                     new_char = (
@@ -382,21 +395,35 @@ def handle_client(conn, addr):
                 pkt = build_login_character_list_bitpacked()
                 conn.sendall(pkt)
                 print("Sent updated login character list (0x15):", pkt.hex())
-                time.sleep(0.2)
+
 
                 # Send enter game character data for method_1170
-                enter_packet = build_enter_game_packet_full(new_char)
+                enter_packet = Character_creation(new_char)
                 conn.sendall(enter_packet)
                 print("Sent character data  (0x1A) with full character info:", enter_packet.hex())
-                time.sleep(0.2)
 
-                # NEW: Send load level packet (0x1C) to trigger world loading
-                load_level_pkt = build_game_init_packet()
+                begin_transfer_pkt = build_begin_transfer_packet()
+                conn.sendall(begin_transfer_pkt)
+                print("Sent begin transfer packet (0x1B)")
+
+                  # NEW: Send load level packet (0x1C) to trigger world loading
+                load_level_pkt = build_load_level_packet(
+                    map_name="LevelsHome.swf/a_Level_HomeTutorial",  # ← DevSettings.standAloneMapName
+                    map_level=1,  # ← DevSettings.standAloneMapLevel
+                    base_level=1,  # ← DevSettings.var_1351
+                    internal_name="CraftTown",  # ← DevSettings.standAloneMapInternalName
+                    moment_params="",  # ← DevSettings.standAloneMomentParams
+                    alter_params="",  # ← DevSettings.standAloneAlterParams
+                    is_instanced=True  # ← DevSettings.standAloneIsInstanced
+                )
                 conn.sendall(load_level_pkt)
                 print("Sent load level packet (0x1C):", load_level_pkt.hex())
-                time.sleep(0.2)
+                  # NOW send LOGIN_TO_GAME_LOAD_LEVEL (0x1F) with length=0
+                login_to_game_hdr = struct.pack(">HH", 0x1F, 0)
+                conn.sendall(login_to_game_hdr)
+                print("Sent login to game load level (0x1F):", login_to_game_hdr.hex())
 
-                        # i dont think this is needed
+                # i dont think this is needed
                 """
                 # Finally, send the paperdoll update (0x7C)
                 paperdoll_xml = build_entity_packet(new_char, category="Player")
@@ -409,38 +436,67 @@ def handle_client(conn, addr):
                 time.sleep(0.2)
                 """
 
-                 ##################################################
+                
 
+                # i belive this code is to start the world load after a character has been selected or a new character has been created(im not really sure yet... )
 
+            ###################################################################################
+            ###################################################################################
 
-            # im honestly not sure what these packets do
             elif pkt_type == 0x16:
-
+                # client selected a character
                 payload = data[4:]
                 if len(payload) > 0:
                     br = BitReader(payload)
                     selected_name = br.read_string()
                     print("Received character selection (0x16) from client:", selected_name)
-                    # Look for the character by name in our global characters list.
-                    found = False
+                    # find the tuple for that character
                     for char in characters:
                         if char[0] == selected_name:
-                            found = True
-                            # For example, send the load level packet to trigger world loading.
-                            load_level_pkt = build_game_init_packet()
-                            conn.sendall(load_level_pkt)
-                            print("Sent load level packet (0x1C) for selected character:", load_level_pkt.hex())
+                            # 1) Begin transfer (0x1B)
+                            begin_transfer = struct.pack(">HH", 0x1B, 0)
+                            conn.sendall(begin_transfer)
+                            print("Sent begin transfer (0x1B):", begin_transfer.hex())
+                            # 2) Load level (0x1C)
+                            load_level = build_load_level_packet(
+                                map_name="LevelsHome.swf/a_Level_Home",
+                                map_level=1,
+                                base_level=1,
+                                internal_name="CraftTown",
+                                moment_params="",
+                                alter_params="",
+                                is_instanced=True
+                            )
+                            conn.sendall(load_level)
+                            print("Sent load level (0x1C):", load_level.hex())
+                            # 3) Login‑to‑game ack (0x1F)
+                            login_to_game = struct.pack(">HH", 0x1F, 0)
+                            conn.sendall(login_to_game)
+                            print("Sent login to game (0x1F):", login_to_game.hex())
+                            # 4) Paper‑doll update (0x7C)
+                            xml = build_entity_packet(char, category="Player")
+                            buf = BitBuffer()
+                            buf.write_utf_string(xml)
+                            pd_payload = buf.to_bytes()
+                            pd_pkt = struct.pack(">HH", 0x7C, len(pd_payload)) + pd_payload
+                            conn.sendall(pd_pkt)
+                            print("Sent paperdoll update (0x7C):", pd_pkt.hex())
                             break
-                    if not found:
-                        print("Character not found for selection:", selected_name)
-                        ack_pkt = struct.pack(">HH", 0x16, 0)
-                        conn.sendall(ack_pkt)
-                        print("Sent 0x16 ack:", ack_pkt.hex())
+                    else:
+                        # character name not found: ack empty
+                        ack = struct.pack(">HH", 0x16, 0)
+                        conn.sendall(ack)
+                        print("Character not found, sent empty 0x16 ack:", ack.hex())
                 else:
-                    # If payload is empty, fallback to sending the updated character list.
-                    updated_list = build_login_character_list_bitpacked()
-                    conn.sendall(updated_list)
-                    print("Sent updated login character list (0x15) after paper doll update:", updated_list.hex())
+                    # no payload: resend character list
+                    updated = build_login_character_list_bitpacked()
+                    conn.sendall(updated)
+                    print("Empty select payload; resent char list (0x15):", updated.hex())
+
+
+               ###################################################################################
+               ###################################################################################
+
 
             elif pkt_type == 0x19:
                 print("Got packet type 0x19. Request for character details.")
@@ -471,7 +527,6 @@ def handle_client(conn, addr):
                     conn.sendall(ack_pkt)
                     print("Sent 0x19 ack:", ack_pkt.hex())
 
-
             elif pkt_type == 0x7C:
                 print("Received packet type 0x7C. (Appearance/cue update)")
                 if characters:
@@ -488,12 +543,12 @@ def handle_client(conn, addr):
                     conn.sendall(response)
                     print("Sent 0x7C response:", response.hex())
 
-
     except Exception as e:
         print("Error:", e)
     finally:
         conn.close()
         print("Client disconnected.")
+
 
 def start_server():
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -503,6 +558,7 @@ def start_server():
     while True:
         conn, addr = s.accept()
         handle_client(conn, addr)
+
 
 if __name__ == "__main__":
     start_server()
