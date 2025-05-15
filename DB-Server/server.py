@@ -6,10 +6,6 @@ import socket, struct, hashlib, sys, time
 HOST = '127.0.0.1'
 PORT = 443
 
-PKTTYPE_WELCOME = 0x10
-max_hp = 100
-current_hp = 100
-YOUR_PLAYER_ID = 2000
 transfer_token = 1
 
 # Global storage for characters.
@@ -34,19 +30,16 @@ def build_handshake_response(session_id):
     header = struct.pack(">HH", 0x12, len(payload))
     return header + payload
 
-
 def build_login_challenge(challenge_str):
     cbytes = challenge_str.encode('utf-8')
     payload = struct.pack(">H", len(cbytes)) + cbytes
     header = struct.pack(">HH", 0x13, len(payload))
     return header + payload
 
-
 def build_entity_packet(character, category="Player"):
     (name, class_name, level, computed, extra1, extra2, extra3, extra4,
      hair_color, skin_color, shirt_color, pant_color, equipped_gear) = character
 
-    # Change this: Use the character's name for the key
     parent = f"Player:{name}"
 
     computed = computed if computed else "Male"
@@ -128,137 +121,9 @@ def build_enter_world_packet(
     buf._append_bits(1 if new_is_inst else 0, 1)
     buf.align_to_byte()
 
-    # (You could follow this by writing entity‐update blocks if you want to spawn
-    #  the world’s objects immediately. But minimal playability just needs the SWF.)
-
     payload = buf.to_bytes()
     return struct.pack(">HH", 0x21, len(payload)) + payload
 
-# this should be the Final packet the wants for the game to actually load
-# as far as i know it is supposed to be send with the (build_enter_world_packet) packet
-##########################################################
-
-def build_welcome_packet(
-    server_time: int,
-    server_uptime: int,
-    flags: int,
-    player_ent_id: int,
-    class_name: str,
-    anim_key: str,
-    level: int
-) -> bytes:
-    buf = BitBuffer()
-
-    # 1) two 32-bit times via method_4()
-    buf.write_method_4(server_time)
-    buf.write_method_4(server_uptime)
-
-    # 2) flags via method_6()
-    #buf.write_method_6(flags, Game.const_813)  # bit-width from the client
-    buf.write_method_6(flags, 32)
-
-    # 3) your entity ID via method_4()
-    buf.write_method_4(player_ent_id)
-
-    # 4) class name string
-    buf.write_utf_string(class_name)
-
-    # 5) animation key string (often the same as class_name)
-    buf.write_utf_string(anim_key)
-
-    # 6) level via method_6()
-    #buf.write_method_6(level, Entity.MAX_CHAR_LEVEL_BITS)
-    buf.write_method_6(level, 6)
-
-    # --- now you hit those series of method_4() calls for HP, MP, XP, gold, etc.
-    # for each of these you must write buf.write_method_4(value).
-
-    # 7) current HP
-    buf.write_method_4(current_hp)
-    # 8) max HP
-    buf.write_method_4(max_hp)
-    # … etc …
-
-    # 9) any booleans via method_11():
-    #    write one bit 0 or 1, then if 1 you write the branched data
-    buf._append_bits(0, 1)  # stub out “no spawn door” for example
-
-    # … keep going through every “param1.method_xxx()” read in method_1379 …
-
-    payload = buf.to_bytes()
-    header  = struct.pack(">HH", PKTTYPE_WELCOME, len(payload))
-    return header + payload
-
-####################################################################
-#testing
-
-def build_empty_welcome(user_id):
-    buf = BitBuffer()
-    # 1) server time + uptime
-    buf.write_method_4(int(time.time()))
-    buf.write_method_4(0)
-    # 2) flags (32 bits of zero)
-    buf.write_method_6(0, 32)
-    # 3) your entity ID
-    buf.write_method_4(user_id)
-    # 4-5) class name, anim key
-    buf.write_utf_string("Rogue")     # or Paladin, etc.
-    buf.write_utf_string("Rogue")
-    # 6) level (6 bits)
-    buf.write_method_6(1, 6)
-    # 7-?    the sequence of stats HP, MP, XP, gold, etc
-    # You must supply *exactly* the same number of write_method_4 calls
-    # as the client will read.  If you read 10 method_4s, you must write 10.
-    # From looking at method_1379 the first few are likely:
-    #   currentHP, maxHP, currentMP, maxMP, XP, gold, ??? – so conservatively:
-    for _ in range(10):
-        buf.write_method_4(0)
-    # 8) “spawn-door?” boolean → false
-    buf._append_bits(0, 1)
-    # 9) next comes a var_4(levelID) if that bit was 1—but ours is 0, so skip.
-    # 10) mappers/maps: first a boolean “has map extras?”
-    buf._append_bits(0, 1)
-    buf.align_to_byte()
-
-    # 11) gear list: a count via method_4, then loop – make count=0
-    buf.write_method_4(0)
-
-    # 12) mount list: count=0
-    buf.write_method_4(0)
-
-    # 13) pet info: while(param1.method_11()) ⇒ we write one bit “0” to break
-    buf._append_bits(0, 1)
-
-    # 14) mission list: count via method_4
-    buf.write_method_4(0)
-
-    # 15) friend list: count via method_4
-    buf.write_method_4(0)
-
-    # 16) ability book counts – one count via method_6, then loops – zero
-    buf.write_method_6(0, 8)   # you saw Game.const_83 was 8 bits
-    # and three more level-read bits? rather than guess, force another 0
-    buf.write_method_6(0, 8)
-
-    # 17) news data: four UTF strings + an uint
-    for _ in range(4):
-        buf.write_utf_string("")
-    buf.write_method_4(0)
-
-    # 18) tower/forge/etc. blocks: start with a boolean
-    buf._append_bits(0, 1)
-    buf.align_to_byte()
-
-    # 19) custom “level complete” lists: count via method_4
-    buf.write_method_4(0)
-
-    # 20) …and so on.  If you spot more loops in method_1379, stub them to 0.
-
-    payload = buf.to_bytes()
-    return struct.pack(">HH", PKTTYPE_WELCOME, len(payload)) + payload
-
-
-###################################################################
 #
 # ----------------------- BIT-PACKED READING -----------------------
 #
@@ -306,7 +171,6 @@ class BitReader:
 
     def read_method_6(self, bit_count: int) -> int:
         return self.read_bits(bit_count)
-
 
 #
 # ----------------------- BIT-PACKED WRITING -----------------------
@@ -388,8 +252,6 @@ class BitBuffer:
     # this shows all the user characters in the character select list
 ############################################################################
 
-# we may have to update this since the character paper doll is not showing when login in
-
 def build_login_character_list_bitpacked():
     buf = BitBuffer()
     user_id = 1
@@ -412,7 +274,6 @@ def build_login_character_list_bitpacked():
     header = struct.pack(">HH", 0x15, len(payload))
     return header + payload
 
-
 #############################################################################
 def Character_creation(character):
     # Unpack character details
@@ -423,7 +284,7 @@ def Character_creation(character):
     # Write the seven strings (order must match what method_1170 reads)
     buf.write_utf_string(name)  # _loc2_
     buf.write_utf_string(class_name)  # _loc3_
-    buf.write_utf_string(computed)  # _loc5_
+    buf.write_utf_string(computed)  # _loc5_  
     buf.write_utf_string(extra1)  # _loc6_
     buf.write_utf_string(extra2)  # _loc7_
     buf.write_utf_string(extra3)  # _loc8_
@@ -473,9 +334,6 @@ def Character_creation(character):
 
 ###################################################################
 
-###############################################################
-
-
 def handle_client(conn, addr):
     print("Connection from", addr)
     try:
@@ -484,10 +342,10 @@ def handle_client(conn, addr):
             if not data:
                 break
 
-            if b"<policy-file-request/>" in data:
-                print("Flash policy request received. Sending policy XML.")
-                conn.sendall(policy_response)
-                continue
+            #if b"<policy-file-request/>" in data:
+                #print("Flash policy request received. Sending policy XML.")
+                #conn.sendall(policy_response)
+                #continue
 
             hex_data = data.hex()
             print("Received raw data:", hex_data)
@@ -568,14 +426,7 @@ def handle_client(conn, addr):
                 conn.sendall(enter_packet)
                 print("Sent character data  (0x1A) with full character info:", enter_packet.hex())
 
-                  # NOW send LOGIN_TO_GAME_LOAD_LEVEL (0x1F) with length=0
-                login_to_game_hdr = struct.pack(">HH", 0x1B, 0)
-                conn.sendall(login_to_game_hdr)
-                print("Sent login to game load level (0x1F):", login_to_game_hdr.hex())
-
             ###################################################################################
-
-             #TODO...
 
             elif pkt_type == 0x16:
                 payload = data[4:]
@@ -585,6 +436,7 @@ def handle_client(conn, addr):
                 selected_name = br.read_string()
                 for char in characters:
                     if char[0] == selected_name:
+                        # 1) Send the “enter world” (transfer) packet
                         enter_world = build_enter_world_packet(
                             transfer_token=transfer_token,
                             old_level_id=0,
@@ -594,7 +446,7 @@ def handle_client(conn, addr):
                             old_y=0,
                             old_flashvars="",
                             user_id=1,
-                            new_level_swf="LevelsHome.swf/a_Level_Home",
+                            new_level_swf="LevelsTut.swf/a_Level_TutorialBoat",
                             new_map_lvl=1,
                             new_base_lvl=1,
                             new_internal="CraftTown",
@@ -603,11 +455,8 @@ def handle_client(conn, addr):
                             new_is_inst=True
                         )
                         conn.sendall(enter_world)
-                        print("Sent TRANSFER_READY (0x22):", enter_world.hex())
+                        print("Sent TRANSFER_BEGIN+READY:", enter_world.hex())
                         break
-
-
-
 
             ###################################################################################
 
@@ -663,13 +512,11 @@ def handle_client(conn, addr):
                 print("Sent updated character list (0x15):", updated.hex())
             """
 
-
     except Exception as e:
         print("Error:", e)
     finally:
         conn.close()
         print("Client disconnected.")
-
 
 def start_server():
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -679,7 +526,6 @@ def start_server():
     while True:
         conn, addr = s.accept()
         handle_client(conn, addr)
-
 
 if __name__ == "__main__":
     start_server()
