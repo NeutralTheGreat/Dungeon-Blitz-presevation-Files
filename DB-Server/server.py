@@ -277,10 +277,10 @@ def handle_client(conn, addr):
                         )
                         conn.sendall(transfer_packet)
                         print("Sent TRANSFER_BEGIN (0x1C)")
-                        # Send WELCOME (0x10) packet
-                        welcome_pkt = build_welcome_packet()
-                        conn.sendall(welcome_pkt)
-                        print("Sent WELCOME (0x10)")
+                        # Send WELCOME (0x10) packet (for now this will crash the game )
+                        #welcome_pkt = build_welcome_packet()
+                        #conn.sendall(welcome_pkt)
+                        #print("Sent WELCOME (0x10)")
                         break
                 else:
                     print(f"Character {selected_name} not found in list")
