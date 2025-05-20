@@ -1,0 +1,68 @@
+[
+  {
+    "name": "Paladin",
+    "class": "Paladin",
+    "level": 1,
+    "gender": "Male",
+    "headSet": "Short",
+    "hairSet": "Do01",
+    "mouthSet": "M01",
+    "faceSet": "F01",
+    "hairColor": 8355711,
+    "skinColor": 16764057,
+    "shirtColor": 76934,
+    "pantColor": 923734,
+    "gearList": [
+      902,
+      890,
+      912,
+      916,
+      909,
+      905
+    ]
+  },
+  {
+    "name": "Rogue",
+    "class": "Rogue",
+    "level": 1,
+    "gender": "Male",
+    "headSet": "MaleHead",
+    "hairSet": "Do01",
+    "mouthSet": "Mouth01",
+    "faceSet": "Face01",
+    "hairColor": 19854,
+    "skinColor": 16764057,
+    "shirtColor": 7941,
+    "pantColor": 256,
+    "gearList": [
+      484,
+      379,
+      584,
+      676,
+      668,
+      577
+    ]
+  },
+  {
+    "name": "Mage",
+    "class": "Mage",
+    "level": 1,
+    "gender": "Male",
+    "headSet": "Head03",
+    "hairSet": "Do11",
+    "mouthSet": "M03",
+    "faceSet": "F01",
+    "hairColor": 10488128,
+    "skinColor": 16764057,
+    "shirtColor": 14351094,
+    "pantColor": 6878351,
+    "gearList": [
+      63,
+      151,
+      75,
+      68,
+      77,
+      70
+    ]
+  }
+]
