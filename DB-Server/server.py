@@ -222,21 +222,29 @@ def handle_client(conn, addr):
                     # Re-send the list so client doesn’t hang
                     conn.sendall(build_login_character_list_bitpacked(characters))
                     continue
+
                 # Convert tuple → full dict (fills in gearList, defaults, etc.)
                 char_dict = make_character_dict_from_tuple(character_tuple)
                 # Append + persist
                 characters.append(char_dict)
                 save_characters(characters)
                 print(f"Created new char '{name}', class='{class_name}' and saved to JSON.")
+
                 # Send updated character list (0x15)
                 list_pkt = build_login_character_list_bitpacked(characters)
                 conn.sendall(list_pkt)
                 print("Sent updated login-character-list (0x15):", list_pkt.hex())
+
                 # Send initial paper-doll (0x1A)
                 pd_payload = build_paperdoll_packet(char_dict)
                 pd_pkt = struct.pack(">HH", 0x1A, len(pd_payload)) + pd_payload
                 conn.sendall(pd_pkt)
                 print("Sent initial paper-doll (0x1A), length:", len(pd_payload))
+
+                #i just added this so the game will show a pop wich can be removed instead of getting stuck at (creating Character...)
+                PopUpError = struct.pack(">HH", 0x1B, 0)
+                conn.sendall(PopUpError)
+                print("Sent login to game load level (0x1F):", PopUpError.hex())
             ###################################################################################
             elif pkt_type == 0x19:
                 name = BitReader(data[4:]).read_string()
