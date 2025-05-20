@@ -21,13 +21,6 @@ PORT = 443
 transfer_token = 1
 PKTTYPE_WELCOME = 0x10
 
-# The Flash policy file
-policy_response = b"""<?xml version="1.0"?>
-<!DOCTYPE cross-domain-policy SYSTEM="http://www.adobe.com/xml/dtds/cross-domain-policy.dtd">
-<cross-domain-policy>
-  <allow-access-from domain="*" to-ports="443"/>
-</cross-domain-policy>\x00"""
-
 def build_handshake_response(session_id):
     session_id_bytes = session_id.to_bytes(2, 'big')
     key = b"815bfb010cd7b1b4e6aa90abc7679028"
@@ -35,12 +28,6 @@ def build_handshake_response(session_id):
     dummy_bytes = bytes.fromhex(challenge_hash[:12])  # first 6 bytes
     payload = session_id_bytes + dummy_bytes
     header = struct.pack(">HH", 0x12, len(payload))
-    return header + payload
-
-def build_login_challenge(challenge_str):
-    cbytes = challenge_str.encode('utf-8')
-    payload = struct.pack(">H", len(cbytes)) + cbytes
-    header = struct.pack(">HH", 0x13, len(payload))
     return header + payload
 
 ###################################################################
@@ -172,12 +159,8 @@ def handle_client(conn, addr):
                 conn.sendall(resp)
                 print("Sent handshake response (0x12):", resp.hex())
 
-                challenge_packet = build_login_challenge("CHALLENGE")
-                conn.sendall(challenge_packet)
-                print("Sent login challenge (0x13):", challenge_packet.hex())
-
             elif pkt_type in (0x13, 0x14):
-                print("Got authentication packet (0x13/0x14). Parsing...")
+                print("Got auth packet (0x14). Sending character list…")
                 pkt = build_login_character_list_bitpacked(characters)
                 conn.sendall(pkt)
                 print("Sent login character list (0x15):", pkt.hex())
