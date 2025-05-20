@@ -4,7 +4,7 @@
 import socket, struct, hashlib, sys, time
 import json
 import os
-from Character_handle import (
+from Character import (
     make_character_dict_from_tuple,
     build_login_character_list_bitpacked,
     build_paperdoll_packet,
