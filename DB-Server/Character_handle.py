@@ -28,10 +28,13 @@ def make_character_dict_from_tuple(character):
     else:
         cls = class_name.lower()
         if cls == "paladin":
+        #Gear Slot Hint: Shield / Sword / Gloves / Helmet / Armor / Boots
             gear_list = [902, 890, 912, 916, 909, 905]
         elif cls == "rogue":
+        #Gear Slot Hint: Shield / Sword / Gloves / Helmet / Armor / Boots
             gear_list = [484, 379, 584, 676, 668, 577]
         elif cls == "mage":
+        #Gear Slot Hint: Staff / Offhand orb / Robe / focus / Gloves / Boots
             gear_list = [63, 151, 75, 68, 77, 70]
         else:
             gear_list = [0] * 6
