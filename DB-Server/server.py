@@ -1,25 +1,21 @@
 ﻿#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import socket, struct, hashlib, sys, time
-import json
-import os
+import socket, struct, hashlib
 from Character import (
     make_character_dict_from_tuple,
     build_login_character_list_bitpacked,
     build_paperdoll_packet,
     load_characters,
     save_characters
+
 )
+from WorldEnter import (build_enter_world_packet,build_welcome_packet)
 from bitreader import BitReader
 characters = load_characters()
-from BitUtils import BitBuffer
 
 HOST = '127.0.0.1'
 PORT = 443
-
-transfer_token = 1
-PKTTYPE_WELCOME = 0x10
 
 def build_handshake_response(session_id):
     session_id_bytes = session_id.to_bytes(2, 'big')
@@ -28,108 +24,6 @@ def build_handshake_response(session_id):
     dummy_bytes = bytes.fromhex(challenge_hash[:12])  # first 6 bytes
     payload = session_id_bytes + dummy_bytes
     header = struct.pack(">HH", 0x12, len(payload))
-    return header + payload
-
-###################################################################
-
-def build_enter_world_packet(
-    transfer_token: int,
-    old_level_id: int,
-    old_swf: str,
-    has_old_coord: bool,
-    old_x: int,
-    old_y: int,
-    old_flashvars: str,
-    user_id: int,
-    new_level_swf: str,
-    new_map_lvl: int,
-    new_base_lvl: int,
-    new_internal: str,
-    new_moment: str,
-    new_alter: str,
-    new_is_inst: bool
-) -> bytes:
-    buf = BitBuffer()
-
-    # 1) transferToken + oldLevelId
-    buf.write_method_4(transfer_token)
-    buf.write_method_4(old_level_id)
-
-    # 2) old SWF path
-    buf.write_utf_string(old_swf)
-
-    # 3) old coords?
-    buf._append_bits(1 if has_old_coord else 0, 1)
-    if has_old_coord:
-        buf.write_method_4(old_x)
-        buf.write_method_4(old_y)
-
-    # 4) old flashVars
-    buf.write_utf_string(old_flashvars)
-
-    # 5) userID
-    buf.write_method_4(user_id)
-
-    # 6) new SWF path
-    buf.write_utf_string(new_level_swf)
-
-    # 7) map/base levels (6 bits each)
-    buf.write_method_6(new_map_lvl, 6)
-    buf.write_method_6(new_base_lvl, 6)
-
-    # 8) new strings
-    buf.write_utf_string(new_internal)
-    buf.write_utf_string(new_moment)
-    buf.write_utf_string(new_alter)
-
-    # 9) new isInstanced
-    buf._append_bits(1 if new_is_inst else 0, 1)
-    buf.align_to_byte()
-
-    payload = buf.to_bytes()
-    return struct.pack(">HH", 0x21, len(payload)) + payload
-
-clientEntID = 500
-clientEntName = "Frosby"
-characterLevel = 20
-MAX_CHAR_LEVEL_BITS = 1
-skinID = 1
-currGold = 100
-currGems = 100
-
-#TODO.....
-     #WELCOME packet
-##############################################################
-def build_welcome_packet():
-    buf = BitBuffer()
-
-    # 1) clientEntID
-    buf.write_method_4(clientEntID)
-
-  # 2) clientEntName — writeUTF (2-byte length + UTF-8), then align to the next byte
-    buf.write_utf_string(clientEntName)
-    buf.align_to_byte()
-
-    # 3) characterLevel
-    buf.write_method_6(characterLevel, MAX_CHAR_LEVEL_BITS)
-
-    # 4) skin/class ID
-    buf.write_method_4(skinID)
-
-    # 5) currGold
-    buf.write_method_4(currGold)
-
-    # 6) currGems
-    buf.write_method_4(currGems)
-
-    # 7) **hasOptions flag** (1 bit). 0 = skip all the appearance data
-    buf._append_bits(0, 1)
-    buf.align_to_byte()
-
-    # … now continue with master‐ranks, world code, bonusLevels, pet list …
-
-    payload = buf.to_bytes()
-    header  = struct.pack(">HH", PKTTYPE_WELCOME, len(payload))
     return header + payload
 
 def handle_client(conn, addr):
@@ -224,11 +118,14 @@ def handle_client(conn, addr):
                 conn.sendall(pd_pkt)
                 print("Sent initial paper-doll (0x1A), length:", len(pd_payload))
 
-                #i just added this so the game will show a pop wich can be removed instead of getting stuck at (creating Character...)
-                PopUpError = struct.pack(">HH", 0x1B, 0)
-                conn.sendall(PopUpError)
-                print("Sent login to game load level (0x1F):", PopUpError.hex())
-            ###################################################################################
+                #i just added this so the game will show a popup in the game which can be removed instead of getting stuck at (creating Character...)
+                text_message = "Character Successfully Created"
+                text_bytes = text_message.encode('utf-8')
+                utf16_length_prefix = struct.pack(">H", len(text_bytes))
+                payload = utf16_length_prefix + text_bytes
+                pkt = struct.pack(">HH", 0x1B, len(payload)) + payload
+                conn.sendall(pkt)
+
             elif pkt_type == 0x19:
                 name = BitReader(data[4:]).read_string()
                 for char in characters:
@@ -248,7 +145,9 @@ def handle_client(conn, addr):
                 selected_name = br.read_string()
                 for char in characters:
                     if char["name"] == selected_name:
-                        # Send ENTER_WORLD (transfer) packet
+                        welcome = build_welcome_packet(char, transfer_token=1)
+                        conn.sendall(welcome)
+                        print("Sent MINIMAL WELCOME (0x10):", welcome.hex())
                         transfer_packet = build_enter_world_packet(
                             transfer_token=1,
                             old_level_id=0,
@@ -267,11 +166,7 @@ def handle_client(conn, addr):
                             new_is_inst=True
                         )
                         conn.sendall(transfer_packet)
-                        print("Sent TRANSFER_BEGIN (0x1C)")
-                        # Send WELCOME (0x10) packet (for now this will crash the game )
-                        #welcome_pkt = build_welcome_packet()
-                        #conn.sendall(welcome_pkt)
-                        #print("Sent WELCOME (0x10)")
+                        print("Sent TRANSFER_BEGIN (0x21)")
                         break
                 else:
                     print(f"Character {selected_name} not found in list")
