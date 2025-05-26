@@ -1,3 +1,5 @@
-# Dungeon Blitz - Preservation Files
+# Dungeon Blitz - Preservation Project
 
-This repository holds data of Dungeon Blitz Flash game.
+This Dungeon Blitz preservation project is dedicated to preserving this Flash game so that it's not lost to time.
+  
+
