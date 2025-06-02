@@ -10,7 +10,7 @@ from Character import (
     save_characters
 
 )
-from WorldEnter import (build_enter_world_packet,build_welcome_packet)
+from WorldEnter import (build_enter_world_packet,Player_Data_Packet)
 from bitreader import BitReader
 characters = load_characters()
 
@@ -145,7 +145,7 @@ def handle_client(conn, addr):
                 selected_name = br.read_string()
                 for char in characters:
                     if char["name"] == selected_name:
-                        welcome = build_welcome_packet(char, transfer_token=1)
+                        welcome = Player_Data_Packet(char, transfer_token=1)
                         conn.sendall(welcome)
                         print("Sent MINIMAL WELCOME (0x10):", welcome.hex())
                         transfer_packet = build_enter_world_packet(
