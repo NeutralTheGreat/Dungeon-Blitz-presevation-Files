@@ -19,7 +19,15 @@
       1179,
       1180,
       1182
-    ]
+    ],
+    "currGold": 1000,
+    "currGems": 1000,
+    "bonusLevels": 1000,
+    "mammothIdols": 1000,
+    "extraField": 0,
+    "showHigher": true,
+    "tutorialStage": 0,
+    "MasterClass": "Templar"
   },
   {
     "name": "Raynare",
@@ -41,7 +49,14 @@
       0,
       1168,
       1170
-    ]
+    ],
+    "currGold": 1000,
+    "currGems": 1000,
+    "bonusLevels": 1000,
+    "mammothIdols": 1000,
+    "extraField": 0,
+    "showHigher": false,
+    "MasterClass": "Executioner"
   },
   {
     "name": "Raziel",
@@ -63,6 +78,13 @@
       1173,
       1174,
       1176
-    ]
+    ],
+    "currGold": 0,
+    "currGems": 0,
+    "bonusLevels": 0,
+    "mammothIdols": 0,
+    "extraField": 0,
+    "showHigher": false,
+    "MasterClass": "Frostwarden"
   }
 ]

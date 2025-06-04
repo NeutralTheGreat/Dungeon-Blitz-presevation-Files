@@ -1,3 +1,4 @@
+#bitreader.py
 class BitReader:
     def __init__(self, data: bytes):
         self.data = data

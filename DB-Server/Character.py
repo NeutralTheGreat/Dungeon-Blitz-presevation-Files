@@ -1,8 +1,7 @@
+# Character.py
 
 import os
 import json
-import struct
-from BitUtils import BitBuffer
 
 CHAR_FILE = "characters.json"
 
@@ -16,28 +15,48 @@ def save_characters(char_list):
     with open(CHAR_FILE, "w", encoding="utf-8") as f:
         json.dump(char_list, f, ensure_ascii=False, indent=2)
 
+def default_master_for_base(base_cls: str) -> str:
+    """Return the default “first” MasterClass name for a given base class."""
+    # these must match the client’s class_150 mappings:
+    if base_cls == "Paladin":
+        return "Sentinel"
+    if base_cls == "Rogue":
+        return "Executioner"
+    if base_cls == "Mage":
+        return "Frostwarden"
+    return ""
 
 def make_character_dict_from_tuple(character):
+    """
+    character is a tuple of:
+      (name, class_name, level,
+       gender, head, hair, mouth, face,
+       hair_color, skin_color, shirt_color, pant_color,
+       equipped_gear)
+    """
     (name, class_name, level,
      gender, head, hair, mouth, face,
      hair_color, skin_color, shirt_color, pant_color,
      equipped_gear) = character
 
+    # build gear_list (either the provided tuple or defaults per class)
     if isinstance(equipped_gear, (list, tuple)) and len(equipped_gear) == 6:
-        gear_list = equipped_gear
+        gear_list = list(equipped_gear)
     else:
         cls = class_name.lower()
         if cls == "paladin":
-        #Gear Slot Hint: Shield / Sword / Gloves / Helmet / Armor / Boots
             gear_list = [902, 890, 912, 916, 909, 905]
         elif cls == "rogue":
-        #Gear Slot Hint: Shield / Sword / Gloves / Helmet / Armor / Boots
             gear_list = [484, 379, 584, 676, 668, 577]
         elif cls == "mage":
-        #Gear Slot Hint: Staff / Offhand orb / Robe / focus / Gloves / Boots
             gear_list = [63, 151, 75, 68, 77, 70]
         else:
             gear_list = [0] * 6
+
+    # Give every character a “MasterClass” field.  If there is no
+    # pre‐existing “MasterClass” in the tuple, default to the first
+    # tier (e.g. Sentinel for Paladin, Executioner for Rogue, Frostwarden for Mage).
+    default_master = default_master_for_base(class_name)
 
     return {
         "name":       name,
@@ -52,11 +71,20 @@ def make_character_dict_from_tuple(character):
         "skinColor":  skin_color,
         "shirtColor": shirt_color,
         "pantColor":  pant_color,
-        "gearList":   gear_list
+        "gearList":   gear_list,
+
+        # ── new persistent fields ───────────────────────────────
+        "currGold":    0,
+        "currGems":    0,
+        "bonusLevels": 0,
+        "mammothIdols":0,
+        "extraField":  0,
+        "showHigher":  False,
+        "MasterClass": default_master
     }
 
 def build_paperdoll_packet(character_dict):
-    from BitUtils import BitBuffer  # if BitBuffer is in another module
+    from BitUtils import BitBuffer
     buf = BitBuffer()
 
     buf.write_utf_string(character_dict["name"])
@@ -71,13 +99,14 @@ def build_paperdoll_packet(character_dict):
     buf.write_bits(character_dict["shirtColor"], 24)
     buf.write_bits(character_dict["pantColor"], 24)
 
+    # The client expects exactly six 11‐bit gear IDs in a row.
     for gear in character_dict.get("gearList", []):
         buf.write_bits(gear, 11)
 
     return buf.to_bytes()
 
 def build_login_character_list_bitpacked(characters):
-    from BitUtils import BitBuffer  # if BitBuffer is elsewhere
+    from BitUtils import BitBuffer
     buf = BitBuffer()
     user_id = 1
     max_chars = 8
@@ -92,7 +121,6 @@ def build_login_character_list_bitpacked(characters):
         buf.write_utf_string(char["class"])
         buf.write_method_6(char["level"], 6)
 
-    payload = buf.to_bytes()
     import struct
-    header = struct.pack(">HH", 0x15, len(payload))
-    return header + payload
+    header = struct.pack(">HH", 0x15, len(buf.to_bytes()))
+    return header + buf.to_bytes()

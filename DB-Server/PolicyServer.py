@@ -44,3 +44,6 @@ if __name__ == "__main__":
     t.daemon = True
     t.start()
     t.join()  # Keep the main thread alive
+
+    while True:
+        pass

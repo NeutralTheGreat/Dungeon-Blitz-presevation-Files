@@ -1,21 +1,41 @@
 ﻿#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import socket, struct, hashlib
+import os
+import signal
+import socket
+import struct
+import hashlib
+import subprocess
+import sys
+import time
+
 from Character import (
     make_character_dict_from_tuple,
     build_login_character_list_bitpacked,
     build_paperdoll_packet,
     load_characters,
     save_characters
-
 )
-from WorldEnter import (build_enter_world_packet,Player_Data_Packet)
+from WorldEnter import (build_enter_world_packet, Player_Data_Packet)
 from bitreader import BitReader
+
+# Watchable extensions (add others if needed)
+WATCHED_EXTENSIONS = {".py", ".json"}
+
+# -----------------------
+# Server logic:
+# -----------------------
+
 characters = load_characters()
 
 HOST = '127.0.0.1'
-PORT = 443
+PORT = 1
+
+# When a client selects a character (0x16), we generate a unique token here...
+pending_world = {}         # maps transfer_token → character_dict
+next_transfer_token = 1    # incrementing integer for each new selection
+
 
 def build_handshake_response(session_id):
     session_id_bytes = session_id.to_bytes(2, 'big')
@@ -26,7 +46,10 @@ def build_handshake_response(session_id):
     header = struct.pack(">HH", 0x12, len(payload))
     return header + payload
 
+
 def handle_client(conn, addr):
+    global next_transfer_token, pending_world
+
     print("Connection from", addr)
     try:
         while True:
@@ -47,6 +70,7 @@ def handle_client(conn, addr):
                 continue
 
             if pkt_type == 0x11:
+                # Initial handshake
                 session_id = int(hex_data[8:12], 16) if len(hex_data) >= 12 else 0
                 print(f"Got handshake packet (0x11), session ID = {session_id}")
                 resp = build_handshake_response(session_id)
@@ -54,19 +78,21 @@ def handle_client(conn, addr):
                 print("Sent handshake response (0x12):", resp.hex())
 
             elif pkt_type in (0x13, 0x14):
+                # Auth packet → send character list
                 print("Got auth packet (0x14). Sending character list…")
                 pkt = build_login_character_list_bitpacked(characters)
                 conn.sendall(pkt)
-                print("Sent login character list (0x15):", pkt.hex())
+                print("Sent login-character list (0x15):", pkt.hex())
 
             elif pkt_type == 0x17:
+                # Character creation request
                 print("Got character creation packet (0x17). Parsing creation data...")
                 payload = data[4:]
                 try:
                     br = BitReader(payload)
                     name = br.read_string()
                     class_name = br.read_string()
-                    level_dummy = 1  # level is fixed at creation
+                    level_dummy = 1  # fixed at creation
                     gender = br.read_string()
                     head = br.read_string()
                     hair = br.read_string()
@@ -76,9 +102,7 @@ def handle_client(conn, addr):
                     skin_color = br.read_bits(24)
                     shirt_color = br.read_bits(24)
                     pant_color = br.read_bits(24)
-                    # equipped_gear placeholder, will be handled by make_character_dict...
                     equipped_gear = None
-                    # Build the raw-character tuple exactly as make_character_dict expects
                     character_tuple = (
                         name,
                         class_name,
@@ -100,9 +124,8 @@ def handle_client(conn, addr):
                     conn.sendall(build_login_character_list_bitpacked(characters))
                     continue
 
-                # Convert tuple → full dict (fills in gearList, defaults, etc.)
+                # Build and store the new character dict
                 char_dict = make_character_dict_from_tuple(character_tuple)
-                # Append + persist
                 characters.append(char_dict)
                 save_characters(characters)
                 print(f"Created new char '{name}', class='{class_name}' and saved to JSON.")
@@ -118,38 +141,43 @@ def handle_client(conn, addr):
                 conn.sendall(pd_pkt)
                 print("Sent initial paper-doll (0x1A), length:", len(pd_payload))
 
-                #i just added this so the game will show a popup in the game which can be removed instead of getting stuck at (creating Character...)
+                # Send “Character Successfully Created” popup (0x1B)
                 text_message = "Character Successfully Created"
                 text_bytes = text_message.encode('utf-8')
                 utf16_length_prefix = struct.pack(">H", len(text_bytes))
-                payload = utf16_length_prefix + text_bytes
-                pkt = struct.pack(">HH", 0x1B, len(payload)) + payload
-                conn.sendall(pkt)
+                payload2 = utf16_length_prefix + text_bytes
+                pkt2 = struct.pack(">HH", 0x1B, len(payload2)) + payload2
+                conn.sendall(pkt2)
 
             elif pkt_type == 0x19:
+                # Client requests a paper-doll update for an existing character
                 name = BitReader(data[4:]).read_string()
                 for char in characters:
                     if char["name"] == name:
-                        payload = build_paperdoll_packet(char)  # use char, not new_char
+                        payload = build_paperdoll_packet(char)
                         pkt = struct.pack(">HH", 0x1A, len(payload)) + payload
                         conn.sendall(pkt)
                         print("Sent paper-doll (0x1A), payload len:", len(payload))
                         break
                 else:
-                    # character not found → still ack so the client doesn't hang
+                    # char not found → still ack so client doesn’t hang
                     conn.sendall(struct.pack(">HH", 0x1A, 0))
 
+
             elif pkt_type == 0x16:
+                # Client selected a character and wants to enter the world
                 payload = data[4:]
                 br = BitReader(payload)
                 selected_name = br.read_string()
                 for char in characters:
                     if char["name"] == selected_name:
-                        welcome = Player_Data_Packet(char, transfer_token=1)
-                        conn.sendall(welcome)
-                        print("Sent MINIMAL WELCOME (0x10):", welcome.hex())
+                        # Assign a fresh, unique transfer_token
+                        token = next_transfer_token
+                        next_transfer_token += 1
+                        # Remember which character maps to that token
+                        pending_world[token] = char
                         transfer_packet = build_enter_world_packet(
-                            transfer_token=1,
+                            transfer_token=token,
                             old_level_id=0,
                             old_swf="",
                             has_old_coord=False,
@@ -157,7 +185,7 @@ def handle_client(conn, addr):
                             old_y=0,
                             old_flashvars="",
                             user_id=1,
-                            new_level_swf="LevelsTut.swf/a_Level_TutorialBoat",
+                            new_level_swf="LevelsNR.swf/a_Level_NewbieRoad",
                             new_map_lvl=1,
                             new_base_lvl=1,
                             new_internal="CraftTown",
@@ -166,16 +194,36 @@ def handle_client(conn, addr):
                             new_is_inst=True
                         )
                         conn.sendall(transfer_packet)
-                        print("Sent TRANSFER_BEGIN (0x21)")
+                        print(f"Sent TRANSFER_BEGIN (0x21) for character {selected_name}, token={token}")
                         break
                 else:
                     print(f"Character {selected_name} not found in list")
 
+            elif pkt_type == 0x1f:
+                # Client is now asking for “minimal welcome.” First, read transfer_token
+                br = BitReader(data[4:])
+                token = br.read_method_4()
+                char = pending_world.pop(token, None)
+                if char is None:
+                    print(f"Error: 0x1F with unknown transfer_token={token}")
+                    continue
+                # ───► Here: supply pos_x, pos_y (e.g. 0.0, 0.0) so the client
+                # sees hasPosition=1 and reads two floats right away.
+                # Replace (0.0, 0.0) with whatever spawn coordinates your map needs.
+                welcome = Player_Data_Packet(char,
+                                             transfer_token=token,
+                                             pos_x=0.0,
+                                             pos_y=0.0)
+                conn.sendall(welcome)
+                print(f"Sent MINIMAL WELCOME (0x10) for character {char['name']} (token={token}) at (0.0,0.0)")
+
+            # …any other packet types you support…
     except Exception as e:
         print("Error:", e)
     finally:
         conn.close()
         print("Client disconnected.")
+
 
 def start_server():
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -186,5 +234,78 @@ def start_server():
         conn, addr = s.accept()
         handle_client(conn, addr)
 
+
+# -------------------------------
+# Embedded “auto-reload” wrapper:
+# -------------------------------
+try:
+    from watchdog.events import FileSystemEventHandler
+    from watchdog.observers import Observer
+except ImportError:
+    print("The 'watchdog' package is required for auto-reload. Install it with:\n\n    pip install watchdog\n")
+    sys.exit(1)
+
+
+class ReloaderHandler(FileSystemEventHandler):
+    def __init__(self, proc_holder, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.proc_holder = proc_holder
+
+    def on_any_event(self, event):
+        if event.is_directory:
+            return
+
+        _, ext = os.path.splitext(event.src_path)
+        if ext not in WATCHED_EXTENSIONS:
+            return
+
+        print(f"[reload] Detected change in {event.src_path}. Restarting server…")
+        if self.proc_holder["proc"] is not None:
+            try:
+                self.proc_holder["proc"].send_signal(signal.SIGINT)
+                self.proc_holder["proc"].wait(timeout=5)
+            except Exception:
+                self.proc_holder["proc"].kill()
+                self.proc_holder["proc"].wait()
+        self.proc_holder["proc"] = subprocess.Popen([sys.executable, __file__, "--run-server"])
+
+
+def watcher_loop():
+    holder = {"proc": subprocess.Popen([sys.executable, __file__, "--run-server"])}
+    event_handler = ReloaderHandler(proc_holder=holder)
+    observer = Observer()
+    observer.schedule(event_handler, path=".", recursive=True)
+    observer.start()
+
+    try:
+        while True:
+            time.sleep(1)
+            if holder["proc"].poll() is not None:
+                print("[reload] Server process exited. Restarting…")
+                holder["proc"] = subprocess.Popen([sys.executable, __file__, "--run-server"])
+    except KeyboardInterrupt:
+        print("\n[reload] Stopping watcher and server…")
+    finally:
+        observer.stop()
+        observer.join()
+        if holder["proc"].poll() is None:
+            try:
+                holder["proc"].send_signal(signal.SIGINT)
+                holder["proc"].wait(timeout=5)
+            except Exception:
+                holder["proc"].kill()
+                holder["proc"].wait()
+
+
 if __name__ == "__main__":
-    start_server()
+    # If "--run-server" argument is provided, just run the socket server.
+    if len(sys.argv) > 1 and sys.argv[1] == "--run-server":
+        try:
+            start_server()
+        except KeyboardInterrupt:
+            print("\nServer shutting down…")
+            sys.exit(0)
+    else:
+        # Otherwise, run the file-watcher wrapper
+        print("Starting in auto-reload mode. Watching for file changes…")
+        watcher_loop()
