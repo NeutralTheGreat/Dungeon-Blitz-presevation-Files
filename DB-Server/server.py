@@ -20,7 +20,7 @@ from Character import (
 from WorldEnter import (build_enter_world_packet, Player_Data_Packet)
 from bitreader import BitReader
 
-# Watchable extensions (add others if needed)
+
 WATCHED_EXTENSIONS = {".py", ".json"}
 
 # -----------------------
@@ -200,16 +200,13 @@ def handle_client(conn, addr):
                     print(f"Character {selected_name} not found in list")
 
             elif pkt_type == 0x1f:
-                # Client is now asking for “minimal welcome.” First, read transfer_token
                 br = BitReader(data[4:])
                 token = br.read_method_4()
                 char = pending_world.pop(token, None)
                 if char is None:
                     print(f"Error: 0x1F with unknown transfer_token={token}")
                     continue
-                # ───► Here: supply pos_x, pos_y (e.g. 0.0, 0.0) so the client
-                # sees hasPosition=1 and reads two floats right away.
-                # Replace (0.0, 0.0) with whatever spawn coordinates your map needs.
+
                 welcome = Player_Data_Packet(char,
                                              transfer_token=token,
                                              pos_x=0.0,
@@ -217,7 +214,7 @@ def handle_client(conn, addr):
                 conn.sendall(welcome)
                 print(f"Sent MINIMAL WELCOME (0x10) for character {char['name']} (token={token}) at (0.0,0.0)")
 
-            # …any other packet types you support…
+            
     except Exception as e:
         print("Error:", e)
     finally:
