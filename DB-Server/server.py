@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 import os
@@ -21,7 +21,7 @@ from WorldEnter import (build_enter_world_packet, Player_Data_Packet)
 from bitreader import BitReader
 
 
-WATCHED_EXTENSIONS = {".py", ".json"}
+WATCHED_EXTENSIONS = {".py"}
 
 # -----------------------
 # Server logic:
