@@ -21,7 +21,7 @@ from WorldEnter import (build_enter_world_packet, Player_Data_Packet)
 from bitreader import BitReader
 
 
-WATCHED_EXTENSIONS = {".py"}
+
 
 # -----------------------
 # Server logic:
@@ -214,7 +214,7 @@ def handle_client(conn, addr):
                 conn.sendall(welcome)
                 print(f"Sent MINIMAL WELCOME (0x10) for character {char['name']} (token={token}) at (0.0,0.0)")
 
-            
+
     except Exception as e:
         print("Error:", e)
     finally:
@@ -232,77 +232,9 @@ def start_server():
         handle_client(conn, addr)
 
 
-# -------------------------------
-# Embedded “auto-reload” wrapper:
-# -------------------------------
-try:
-    from watchdog.events import FileSystemEventHandler
-    from watchdog.observers import Observer
-except ImportError:
-    print("The 'watchdog' package is required for auto-reload. Install it with:\n\n    pip install watchdog\n")
-    sys.exit(1)
-
-
-class ReloaderHandler(FileSystemEventHandler):
-    def __init__(self, proc_holder, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.proc_holder = proc_holder
-
-    def on_any_event(self, event):
-        if event.is_directory:
-            return
-
-        _, ext = os.path.splitext(event.src_path)
-        if ext not in WATCHED_EXTENSIONS:
-            return
-
-        print(f"[reload] Detected change in {event.src_path}. Restarting server…")
-        if self.proc_holder["proc"] is not None:
-            try:
-                self.proc_holder["proc"].send_signal(signal.SIGINT)
-                self.proc_holder["proc"].wait(timeout=5)
-            except Exception:
-                self.proc_holder["proc"].kill()
-                self.proc_holder["proc"].wait()
-        self.proc_holder["proc"] = subprocess.Popen([sys.executable, __file__, "--run-server"])
-
-
-def watcher_loop():
-    holder = {"proc": subprocess.Popen([sys.executable, __file__, "--run-server"])}
-    event_handler = ReloaderHandler(proc_holder=holder)
-    observer = Observer()
-    observer.schedule(event_handler, path=".", recursive=True)
-    observer.start()
-
-    try:
-        while True:
-            time.sleep(1)
-            if holder["proc"].poll() is not None:
-                print("[reload] Server process exited. Restarting…")
-                holder["proc"] = subprocess.Popen([sys.executable, __file__, "--run-server"])
-    except KeyboardInterrupt:
-        print("\n[reload] Stopping watcher and server…")
-    finally:
-        observer.stop()
-        observer.join()
-        if holder["proc"].poll() is None:
-            try:
-                holder["proc"].send_signal(signal.SIGINT)
-                holder["proc"].wait(timeout=5)
-            except Exception:
-                holder["proc"].kill()
-                holder["proc"].wait()
-
-
 if __name__ == "__main__":
-    # If "--run-server" argument is provided, just run the socket server.
-    if len(sys.argv) > 1 and sys.argv[1] == "--run-server":
-        try:
-            start_server()
-        except KeyboardInterrupt:
-            print("\nServer shutting down…")
-            sys.exit(0)
-    else:
-        # Otherwise, run the file-watcher wrapper
-        print("Starting in auto-reload mode. Watching for file changes…")
-        watcher_loop()
+    try:
+        start_server()
+    except KeyboardInterrupt:
+        print("\nServer shutting down…")
+        sys.exit(0)
