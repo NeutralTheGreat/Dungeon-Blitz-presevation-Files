@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 import os
@@ -21,21 +21,17 @@ from WorldEnter import (build_enter_world_packet, Player_Data_Packet)
 from bitreader import BitReader
 
 
-
-
 # -----------------------
 # Server logic:
 # -----------------------
 
 characters = load_characters()
-
 HOST = '127.0.0.1'
 PORT = 1
 
 # When a client selects a character (0x16), we generate a unique token here...
 pending_world = {}         # maps transfer_token → character_dict
 next_transfer_token = 1    # incrementing integer for each new selection
-
 
 def build_handshake_response(session_id):
     session_id_bytes = session_id.to_bytes(2, 'big')
@@ -45,7 +41,6 @@ def build_handshake_response(session_id):
     payload = session_id_bytes + dummy_bytes
     header = struct.pack(">HH", 0x12, len(payload))
     return header + payload
-
 
 def handle_client(conn, addr):
     global next_transfer_token, pending_world
@@ -163,7 +158,6 @@ def handle_client(conn, addr):
                     # char not found → still ack so client doesn’t hang
                     conn.sendall(struct.pack(">HH", 0x1A, 0))
 
-
             elif pkt_type == 0x16:
                 # Client selected a character and wants to enter the world
                 payload = data[4:]
@@ -188,8 +182,8 @@ def handle_client(conn, addr):
                             new_level_swf="LevelsNR.swf/a_Level_NewbieRoad",
                             new_map_lvl=1,
                             new_base_lvl=1,
-                            new_internal="CraftTown",
-                            new_moment="Normal",
+                            new_internal="",
+                            new_moment="",
                             new_alter="",
                             new_is_inst=True
                         )
@@ -207,20 +201,15 @@ def handle_client(conn, addr):
                     print(f"Error: 0x1F with unknown transfer_token={token}")
                     continue
 
-                welcome = Player_Data_Packet(char,
-                                             transfer_token=token,
-                                             pos_x=0.0,
-                                             pos_y=0.0)
+                welcome = Player_Data_Packet(char,transfer_token=token)
                 conn.sendall(welcome)
-                print(f"Sent MINIMAL WELCOME (0x10) for character {char['name']} (token={token}) at (0.0,0.0)")
-
+                print(f"Sent Send Player data (0x10) for character {char['name']} (token={token}) at (0.0,0.0)")
 
     except Exception as e:
         print("Error:", e)
     finally:
         conn.close()
         print("Client disconnected.")
-
 
 def start_server():
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -231,10 +220,8 @@ def start_server():
         conn, addr = s.accept()
         handle_client(conn, addr)
 
-
 if __name__ == "__main__":
     try:
         start_server()
     except KeyboardInterrupt:
         print("\nServer shutting down…")
-        sys.exit(0)
