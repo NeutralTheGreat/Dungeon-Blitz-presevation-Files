@@ -205,7 +205,7 @@ def handle_client(conn, addr):
                             old_y=0,
                             old_flashvars="",
                             user_id=1,
-                            new_level_swf="LevelsBT.swf/a_Level_BridgeTown",
+                            new_level_swf="LevelsHome.swf/a_Level_Home",
                             new_map_lvl=1,
                             new_base_lvl=1,
                             new_internal="CraftTown",
