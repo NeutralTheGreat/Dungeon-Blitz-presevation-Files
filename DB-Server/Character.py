@@ -47,9 +47,9 @@ def make_character_dict_from_tuple(character):
         if cls == "paladin":
             gear_list = [902, 890, 912, 916, 909, 905]
         elif cls == "rogue":
-            gear_list = [484, 379, 584, 676, 668, 577]
+            gear_list = [1172, 1171, 1175, 1173, 1174, 1176]
         elif cls == "mage":
-            gear_list = [63, 151, 75, 68, 77, 70]
+            gear_list = [1165, 1166, 1169, 0, 1168, 1170]
         else:
             gear_list = [0] * 6
 

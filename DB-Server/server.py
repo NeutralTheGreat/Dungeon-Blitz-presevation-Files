@@ -162,12 +162,28 @@ def handle_client(conn, addr):
                 print("Sent initial paper-doll (0x1A), length:", len(pd_payload))
 
                 # Send “Character Successfully Created” popup (0x1B)
-                text_message = "Character Successfully Created"
-                text_bytes = text_message.encode('utf-8')
-                utf16_length_prefix = struct.pack(">H", len(text_bytes))
-                payload2 = utf16_length_prefix + text_bytes
-                pkt2 = struct.pack(">HH", 0x1B, len(payload2)) + payload2
-                conn.sendall(pkt2)
+                token = next_transfer_token
+                next_transfer_token += 1
+                # Remember which character maps to that token
+                pending_world[token] = char_dict
+                transfer_packet = build_enter_world_packet(
+                    transfer_token=token,
+                    old_level_id=0,
+                    old_swf="",
+                    has_old_coord=False,
+                    old_x=0,
+                    old_y=0,
+                    old_flashvars="",
+                    user_id=1,
+                    new_level_swf="LevelsHome.swf/a_Level_Home",
+                    new_map_lvl=1,
+                    new_base_lvl=1,
+                    new_internal="CraftTown",
+                    new_moment="",
+                    new_alter="",
+                    new_is_inst=False
+                )
+                conn.sendall(transfer_packet)
 
             elif pkt_type == 0x19:
                 # Client requests a paper-doll update for an existing character
@@ -220,7 +236,7 @@ def handle_client(conn, addr):
                     print(f"Character {selected_name} not found in list")
 
             elif pkt_type == 0x1f:
-                # Client is now asking for “Player data.” 
+                # Client is now asking for “minimal welcome.” First, read transfer_token
                 br = BitReader(data[4:])
                 token = br.read_method_4()
                 char = pending_world.pop(token, None)
@@ -231,7 +247,7 @@ def handle_client(conn, addr):
                 welcome = Player_Data_Packet(char,
                                              transfer_token=token)
                 conn.sendall(welcome)
-                print(f"Sent  WELCOME (0x10) for character {char['name']} (token={token})")
+                print(f"Sent MINIMAL WELCOME (0x10) for character {char['name']} (token={token}) at (0.0,0.0)")
 
             elif pkt_type == 0x07:
                 print("Got movement/action packet (0x07).")
