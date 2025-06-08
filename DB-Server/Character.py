@@ -76,7 +76,7 @@ def make_character_dict_from_tuple(character):
         # ── new persistent fields ───────────────────────────────
         "currGold":    0,
         "currGems":    0,
-        "bonusLevels": 0,
+        "mCraftTalentData": 0,
         "mammothIdols":0,
         "extraField":  0,
         "showHigher":  False,

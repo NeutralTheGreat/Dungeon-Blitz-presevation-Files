@@ -2,111 +2,41 @@
 
 from BitUtils import BitBuffer
 import struct
-
-ENT_MAX_SLOTS = 7
-GS_BITS = 2             # Game.const_813
-MAX_CHAR_LEVEL_BITS = 6 # Entity.MAX_CHAR_LEVEL_BITS
-
-# (1) Bit-width for master-class ID
-Game_const_209     = 4
-
-# (2) Bit-width for “alert state”
-Game_const_646     = 4
-
-# (3) Maximum dye index (so we write exactly that many 1-bit flags)
-class_21_const_763 = 250
-
-# (4) Bit-width for ability IDs/ranks
-class_10_const_83  = 7
-
-# (5) Bit-width for master-class tower data
-class_66_const_409 = 6
-
-# (6) Bit-width for pet-ID in egg/pet loops
-class_16_const_167 = 6
-
-class class_118:
-    const_43 = 27
-
-
-class GearType:
-    GEARTYPE_BITSTOSEND = 11   # (for example—use whatever the AS3 says)
-    const_348          = 3   # (for example)
-    const_176          = 2   # (for example)
-
-
-# ─── Define the same “var_911” lookup in Python ───
-NEWS_EVENTS = {
-    1: [
-        "a_NewsGoldIcon",
-        "Double Gold Event",
-        "While this event is in place all gold will be doubled world wide",
-        "http://www.dungeonblitz.com/",
-        1387602000,
-    ],
-    2: [
-        "a_NewsGearIcon",
-        "Double Gear Event",
-        "While this event is in place all gear drops will be doubled world wide",
-        "http://www.dungeonblitz.com/",
-        1387602000,
-    ],
-    3: [
-        "a_NewsMatsIcon",
-        "Double Material Event",
-        "While this event is in place all material drops will be doubled world wide",
-        "http://www.dungeonblitz.com/",
-        1387602000,
-    ],
-    4: [
-        "a_NewsXPIcon",
-        "Double XP Event",
-        "While this event is in place all XP gained will be doubled world wide",
-        "http://www.dungeonblitz.com/",
-        1387602000,
-    ],
-    5: [
-        "a_NewsPetXPIcon",
-        "Double Pet XP Event",
-        "While this event is in place all pet XP gained will be doubled world wide",
-        "http://www.dungeonblitz.com/",
-        1387602000,
-    ],
-}
-
-
-_MASTERCLASS_TO_ID = {
-    "frostwarden":   7,
-    "flameseer":     8,
-    "necromancer":   9,
-    "sentinel":      4,
-    "justicar":      5,
-    "templar":       6,
-    "executioner":   1,
-    "shadowwalker":  2,
-    "soulthief":     3,
-}
-
-def _masterclass_to_id(name: str) -> int:
-    if not name:
-        return 0
-    return _MASTERCLASS_TO_ID.get(name.lower(), 0)
+import time
+import struct
+from constants import (
+    GS_BITS,
+    MAX_CHAR_LEVEL_BITS,
+    GAME_CONST_209,
+    CLASS_118_CONST_43,
+    CLASS_118_CONST_127,
+    master_bits_for_slot,
+    _MASTERCLASS_TO_ID,
+    Game_const_646,
+    class_10_const_83,
+    GearType,
+    class_21_const_763,
+    class_66_const_409,
+    class_16_const_167,
+    EntType_MAX_SLOTS
+)
 
 def Player_Data_Packet(char: dict,
-                       event_index: int = 2,   # e.g. 1 for “double‐gold,” 2 for “double‐gear,” etc.
+                       event_index: int = 2,
                        transfer_token: int = 1) -> bytes:
 
     buf = BitBuffer()
 
     # ────────────── (1) Preamble ──────────────
-    buf.write_method_4(transfer_token)     # _loc2_
-    buf.write_method_4(0)                  # _loc3_
-    buf.write_method_6(0, GS_BITS)         # _loc4_
-    buf.write_method_4(0)                  # _loc5_
+    buf.write_method_4(transfer_token)                   # _loc2_
+    current_game_time = int(time.time())
+    buf.write_method_4(current_game_time)                # _loc3_
+    buf.write_method_6(0, GS_BITS)                       # _loc4_
+    buf.write_method_4(0)                                # _loc5_
 
     # ────────────── (2) Customization ──────────────
-    buf.write_utf_string(char.get("name", "") or "")  # _loc6_
-    buf._append_bits(1, 1)                            # hasCustomization = true
+    buf.write_utf_string(char.get("name", "") or "")
+    buf._append_bits(1, 1)  # hasCustomization
     buf.write_utf_string(char.get("class", "") or "")
     buf.write_utf_string(char.get("gender", "") or "")
     buf.write_utf_string(char.get("headSet", "") or "")
@@ -118,10 +48,9 @@ def Player_Data_Packet(char: dict,
     buf._append_bits(char.get("shirtColor", 0), 24)
     buf._append_bits(char.get("pantColor", 0), 24)
 
-    # ────────────── (3) Gear slots (6 slots) ──────────────
+    # ────────────── (3) Gear slots ──────────────
     gear_list = char.get("gearList", [0] * 6)
-    for i in range(6):
-        gear_id = gear_list[i] if i < len(gear_list) else 0
+    for gear_id in gear_list:
         if gear_id:
             buf._append_bits(1, 1)
             buf._append_bits(gear_id, 11)
@@ -129,148 +58,94 @@ def Player_Data_Packet(char: dict,
             buf._append_bits(0, 16)
             buf._append_bits(0, 16)
             buf._append_bits(0, 16)
-            buf._append_bits(10, 8)
-            buf._append_bits(10, 8)
+            buf._append_bits(14162176, 8)
+            buf._append_bits(14162176, 8)
         else:
             buf._append_bits(0, 1)
 
     # ────────────── (4) Numeric fields ──────────────
-    buf.write_method_6(char.get("level", 1), MAX_CHAR_LEVEL_BITS)
-    buf.write_method_4(char.get("currGold",  0))
-    buf.write_method_4(char.get("currGems",  0))
-    buf.write_method_4(char.get("bonusLevels", 0))
-    buf.write_method_4(char.get("mammothIdols",0))
-    buf.write_method_4(char.get("extraField", 0))
-    buf._append_bits(int(char.get("showHigher", False)), 1)
+    buf.write_method_6(0, MAX_CHAR_LEVEL_BITS)  # level
+    buf.write_method_4(1000)  # xp
+    buf.write_method_4(2000)  # gold
+    buf.write_method_4(3000)  # gems
+    buf.write_method_4(4000)  # something else
+    buf.write_method_4(5000) # mammoth idols
+    buf._append_bits(int(char.get("showHigher", True)), 1)
 
-    # ────────────── (5) Teleport / “big init‐block” ──────────────
-    buf._append_bits(0, 1)   # hasOldCoord? = false
-    buf._append_bits(0, 1)   # hasPosition? = false
-    buf._append_bits(1, 1)   # initBlockPresent? = true
-
-    #  (a) Gear‐inventory count (bits)
-    buf._append_bits(0, GearType.GEARTYPE_BITSTOSEND)
-
-    #  (b) Gear‐sets count (bits)
-    buf._append_bits(0, GearType.const_348)
-
-    #  (c) Keybinds? (1 bit)
-    buf._append_bits(0, 1)
-
-    #  (d) Mounts count (uint32)
-    buf.write_method_4(0)
-
-    #  (e1–e4) Pet flags (4 × 1 bit)
-    buf._append_bits(0, 1)
-    buf._append_bits(0, 1)
-    buf._append_bits(0, 1)
-    buf._append_bits(0, 1)
-
-    #  (f) Charms loop (1 bit)
-    buf._append_bits(0, 1)
-
-    #  (g) Materials loop (1 bit)
-    buf._append_bits(0, 1)
-
-    #  (h) Lockboxes loop (1 bit) + two uint32s
-    buf._append_bits(0, 1)
-    buf.write_method_4(0)
-    buf.write_method_4(0)
-
-    #  (i) Alert state (4 bits)
-    buf._append_bits(0, Game_const_646)
-
-    # ═══ Dye loop (250 bits) ═══
-    for _ in range(class_21_const_763):
-        buf._append_bits(0, 1)
-
-    #  (j) Consumables loop (1 bit)
-    buf._append_bits(0, 1)
-
-    #  (k) Missions (uint32)
-    buf.write_method_4(0)
-
-    #  (l) Friends (uint32)
-    buf.write_method_4(0)
-
-    #  (m) Ability ranks (7 bits)
-    buf._append_bits(0, class_10_const_83)
-
-    #  (n) Master‐class loadout IDs (3 × 7 bits)
-    buf._append_bits(0, class_10_const_83)
-    buf._append_bits(0, class_10_const_83)
-    buf._append_bits(0, class_10_const_83)
-
-    #  (o) Craft talent points (uint32)
-    buf.write_method_4(0)
-
-    #  (p) Tower data (3 × 6 bits)
-    buf._append_bits(0, class_66_const_409)
-    buf._append_bits(0, class_66_const_409)
-    buf._append_bits(0, class_66_const_409)
-
-    # ─── (q) Magic Forge? (1 bit) = false ───
-    buf._append_bits(0, 1)
-
-    # ─── “Quick‐and‐dirty” 2‐bit pad → so that the next four UTF‐writes begin on a byte boundary ───
-    buf.write_method_6(0, 2)
-
-    # ─── Now, if event_index is provided, send exactly those five “news” fields; otherwise send four empty strings + 0 ───
-    if event_index in NEWS_EVENTS:
-        icon_name, title, body, url, end_time = NEWS_EVENTS[event_index]
-        buf.write_utf_string(icon_name)
-        buf.write_utf_string(title)
-        buf.write_utf_string(body)
-        buf.write_utf_string(url)
-        buf.write_method_4(end_time)
+    # ────────────── (5) Quest-tracker ──────────────
+    quest_val = char.get("questTrackerState", None)
+    if quest_val is not None:
+        buf._append_bits(1, 1)
+        buf.write_method_4(quest_val)
     else:
-        # no event → four empty strings + zero
-        buf.write_utf_string("")
-        buf.write_utf_string("")
-        buf.write_utf_string("")
-        buf.write_utf_string("")
-        buf.write_method_4(0)
-
-    mc_id = _masterclass_to_id(char.get("MasterClass", ""))
-    buf._append_bits(mc_id, Game_const_209)
-
-    # (aa) “hasMasterRanks?” (1 bit).
-    # We’ll send 1 so the client tries to read 27 zero-bits below and builds (null,0) for each.
-    buf._append_bits(1, 1)
-
-    # (ab) Exactly class_118.const_43 zero-bits so the client does “new class_148(null,0)” that many times
-    for _ in range(class_118.const_43):
         buf._append_bits(0, 1)
 
-    # (ac) Equip-gear loop (slots 1..ENT_MAX_SLOTS−1, each 1 bit)
-    for _slot_idx in range(1, ENT_MAX_SLOTS):
+    # ────────────── (6) Position‐presence ──────────────
+    buf._append_bits(0, 1)  # no door/teleport update
+
+    # ────────────── (7) Extended‐data‐presence ──────────────
+    buf._append_bits(1, 1)  # yes, we’re sending the big block
+
+    # ────────────── (8) stub out the entire “if (_loc32_)” block ──────────────
+    buf.write_method_6(0, GearType.GEARTYPE_BITSTOSEND)  # gear-to-send = 0
+    buf.write_method_6(0, GearType.const_348)           # gear-sets = 0
+    buf._append_bits(0, 1)                             # no keybinds
+    buf.write_method_4(0)                              # mounts = 0
+    buf.write_method_4(0)                              # pets = 0
+    buf._append_bits(0, 1)                             # no charms
+    buf._append_bits(0, 1)                             # no materials
+    buf._append_bits(0, 1)                             # no lockboxes
+    buf.write_method_4(0)                              # lockboxKeys
+    buf.write_method_4(0)                              # royalSigils
+    buf.write_method_6(0, Game_const_646)              # alert state = 0
+    for _ in range(1, class_21_const_763 + 1):         # dyes
+        buf._append_bits(1, 1)
+    buf._append_bits(0, 1)                             # no consumables
+    buf.write_method_4(0)                              # missions = 0
+    buf.write_method_4(0)                              # friends = 0
+    buf.write_method_6(0, class_10_const_83)           # learned abilities = 0
+    buf.write_method_6(0, class_10_const_83)           # active slot 1
+    buf.write_method_6(0, class_10_const_83)           # active slot 2
+    buf.write_method_6(0, class_10_const_83)           # active slot 3
+    buf.write_method_4(0)                              # craft talent
+    buf.write_method_6(0, class_66_const_409)          # tower A
+    buf.write_method_6(0, class_66_const_409)          # tower B
+    buf.write_method_6(0, class_66_const_409)          # tower C
+    buf._append_bits(0, 1)                             # no magic forge
+    buf._append_bits(0, 1)                             # no ability research
+    buf._append_bits(0, 1)                             # no building info
+    buf._append_bits(0, 1)                             # no tower research
+    buf._append_bits(0, 1)                             # no egg/pet data
+    buf.write_method_6(0, class_16_const_167)          # pet count = 0
+    # no resting-pet loops…
+    buf._append_bits(0, 1)
+    buf._append_bits(0, 1)
+    buf._append_bits(0, 1)
+    buf._append_bits(0, 1)
+    # NEWS (4 empty strings + zero timestamp)
+    for _ in range(4):
+        buf.write_utf_string("")
+    buf.write_method_4(0)
+
+    # ────────────── (9) World entry & Master‐rank defaults ──────────────
+    buf.write_method_6(char.get("worldID", 0), GAME_CONST_209)
+    buf._append_bits(1, 1)  # send master‐rank block
+    for _ in range(CLASS_118_CONST_43):
         buf._append_bits(0, 1)
 
-    # (ad) cosmeticOverride (uint32)
-    buf.write_method_4(0)
+    # ────────────── (10) Equipped‐gear slots ──────────────
+    # EntType.MAX_SLOTS is usually 7, so slots 1..6
+    # ────────────── (10) Equipped‐gear slots ──────────────
+    # You have 6 slots (1 through 6), so write 6 presence-bits:
+    # EntType_MAX_SLOTS is normally 7, so slots 1 through 6:
+    for _ in range(1, EntType_MAX_SLOTS):
+        buf._append_bits(0, 1)
 
-    # (ae) activePetID (uint32)
-    buf.write_method_4(0)
-
-    # (af) activePetIteration (uint32)
-    buf.write_method_4(0)
-
-    # (ag) potion1 (uint32)
-    buf.write_method_4(0)
-
-    # (ah) potion2 (uint32)
-    buf.write_method_4(0)
-
-    # (ai) levelData count (uint32)
-    buf.write_method_4(0)
-
-    # (aj) roomData count (uint32)
-    buf.write_method_4(0)
-
-    # ─────────────────────────────────────────
-    #   Finally, build and return
+    # ────────────── final packet assembly ──────────────
     payload = buf.to_bytes()
     return struct.pack(">HH", 0x10, len(payload)) + payload
+
+
 
 
 
