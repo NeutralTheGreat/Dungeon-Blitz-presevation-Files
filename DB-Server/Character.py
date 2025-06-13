@@ -4,6 +4,17 @@ import os
 import json
 from BitUtils import BitBuffer
 
+
+#Hints Do not delete
+"""
+"inventoryGears": [
+    # {"gearID": 1, "tier": 1, "runes": [1, 2, 3], "colors": [255, 0]},
+    # {"gearID": 13, "tier": 2, "runes": [0, 0, 0], "colors": [0, 128]},
+    # {"gearID": 30, "tier": 0, "runes": [0, 0, 0], "colors": [0, 0]}
+],
+"""
+
+
 # ──────────────── Default full gear definitions ────────────────
 # Each sub-list is [GearID, Rune1, Rune2, Rune3, Color1, Color2]
 DEFAULT_GEAR = {
@@ -115,6 +126,11 @@ def make_character_dict_from_tuple(character):
         "SilverSigils":   100000,
         "showHigher":     True,
         "MasterClass":    default_master_for_base(class_name),
+        "inventoryGears": [
+            {"gearID": 1, "tier": 1, "runes": [1, 2, 3], "colors": [255, 0]},
+            {"gearID": 13, "tier": 2, "runes": [0, 0, 0], "colors": [0, 128]},
+            {"gearID": 30, "tier": 0, "runes": [0, 0, 0], "colors": [0, 0]}
+        ],
     }
 
     return char_dict
