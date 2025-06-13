@@ -2,22 +2,64 @@
 
 import os
 import json
+from BitUtils import BitBuffer
 
-CHAR_FILE = "characters.json"
+# ──────────────── Default full gear definitions ────────────────
+# Each sub-list is [GearID, Rune1, Rune2, Rune3, Color1, Color2]
+DEFAULT_GEAR = {
+    "paladin": [
+        [1, 0, 0, 0, 0, 0], #Shield
+        [13, 0, 0, 0, 0, 0], #Sword
+        [0, 0, 0, 0, 0, 0], #Gloves
+        [0, 0, 0, 0, 0, 0], #Hat
+        [0, 0, 0, 0, 0, 0], #Armor
+        [0, 0, 0, 0, 0, 0], #Boots
+    ],
+    "rogue": [
+        [39, 0, 0, 0,  0, 0], #Off Hand/Shield
+        [27, 0, 0, 0,  0, 0], #Sword
+        [0, 0, 0, 0,  0, 0], #Gloves
+        [0, 0, 0, 0,  0, 0], #Hat
+        [0, 0, 0, 0,  0, 0], #Armor
+        [0, 0, 0, 0,  0, 0], #Boots
+    ],
+    "mage": [
+        [53, 0, 0, 0, 0, 0], #Staff
+        [65, 0, 0, 0, 0, 0], #Focus/Shield
+        [0, 0, 0, 0, 0, 0], #Gloves
+        [ 0, 0, 0, 0, 0, 0], #Hat
+        [0, 0, 0, 0, 0, 0], #Robe
+        [0, 0, 0, 0, 0, 0], #Boots
+    ],
+}
 
-def load_characters():
-    if not os.path.exists(CHAR_FILE):
+CHAR_SAVE_DIR = "saves"
+
+def load_characters(user_id: str) -> list[dict]:
+    """Load the list of characters for a given user_id."""
+    path = os.path.join(CHAR_SAVE_DIR, f"{user_id}.json")
+    if not os.path.exists(path):
         return []
-    with open(CHAR_FILE, "r", encoding="utf-8") as f:
-        return json.load(f)
+    with open(path, "r", encoding="utf-8") as f:
+        data = json.load(f)
+    return data.get("characters", [])
 
-def save_characters(char_list):
-    with open(CHAR_FILE, "w", encoding="utf-8") as f:
-        json.dump(char_list, f, ensure_ascii=False, indent=2)
+def save_characters(user_id: str, char_list: list[dict]):
+    """Save the list of characters for a given user_id, preserving other fields."""
+    os.makedirs(CHAR_SAVE_DIR, exist_ok=True)
+    path = os.path.join(CHAR_SAVE_DIR, f"{user_id}.json")
+    # Load existing to preserve email
+    if os.path.exists(path):
+        with open(path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+    else:
+        data = {"email": None, "characters": []}
+    data["characters"] = char_list
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
 
 def default_master_for_base(base_cls: str) -> str:
     """Return the default “first” MasterClass name for a given base class."""
-    # these must match the client’s class_150 mappings:
     if base_cls == "Paladin":
         return "Sentinel"
     if base_cls == "Rogue":
@@ -27,38 +69,26 @@ def default_master_for_base(base_cls: str) -> str:
     return ""
 
 def make_character_dict_from_tuple(character):
-    """
-    character is a tuple of:
-      (name, class_name, level,
-       gender, head, hair, mouth, face,
-       hair_color, skin_color, shirt_color, pant_color,
-       equipped_gear)
-    """
     (name, class_name, level,
      gender, head, hair, mouth, face,
      hair_color, skin_color, shirt_color, pant_color,
      equipped_gear) = character
 
-    # build gear_list (either the provided tuple or defaults per class)
-    if isinstance(equipped_gear, (list, tuple)) and len(equipped_gear) == 6:
-        gear_list = list(equipped_gear)
+    cls = class_name.lower()
+
+    # If provided a full 6×6 structure, validate and use it:
+    if (isinstance(equipped_gear, (list, tuple))
+        and len(equipped_gear) == 6
+        and all(isinstance(slot, (list, tuple)) and len(slot) == 6
+                for slot in equipped_gear)):
+        gear_list = [list(slot) for slot in equipped_gear]
     else:
-        cls = class_name.lower()
-        if cls == "paladin":
-            gear_list = [902, 890, 912, 916, 909, 905]
-        elif cls == "rogue":
-            gear_list = [1172, 1171, 1175, 1173, 1174, 1176]
-        elif cls == "mage":
-            gear_list = [1165, 1166, 1169, 0, 1168, 1170]
-        else:
-            gear_list = [0] * 6
+        # Otherwise, pull from our per-class defaults
+        default = DEFAULT_GEAR.get(cls, [[0]*6]*6)
+        gear_list = [list(slot) for slot in default]
 
-    # Give every character a “MasterClass” field.  If there is no
-    # pre‐existing “MasterClass” in the tuple, default to the first
-    # tier (e.g. Sentinel for Paladin, Executioner for Rogue, Frostwarden for Mage).
-    default_master = default_master_for_base(class_name)
-
-    return {
+    # Assemble the character dict
+    char_dict = {
         "name":       name,
         "class":      class_name,
         "level":      level,
@@ -71,22 +101,27 @@ def make_character_dict_from_tuple(character):
         "skinColor":  skin_color,
         "shirtColor": shirt_color,
         "pantColor":  pant_color,
+
+        # Now each slot is [GearID, Rune1, Rune2, Rune3, Color1, Color2]
         "gearList":   gear_list,
 
         # ── new persistent fields ───────────────────────────────
-        "currGold":    0,
-        "currGems":    0,
-        "mCraftTalentData": 0,
-        "mammothIdols":0,
-        "extraField":  0,
-        "showHigher":  False,
-        "MasterClass": default_master
+        "xp":             1,
+        "gold":           100000,
+        "Gems":           100000,
+        "DragonOre":      100000,
+        "mammothIdols":   100000,
+        "DragonKeys":     100000,
+        "SilverSigils":   100000,
+        "showHigher":     True,
+        "MasterClass":    default_master_for_base(class_name),
     }
 
-def build_paperdoll_packet(character_dict):
-    from BitUtils import BitBuffer
-    buf = BitBuffer()
+    return char_dict
 
+def build_paperdoll_packet(character_dict):
+
+    buf = BitBuffer()
     buf.write_utf_string(character_dict["name"])
     buf.write_utf_string(character_dict["class"])
     buf.write_utf_string(character_dict["gender"])
@@ -99,18 +134,21 @@ def build_paperdoll_packet(character_dict):
     buf.write_bits(character_dict["shirtColor"], 24)
     buf.write_bits(character_dict["pantColor"], 24)
 
-    # The client expects exactly six 11‐bit gear IDs in a row.
-    for gear in character_dict.get("gearList", []):
-        buf.write_bits(gear, 11)
+    # Write exactly 6 gear slots, using only the GearID (slot[0])
+    for slot in character_dict.get("gearList", []):
+        gear_id = slot[0]
+        buf.write_bits(gear_id, 11)
 
     return buf.to_bytes()
 
 def build_login_character_list_bitpacked(characters):
-    from BitUtils import BitBuffer
+    """
+    Builds the 0x15 login-character-list packet.
+    """
     buf = BitBuffer()
-    user_id = 1
+    user_id   = 1       # you’ll overwrite this per-session
     max_chars = 8
-    char_count = len(characters)
+    char_count= len(characters)
 
     buf.write_method_4(user_id)
     buf.write_method_393(max_chars)
