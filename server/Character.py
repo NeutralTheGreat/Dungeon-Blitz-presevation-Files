@@ -3,7 +3,7 @@
 import os
 import json
 from BitUtils import BitBuffer
-
+from constants import inventory_gears
 
 #Hints Do not delete
 """
@@ -115,6 +115,8 @@ def make_character_dict_from_tuple(character):
         default = DEFAULT_GEAR.get(cls, [[0]*6]*6)
         gear_list = [list(slot) for slot in default]
 
+    starting_inventory = inventory_gears.get(cls, [])
+
     # Assemble the character dict
     char_dict = {
         "name":       name,
@@ -143,112 +145,7 @@ def make_character_dict_from_tuple(character):
         "SilverSigils":   100000,
         "showHigher":     True,
         "MasterClass":    default_master_for_base(class_name),
-        "inventoryGears": [
-            {
-                "gearID": 13,
-                "tier": 1,
-                "runes": [
-                    1,
-                    2,
-                    3
-                ],
-                "colors": [
-                    0,
-                    0
-                ]
-            },
-            {
-                "gearID": 1,
-                "tier": 1,
-                "runes": [
-                    1,
-                    2,
-                    3
-                ],
-                "colors": [
-                    0,
-                    0
-                ]
-            },
-        {
-          "gearID": 1177,
-          "tier": 1,
-          "runes": [
-            1,
-            2,
-            3
-          ],
-          "colors": [
-            0,
-            0
-          ]
-        },
-        {
-          "gearID": 1181,
-          "tier": 1,
-          "runes": [
-            1,
-            2,
-            3
-          ],
-          "colors": [
-            0,
-            0
-          ]
-        },
-        {
-          "gearID": 1182,
-          "tier": 1,
-          "runes": [
-            1,
-            2,
-            3
-          ],
-          "colors": [
-            0,
-            0
-          ]
-        },
-        {
-          "gearID": 1180,
-          "tier": 1,
-          "runes": [
-            1,
-            2,
-            3
-          ],
-          "colors": [
-            0,
-            0
-          ]
-        },
-        {
-          "gearID": 1178,
-          "tier": 1,
-          "runes": [
-            1,
-            2,
-            3
-          ],
-          "colors": [
-            0,
-            0
-          ]
-        },
-        {
-          "gearID": 1179,
-          "tier": 1,
-          "runes": [
-            1,
-            2,
-            3
-          ],
-          "colors": [
-            0,
-            0
-          ]
-        }
-      ],
+        "inventoryGears":  starting_inventory,
         "mounts": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
             11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
             21, 22, 23, 24, 25, 26, 27, 28, 29, 30,
