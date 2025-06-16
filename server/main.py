@@ -161,14 +161,24 @@ def handle_client(session: ClientSession):
                     if c["name"] == name:
                         tk = session.issue_token(c)
                         pkt_out = build_enter_world_packet(
-                            transfer_token=tk, old_level_id=0, old_swf="", has_old_coord=False,
-                            old_x=0, old_y=0, old_flashvars="", user_id=1,
+                            transfer_token=tk,
+                            old_level_id=0,
+                            old_swf="",
+                            has_old_coord=False,
+                            old_x=0,
+                            old_y=0,
+                            old_flashvars="",
+                            user_id=1,
                             new_level_swf="LevelsHome.swf/a_Level_Home",
-                            new_map_lvl=1, new_base_lvl=1,
-                            new_internal="CraftTown", new_moment="", new_alter="",
+                            new_map_lvl=1,
+                            new_base_lvl=1,
+                            new_internal="CraftTown",
+                            new_moment="",
+                            new_alter="",
                             new_is_inst=False
                         )
                         conn.sendall(pkt_out)
+
                         print("Transfer begin:", name, "tk=",tk)
                         break
 
@@ -204,6 +214,92 @@ def handle_client(session: ClientSession):
                 door_id = BitReader(payload).read_method_4()
                 print(f"[{session.addr}] OPEN_DOOR packet received, door_id={door_id}")
             # … other packet types …
+
+            elif pkt == 0x08:
+              # Heartbeat / time‐sync from client
+              # The client sends back the timestamp we gave it in 0x10,
+              # so just echo it verbatim.
+                        conn.sendall(data)
+
+            elif pkt == 0x41:
+              # SWF load‐progress notification (1-byte 0–100)
+              # We don’t need to do anything—just swallow it.
+              pass
+
+            elif pkt == 0xA2:
+              # Flash ExternalInterface / JS bridge handshake
+              # Also safe to ignore.
+              pass
+
+            elif pkt == 0x07:
+                # movement: just broadcast it back to the client (or to other clients)
+                # so the game’s own client‐side code will animate the player.
+                #conn.sendall(data)
+                # optionally log the raw hex if you still want to see it:
+                #print(f"[{session.addr}] MOVE raw: {data.hex()}")
+                pass
+
+            elif pkt == 0x7C:
+                # Client crash/error report
+                # Packet format: [0x7C][length:2B][UTF-8 error message]
+                _, length = struct.unpack_from(">HH", data, 0)
+                payload = data[4:4 + length]
+                try:
+                    msg = payload.decode("utf-8", errors="replace")
+                except Exception:
+                    msg = repr(payload)
+                print(f"[{session.addr}] CLIENT ERROR (0x7C): {msg}")
+
+            elif pkt == 0x09:
+                # Melee‐attack *request* (0x09) from client
+                #   payload = [ts:4B] + optional [attackIndex:1B]
+                _, length = struct.unpack_from(">HH", data, 0)
+                payload = data[4:4 + length]
+                if len(payload) == 4:
+                    # implicit index 0
+                    ts = struct.unpack_from(">I", payload, 0)[0]
+                    idx = 0
+                elif len(payload) >= 5:
+                    ts = struct.unpack_from(">I", payload, 0)[0]
+                    idx = payload[4]
+                else:
+                    print(f"[{session.addr}] ATTACK_REQ malformed (<4B): {payload.hex()}")
+                    continue
+                #print(f"[{session.addr}] ATTACK_REQ (0x09)  ts={ts}  idx={idx}")
+
+            elif pkt == 0x0E:
+                # Ranged‐attack / projectile fire from client
+                # Format: [0x0E][length:2B][ts:4B][…projectile data…]
+                _, length = struct.unpack_from(">HH", data, 0)
+                payload = data[4:4+length]
+                if len(payload) >= 4:
+                    ts = struct.unpack_from(">I", payload, 0)[0]
+                    extra = payload[4:]
+                    #print(f"[{session.addr}] RANGED_REQ (0x0E)  ts={ts}  data={extra.hex()}")
+                else:
+                    print(f"[{session.addr}] RANGED_REQ malformed: {payload.hex()}")
+
+            elif pkt == 0x0A:
+                # Melee‐attack *response* / hit packet
+                # Format: [0x0A][length:2B][ts:4B][…rest varies…]
+                _, length = struct.unpack_from(">HH", data, 0)
+                payload = data[4:4+length]
+                if len(payload) >= 4:
+                    ts = struct.unpack_from(">I", payload, 0)[0]
+                    rest = payload[4:]
+                    #print(f"[{session.addr}] ATTACK_RES (0x0A)  ts={ts}  data={rest.hex()}")
+                else:
+                    print(f"[{session.addr}] ATTACK_RES malformed: {payload.hex()}")
+
+
+
+
+
+            else:
+                # Log any packet we haven't explicitly handled
+                print(f"[{session.addr}] Unhandled packet type: 0x{pkt:02X}, raw payload = {data.hex()}")
+
+
 
     except Exception as e:
         print("Session error:", e)

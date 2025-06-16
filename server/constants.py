@@ -26,7 +26,26 @@ def master_bits_for_slot(slot_index: int) -> int:
         bits = 3
     return bits
 
+ENTITY_CONST_244    = 2
+Entity_const_172 = 3
 
+CLASS_NAME_TO_ID = {
+    "Paladin": 0,
+    "Rogue":   1,
+    "Mage":    2,
+}
+stringPairs1 = [("Reputation","Friendly"), ("DailyQuest","Complete")]  # etc.
+stringTriples = [(101, "Title1","Desc1"), (102,"Title2","Desc2")]
+
+class_9_const_28 = 5
+class_1_const_254 = 7
+class_64_const_499 = 2
+class_64_const_218 = 5
+class_111_const_432 = 9
+
+
+
+class_10_const_665 = 4
 ENT_MAX_SLOTS = 7
 GS_BITS = 2             # Game.const_813
 MAX_CHAR_LEVEL_BITS = 6 # Entity.MAX_CHAR_LEVEL_BITS
@@ -53,6 +72,10 @@ class_16_const_167 = 6
 
 class class_118:
     const_43 = 27
+
+class class_64:
+    const_101 = 16
+
 
 class GearType:
     GEARTYPE_BITSTOSEND = 11   # (for example—use whatever the AS3 says)
@@ -110,8 +133,3 @@ NEWS_EVENTS = {
         1387602000,
     ],
 }
-
-
-
-
-World_ID =  {}

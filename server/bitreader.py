@@ -16,6 +16,17 @@ class BitReader:
             self.bit_index += 1
         return result
 
+
+    def read_signed_bits(self, count: int) -> int:
+            """
+            Read `count` bits and return as a signed integer (two's complement).
+            """
+            val = self.read_bits(count)
+            sign_bit = 1 << (count - 1)
+            # if sign_bit is set, flip and subtract to get negative
+
+            return (val ^ sign_bit) - sign_bit
+
     def align_to_byte(self):
         remainder = self.bit_index % 8
         if remainder != 0:
@@ -42,3 +53,4 @@ class BitReader:
 
     def read_method_6(self, bit_count: int) -> int:
         return self.read_bits(bit_count)
+
