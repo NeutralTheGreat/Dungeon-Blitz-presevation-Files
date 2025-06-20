@@ -1,5 +1,6 @@
 ﻿#!/usr/bin/env python3
-import os, signal, socket, struct, hashlib, subprocess, sys, time, secrets, threading
+import random
+import socket, struct, hashlib, sys, time, secrets, threading
 from accounts import get_or_create_user_id, load_accounts
 from Character import (
     make_character_dict_from_tuple,
@@ -8,10 +9,17 @@ from Character import (
     load_characters,
     save_characters
 )
+from level_config import DOOR_MAP, LEVEL_CONFIG
+from BitUtils import BitBuffer
+from constants import EntType, DyeType
 from WorldEnter import build_enter_world_packet, Player_Data_Packet
 from bitreader import BitReader
 
-HOST, PORT = "127.0.0.1", 1
+from PolicyServer import start_policy_server
+from static_server import start_static_server
+
+HOST = "127.0.0.1"
+PORTS = [8080]
 pending_world = {}  # token → character dict
 
 def build_handshake_response(sid):
@@ -32,6 +40,12 @@ class ClientSession:
         self.char_list = []
         self.active_tokens = set()
         self.authenticated = False
+        self.current_char     = None
+        self.current_internal = ""
+        self.current_swf      = ""
+        self.current_map_lvl  = 0
+        self.player_x         = 0
+        self.player_y         = 0
     def issue_token(self, char):
         tk = new_transfer_token()
         pending_world[tk] = char
@@ -155,12 +169,27 @@ def handle_client(session: ClientSession):
                     conn.sendall(struct.pack(">HH",0x1A,0))
 
             elif pkt == 0x16:
-                # enter world
                 name = BitReader(data[4:]).read_string()
                 for c in session.char_list:
                     if c["name"] == name:
                         tk = session.issue_token(c)
-                        pkt_out = build_enter_world_packet(
+
+
+                        level_swf = "LevelsHome.swf/a_Level_Home"
+                        level_internal = "CraftTown"
+                        is_inst = False
+
+                        pending_world[tk] = {
+                            "char": c,
+                            "new_internal": level_internal,
+                            "new_swf": level_swf,
+                            "new_map_lvl": 1,
+                            "new_base_lvl": 1,
+                            "is_inst": is_inst,
+                            "spawn_x": 0,
+                            "spawn_y": 0,
+                        }
+                        conn.sendall(build_enter_world_packet(
                             transfer_token=tk,
                             old_level_id=0,
                             old_swf="",
@@ -169,51 +198,93 @@ def handle_client(session: ClientSession):
                             old_y=0,
                             old_flashvars="",
                             user_id=1,
-                            new_level_swf="LevelsHome.swf/a_Level_Home",
+                            new_level_swf=level_swf,
                             new_map_lvl=1,
                             new_base_lvl=1,
-                            new_internal="CraftTown",
+                            new_internal=level_internal,
                             new_moment="",
                             new_alter="",
-                            new_is_inst=False
-                        )
-                        conn.sendall(pkt_out)
-
-                        print("Transfer begin:", name, "tk=",tk)
+                            new_is_inst=is_inst
+                        ))
+                        session.current_char = c
+                        session.current_internal = level_internal
+                        session.current_swf = level_swf
+                        session.current_map_lvl = 1
+                        session.player_x = 0
+                        session.player_y = 0
+                        print("Transfer begin:", name, "tk=", tk)
                         break
 
             elif pkt == 0x1f:
-                # Client asks for “minimal welcome” with a 32-bit raw token
                 if len(data) < 8:
                     print("Malformed 0x1F (too short)")
                     continue
                 token = int.from_bytes(data[4:8], 'big')
-                print("Pending tokens:", list(pending_world.keys()))
-                print("Client asked for token:", token)
-                char = pending_world.pop(token, None)
-                # FALLBACK: if no exact match, but exactly one pending entry left, use it
-                if char is None and len(pending_world) == 1:
-                    fallback_token, fallback_char = next(iter(pending_world.items()))
-                    print(f"Falling back to sole pending token {fallback_token}")
-                    char = fallback_char
-                    token = fallback_token
-                    pending_world.pop(fallback_token, None)
+                info = pending_world.pop(token, None)
+                # fallback if exactly one left
+                if info is None and len(pending_world) == 1:
+                    ft, fi = next(iter(pending_world.items()))
+                    pending_world.pop(ft, None)
+                    token, info = ft, fi
                 session.active_tokens.discard(token)
-                if char:
-                    welcome = Player_Data_Packet(char, transfer_token=token)
-                    conn.sendall(welcome)
-                    print("Welcome:", char["name"], "(used token", token, ")")
+                if info:
+                    c = info["char"]
+                    ni = info["new_internal"]
+                    sp, ml, bl = info["new_swf"], info["new_map_lvl"], info["new_base_lvl"]
+                    inst = info.get("is_inst", False)
+                    sx, sy = info.get("spawn_x", 0), info.get("spawn_y", 0)
+                    session.current_char = c
+                    session.current_internal = ni
+                    session.current_swf = sp
+                    session.current_map_lvl = ml
+                    session.player_x = sx
+                    session.player_y = sy
+                    conn.sendall(Player_Data_Packet(c, transfer_token=token))
+                    print("Welcome:", c["name"], "(used token", token, ")")
                 else:
                     print("Unknown token", token)
-
-
+                """
             elif pkt == 0x2D:
-                # everything after the 4-byte header is the payload
-                payload = data[4:]
-                # read a 32-bit transfer_token / doorID
-                door_id = BitReader(payload).read_method_4()
-                print(f"[{session.addr}] OPEN_DOOR packet received, door_id={door_id}")
-            # … other packet types …
+                door_id = BitReader(data[4:]).read_method_4()
+                key = (session.current_internal, door_id)
+                next_i = DOOR_MAP.get(key)
+                if not next_i:
+                    print(f"No DOOR_MAP entry for {key!r}; ignoring")
+                    return
+                swf, ml, bl, inst = LEVEL_CONFIG[next_i]
+                token = session.issue_token(session.current_char)
+                pending_world[token] = {
+                    "char": session.current_char,
+                    "new_internal": next_i,
+                    "new_swf": swf,
+                    "new_map_lvl": ml,
+                    "new_base_lvl": bl,
+                    "is_inst": inst,
+                    "spawn_x": session.player_x,
+                    "spawn_y": session.player_y,
+                }
+                conn.sendall(build_enter_world_packet(
+                    transfer_token=token,
+                    old_level_id=session.current_map_lvl,
+                    old_swf=session.current_swf,
+                    has_old_coord=True,
+                    old_x=session.player_x,
+                    old_y=session.player_y,
+                    old_flashvars=session.current_internal,
+                    user_id=1,
+                    new_level_swf=swf,
+                    new_map_lvl=ml,
+                    new_base_lvl=bl,
+                    new_internal=next_i,
+                    new_moment="",
+                    new_alter="",
+                    new_is_inst=inst
+                ))
+                session.current_internal = next_i
+                session.current_swf = swf
+                session.current_map_lvl = ml
+                print(f"SENT ENTER_WORLD to {next_i}")
+                """
 
             elif pkt == 0x08:
               # Heartbeat / time‐sync from client
@@ -293,7 +364,118 @@ def handle_client(session: ClientSession):
 
 
 
+            elif pkt == 0x31:
+                # strip off the 4-byte header, give us the raw payload
+                payload = data[4:]
+                br = BitReader(payload)
+                # 1) match the client’s `method_9` varint for entity ID:
+                entity_id = br.read_method_4()
+                # 2) read the 3-bit “padded bit-count header”:
+                header = br.read_bits(3)
+                bit_count = (header + 1) * 2
+                # 3) read exactly bit_count bits for the slot:
+                slot = br.read_bits(bit_count)
+                # 4) finally read the 11-bit gear ID:
+                gear_id = br.read_bits(11)
+                print(f"Equip request: entity={entity_id}, slot={slot}, gear={gear_id}")
+                # …now update your character and send out a paperdoll refresh…
+                continue
 
+
+            elif pkt == 0xBA:
+                payload = data[4:]
+                br = BitReader(payload)
+                # 1) clientEntID
+                entity_id = br.read_method_4()
+                # 2) per‐slot dye pairs
+                dyes_by_slot = {}
+                for slot in range(1, EntType.MAX_SLOTS):
+                    has_pair = br.read_bits(1)
+                    if has_pair:
+                        d1 = br.read_bits(DyeType.BITS)
+                        d2 = br.read_bits(DyeType.BITS)
+                        dyes_by_slot[slot] = (d1, d2)
+                # 3) “apply permanently?” preview flag
+                preview_only = bool(br.read_bits(1))
+                # 4) two extra dyes
+                primary_dye = None
+                if br.read_bits(1):
+                    primary_dye = br.read_bits(DyeType.BITS)
+                secondary_dye = None
+                if br.read_bits(1):
+                    secondary_dye = br.read_bits(DyeType.BITS)
+                print(f"Dyes: ent={entity_id}, slots={dyes_by_slot}, "
+                      f"preview={preview_only}, primary={primary_dye}, secondary={secondary_dye}")
+                # …apply & broadcast…
+                continue
+            elif pkt == 0xBD:
+                payload = data[4:]
+                if len(payload) < 1:
+                    print(f"Malformed 0xBD packet: too short, payload={payload.hex()}")
+                    continue
+                if payload.hex() == '2640':
+                    print(f"0xBD packet: possible hotbar clear or default action, payload={payload.hex()} ")
+                    continue
+                br = BitReader(payload)
+                max_slots = 4
+                slot = 0
+                ability_id = 0
+                for i in range(max_slots):
+                    changed = br.read_bits(1)
+                    if changed:
+                        slot = i + 1
+                        ability_id = br.read_bits(7)
+                        break
+                if slot == 0:
+                    print(f"0xBD packet: no slots changed, payload={payload.hex()}")
+                    continue
+                remaining_bits = br.remaining_bits()
+                entity_id = br.read_bits(remaining_bits) if remaining_bits > 0 else 0
+                print(f"Ability equip: slot={slot}, ability_id={ability_id}, entity_id={entity_id} ")
+                continue
+
+            #TODO... Sigils reward are missing and the commented out rewards currently crash the game
+            elif pkt == 0x107:
+                CAT_BITS = 3  # class_18.var_1846
+                ID_BITS = 6  # class_18.var_1776
+                PACK_ID = 1  # Lockbox01's RewardpackID
+                # Full 0–19 mapping from your XML:
+                reward_map = {
+                    0: ("MountLockbox01L01", True),  # Mount
+                    1: ("Lockbox01L01", True),  # Pet
+                    #2: ("GenericBrown", True),  # Egg
+                    #3: ("CommonBrown", True),  # Egg
+                    #4: ("OrdinaryBrown", True),  # Egg
+                    #5: ("PlainBrown", True),  # Egg
+                    6: ("RarePetFood", True),  # Consumable
+                    7: ("PetFood", True),  # Consumable
+                    8: ("Lockbox01Gear", True),  # Gear (will crash if invalid)
+                    9: ("TripleFind", True),  # Charm
+                    10: ("DoubleFind1", True),  # Charm
+                    11: ("DoubleFind2", True),  # Charm
+                    12: ("DoubleFind3", True),  # Charm
+                    13: ("MajorLegendaryCatalyst", True),  # Consumable
+                    14: ("MajorRareCatalyst", True),  # Consumable
+                    15: ("MinorRareCatalyst", True),  # Consumable
+                    16: (None, False),  # Gold (3 000 000)
+                    17: (None, False),  # Gold (1 500 000)
+                    18: (None, False),  # Gold (750 000)
+                    19: ("DyePack01Legendary", True),  # Dye‐pack
+                }
+                # Pick a random index 0–19
+                idx, (name, needs_str) = random.choice(list(reward_map.items()))
+                # Build the packet
+                bb = BitBuffer()
+                bb.write_method_6(PACK_ID, CAT_BITS)
+                bb.write_method_6(idx, ID_BITS)
+                bb.write_bits(1 if needs_str else 0, 1)
+                if needs_str:
+                    bb.write_utf_string(name)
+                payload = bb.to_bytes()
+                packet = struct.pack(">HH", 0x108, len(payload)) + payload
+                session.conn.sendall(packet)
+                print(f"Lockbox reward: idx={idx}, name={name}, needs_str={needs_str}")
+                continue
 
             else:
                 # Log any packet we haven't explicitly handled
@@ -307,18 +489,55 @@ def handle_client(session: ClientSession):
         print("Disconnect:", addr)
         session.cleanup()
 
-def start_server():
+def start_server(port):
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.bind((HOST, PORT))
+    try:
+        s.bind((HOST, port))
+    except PermissionError:
+        print(f"Error: Cannot bind to port {port}. Ports below 1024 require root privileges.")
+        return None
+    except OSError as e:
+        print(f"Error: Cannot bind to port {port}. {e}")
+        return None
     s.listen(5)
-    print("Server listening on", HOST, PORT)
+    print(f"Server listening on {HOST}:{port}")
+    return s
+
+def accept_connections(s, port):
     while True:
-        conn, addr = s.accept()
-        session = ClientSession(conn, addr)
-        threading.Thread(target=handle_client, args=(session,), daemon=True).start()
+        try:
+            conn, addr = s.accept()
+            session = ClientSession(conn, addr)
+            threading.Thread(target=handle_client, args=(session,), daemon=True).start()
+        except Exception as e:
+            print(f"Error accepting connections on port {port}: {e}")
+
+def start_servers():
+    servers = []
+    for port in PORTS:
+        server = start_server(port)
+        if server:
+            servers.append((server, port))
+            # Start a thread to accept connections for this server
+            threading.Thread(target=accept_connections, args=(server, port), daemon=True).start()
+    return servers
 
 if __name__ == "__main__":
-    if "--run-server" in sys.argv:
-        start_server()
-    else:
-        start_server()
+    # 1) Flash policy server on loopback only:
+    start_policy_server(host="127.0.0.1", port=843)
+
+    # 2) Static HTTP server, serving your "p" folder on localhost:80
+    start_static_server(host="127.0.0.1", port=80, directory="content/localhost")
+
+    # 3) Start TCP game servers on both ports
+    servers = start_servers()
+    print("running on : http://localhost/index.html")
+    # Keep the main thread alive
+    try:
+        while True:
+            time.sleep(1)
+    except KeyboardInterrupt:
+        print("Shutting down servers...")
+        for server, port in servers:
+            server.close()
+        sys.exit(0)

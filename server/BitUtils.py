@@ -1,5 +1,3 @@
-# BitUtils.py
-
 class BitBuffer:
     def __init__(self):
         self.bits = []
@@ -42,6 +40,12 @@ class BitBuffer:
     def write_bits(self, value, nbits):
         for i in reversed(range(nbits)):
             self._append_bits((value >> i) & 1, 1)
+
+    def write_uint48(self, value: int) -> None:
+        """Write a 48-bit unsigned integer."""
+        if value < 0 or value > 0xFFFFFFFFFFFF:
+            raise ValueError(f"Value {value} out of range for 48-bit integer")
+        self._append_bits(value, 48)
 
     def to_bytes(self):
         while len(self.bits) % 8 != 0:

@@ -16,6 +16,12 @@ class BitReader:
             self.bit_index += 1
         return result
 
+    def remaining_bits(self) -> int:
+        """
+        Return the number of bits remaining in the data buffer.
+        """
+        total_bits = len(self.data) * 8
+        return max(0, total_bits - self.bit_index)
 
     def read_signed_bits(self, count: int) -> int:
             """

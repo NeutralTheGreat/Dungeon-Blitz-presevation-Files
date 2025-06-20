@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<DevSettings>
+
+  <!-- Must-have flags to force the file to load and bypass the “cannot load swf” guard -->
+  <DEVFLAG_ADDXMLDEVSETTINGS/>
+  <DEVFLAG_MASTER_CLIENT/>
+
+  <!-- Client / server -->
+  <DEVFLAG_STANDALONE_CLIENT/>
+  <DEVFLAG_SERVERLOCAL/>
+
+  <!-- Visualization -->
+  <DEVFLAG_SHOWENTITYCOLLISION/>
+  <DEVFLAG_SHOWENTITYGHOST/>
+  <DEVFLAG_SHOWCUES/>
+  <DEVFLAG_SHOWPOWERRANGE/>
+  <DEVFLAG_SHOWBEHAVIOR/>
+  <DEVFLAG_SHOWRESOURCEMONITOR/>
+  <DEVFLAG_SHOWWORLDCOLLISION/>
+  <DEVFLAG_SHOWPERFORMANCE/>
+
+  <!-- Gameplay tweaks -->
+  <DEVFLAG_PERFORMANCETEST/>
+  <DEVFLAG_SPAWN_MONSTERS/>
+  <DEVFLAG_DUMBMONSTERS/>
+  <DEVFLAG_OUTLINE_REMOTE_ENTS/>
+  <DEVFLAG_NO_GRAPHICS/>
+  <DEVFLAG_NO_PLAYERENT/>
+  <DEVFLAG_DEVSPAWNENABLED/>
+
+  <!-- Creation/debug UIs -->
+  <DEVFLAG_SHOWCHARACTERCREATE/>
+
+  <!-- optional standalone-map parameters -->
+  <STANDALONEMAPNAME value="LevelsHome.swf/a_Level_Home"/>
+  <STANDALONEMAPINTERNALNAME value="CraftTown"/>
+  <STANDALONEMAPLEVEL value="1"/>
+  <STANDALONEBASELEVEL value="1"/>
+  <STANDALONEISINSTANCED value="true"/>
+  <STANDALONEPLAYERENTTYPE value="DevPaladin"/>
+  <STANDALONEMOMENTPARAMS value=""/>
+  <STANDALONEALTERPARAMS value=""/>
+
+</DevSettings>
