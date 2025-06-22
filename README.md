@@ -16,7 +16,9 @@
 >
  2 - [Python](https://www.python.org/)
 >
- 3 - a Flash-compatible browser 
+ 3 - a Flash-compatible browser you have a few options down below 
+>
+### 4 - after installing all the Requirements simply run the main.py for the server to start then open your flash compatible browser and navigate to http://localhost/index.html"
 >
 >To play Dungeon Blitz you'll need the *Adobe Flash Player* and a *browser with Flash support*:
 >
