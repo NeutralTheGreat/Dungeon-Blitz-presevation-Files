@@ -12,9 +12,9 @@
 >
  2 - [Python](https://www.python.org/)
 >
- 3 - a flash combatible browser 
+ 3 - a Flash-compatible browser 
 >
->To play Dungeon Bliz you'll need the *Adobe Flash Player* and a *browser with Flash support*:
+>To play Dungeon Blitz you'll need the *Adobe Flash Player* and a *browser with Flash support*:
 >
 >:flashlight: **Adobe Flash Player**
 >
@@ -53,7 +53,3 @@ Dungeon-Blitz-presevation-Files/
 This project is for **archival** and **educational purposes**. All assets belong to their original creators. We do not monetize, alter, or distribute copyrighted material.
 
 If you're the rights holder and want this removed, open an issue.
-
-### 🤝 Contributing
-
-Have fixes or improvements? PRs are welcome. Check `docs/CONTRIBUTING.md` for more info (coming soon)
