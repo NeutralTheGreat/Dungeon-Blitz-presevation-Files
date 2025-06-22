@@ -60,3 +60,22 @@ class BitReader:
     def read_method_6(self, bit_count: int) -> int:
         return self.read_bits(bit_count)
 
+
+    def read_method_9(self) -> int:
+        # 1) Read the 4-bit unary length prefix
+        prefix = self.read_bits(4)
+        # length in bits = 2*(prefix + 1)
+        n_bits = (prefix + 1) * 2
+
+        # 2) Read the unsigned integer payload
+        raw = self.read_bits(n_bits)
+        return raw
+
+    def read_int24(self) -> int:
+        # 1) sign
+        sign = self.read_bits(1)
+        # 2) magnitude
+        mag  = self.read_method_9()
+        return -mag if sign else mag
+
+

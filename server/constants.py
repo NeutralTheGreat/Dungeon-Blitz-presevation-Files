@@ -1,63 +1,46 @@
 # constants.py
 import time
-GAME_CONST_209 = 4   # number of bits used for the master-class ID
 
-# ─── “Master-class talent tree” constants ───
 CLASS_118_CONST_43 = 27
 CLASS_118_CONST_529 = [5,2,3,5,5,3,2,3,2,5,2,3,5,5,3,2,3,2,5,2,3,5,5,3,2,3,2]
 CLASS_118_CONST_127 = 6
-
-def master_bits_for_slot(slot_index: int) -> int:
-    """
-    Exactly the same logic as class_118.method_277:
-      raw_max = CLASS_118_CONST_529[slot_index]
-      if raw_max <= 2: bits = 1
-      if raw_max <= 4: bits = 2
-      if raw_max <= 5: bits = 3
-    """
-    raw_max = CLASS_118_CONST_529[slot_index]
-    bits = 0
-    if raw_max <= 2:
-        bits = 1
-    if raw_max <= 4:
-        bits = 2
-    if raw_max <= 5:
-        bits = 3
-    return bits
-
+const_228 = 4
+GAME_CONST_209 = 4
 ENTITY_CONST_244    = 2
 Entity_const_172 = 3
+class_9_const_28 = 5
+class_1_const_254 = 7
+class_64_const_499 = 2
+class_64_const_218 = 5
+class_111_const_432 = 9
+class_10_const_665 = 4
+ENT_MAX_SLOTS = 7
+GS_BITS = 2
+MAX_CHAR_LEVEL_BITS = 6
+Game_const_209     = 4
+Game_const_646     = 4
+EntType_MAX_SLOTS = 7
+class_21_const_763 = 250
+class_10_const_83  = 7
+class_66_const_409 = 6
+class_16_const_167 = 6
+quest_val = None
+
+class class_119:
+    const_228 = const_228
 
 CLASS_NAME_TO_ID = {
     "Paladin": 0,
     "Rogue":   1,
     "Mage":    2,
 }
-stringPairs1 = [("Reputation","Friendly"), ("DailyQuest","Complete")]  # etc.
-stringTriples = [(101, "Title1","Desc1"), (102,"Title2","Desc2")]
 
-class_9_const_28 = 5
-class_1_const_254 = 7
-class_64_const_499 = 2
-class_64_const_218 = 5
-class_111_const_432 = 9
-
-
-
-class_10_const_665 = 4
-ENT_MAX_SLOTS = 7
-GS_BITS = 2             # Game.const_813
-MAX_CHAR_LEVEL_BITS = 6 # Entity.MAX_CHAR_LEVEL_BITS
-
-# (1) Bit-width for master-class ID
-Game_const_209     = 4
-
-# (2) Bit-width for “alert state”
-Game_const_646     = 4
-
-EntType_MAX_SLOTS = 7
-
-
+class class_111 :
+    const_286 = 1
+    const_509 = 0
+    const_432 = 9
+    const_1101 = 511
+    const_264 = 2
 
 class LockboxType:
     ID_BITS = 8
@@ -72,9 +55,16 @@ class Mission:
     const_72 = 2
     const_58 = 1
 
+class class_118:
+    const_43 = 27
 
-const_228 = 4
+class class_64:
+    const_101 = 16
 
+class GearType:
+    GEARTYPE_BITSTOSEND = 11
+    const_348          = 3
+    const_176          = 2
 
 class MissionDef:
     def __init__(self, var_1775: bool, var_908: int, var_134: bool):
@@ -94,32 +84,6 @@ var_238 = [
     MissionDef(var_1775=False, var_908=5,  var_134=True ),  # mission ID 3
     # …and so on for all mission IDs…
 ]
-
-# (3) Maximum dye index (so we write exactly that many 1-bit flags)
-class_21_const_763 = 250
-
-# (4) Bit-width for ability IDs/ranks
-class_10_const_83  = 7
-
-# (5) Bit-width for master-class tower data
-class_66_const_409 = 6
-
-# (6) Bit-width for pet-ID in egg/pet loops
-class_16_const_167 = 6
-
-class class_118:
-    const_43 = 27
-
-class class_64:
-    const_101 = 16
-
-
-class GearType:
-    GEARTYPE_BITSTOSEND = 11   # (for example—use whatever the AS3 says)
-    const_348          = 3   # (for example)
-    const_176          = 2   # (for example)
-
-quest_val = None      # or char.get("dungeonProgress", None)
 
 _MASTERCLASS_TO_ID = {
     "frostwarden":   7,
@@ -171,7 +135,6 @@ NEWS_EVENTS = {
     }
 }
 
-# ──────────────── Starting inventory by class ────────────────
 inventory_gears = {
     "paladin": [
         {

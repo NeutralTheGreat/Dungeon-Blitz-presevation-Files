@@ -10,20 +10,18 @@ from constants import (
     class_10_const_83,
     GearType,
     class_21_const_763,
-    class_66_const_409,
     class_10_const_665,
     CLASS_NAME_TO_ID,
     ENTITY_CONST_244,
     class_64,
     class_9_const_28,
-class_1_const_254,
-class_64_const_499,
-class_111_const_432,
-var_238,
-const_228
+    class_1_const_254,
+    class_64_const_499,
+    class_111_const_432,
+    var_238,
+    const_228,
+    class_64_const_218
 )
-
-
 def Player_Data_Packet(char: dict,
                       event_index: int = 2,
                       transfer_token: int = 1,
@@ -283,148 +281,53 @@ def Player_Data_Packet(char: dict,
     for slot_id in active_slots[:3]:
         buf.write_method_6(slot_id, class_10_const_83)
 
-    buf.write_method_4(0)  # craft talent
-    buf.write_method_6(0, class_66_const_409)  # tower A
-    buf.write_method_6(0, class_66_const_409)  # tower B
-    buf.write_method_6(0, class_66_const_409)  # tower C
+    craft_talent_points = char.get("craftTalentPoints", [0, 0, 0, 0, 0])  # List of 5 values, each 0-15
+    packed_value = 0
+    for i in range(5):
+        packed_value |= (craft_talent_points[i] & 0xF) << (i * 4)
+    buf.write_method_4(packed_value)
+    tower_points = char.get("towerPoints", [0, 0, 0])  # List of 3 values, each 0-63
+    for tp in tower_points:
+        buf.write_method_6(tp, 6)  # class_66_const_409 = 6
 
-    # Magic Forge
+    # Magic Forge Section
     mf = char.get("magicForge", {})
-    buf._append_bits(1 if mf.get("stats") else 0, 1)
-    if not mf.get("stats"):
-        pass
-    else:
-        for val in mf["stats"]:
-            buf._append_bits(val, class_9_const_28)
-        if not mf.get("hasSession", False):
-            buf._append_bits(0, 1)
-        else:
+    has_stats = bool(mf.get("stats", []))
+    buf._append_bits(1 if has_stats else 0, 1)
+    if has_stats:
+        stats = mf.get("stats", [0] * 7)
+        for val in stats[:7]:
+            buf.write_method_6(val, class_9_const_28)
+
+    has_session = mf.get("hasSession", False)
+    buf._append_bits(1 if has_session else 0, 1)
+    if has_session:
+        primary = mf.get("primary", 0)
+        buf.write_method_6(primary, class_1_const_254)
+        status = mf.get("status", 0)
+        if status == 1:
             buf._append_bits(1, 1)
-            buf._append_bits(mf.get("primary", 0), class_1_const_254)
-            status = mf.get("status", "idle")
-            if status == "inProgress":
-                buf._append_bits(1, 1)
-                buf.write_method_4(mf.get("endTime", 0))
-            else:
-                buf._append_bits(0, 1)
-                mod_id = mf.get("modSlotID", 0)
-                buf._append_bits(mod_id, class_64_const_499)
-                if mod_id:
-                    buf._append_bits(mf.get("modTier", 0), class_64_const_499)
-                    buf._append_bits(mf.get("usedList", 0), class_111_const_432)
-            buf._append_bits(1 if mf.get("flagA", False) else 0, 1)
-            buf._append_bits(1 if mf.get("flagB", False) else 0, 1)
-    """
-    buf._append_bits(0, 1)  # no ability research
-    buf._append_bits(0, 1)  # no building info
-    buf._append_bits(0, 1)  # no tower research
-    buf._append_bits(0, 1)  # no egg/pet data
-    buf.write_method_6(0, class_16_const_167)  # pet count = 0
-    buf._append_bits(0, 1)
-    buf._append_bits(0, 1)
-    buf._append_bits(0, 1)
-    buf._append_bits(0, 1)
-   
-    # ────────────── NEWS ──────────────
-    buf.write_method_6(0, 2)
-    # Select event: prefer char["active_news_event"] if set, else use event_index
-    news_event_id = char.get("active_news_event", event_index)
-    # Validate news_event_id (0–5, where 0 means no event)
-    news_event_id = news_event_id if news_event_id in NEWS_EVENTS else 0
+            endtime = mf.get("endtime", 0)
+            buf.write_method_4(endtime)
+        else:
+            buf._append_bits(0, 1)
+            var_8 = mf.get("var_8", 0)
+            buf.write_method_6(var_8, class_64_const_499)
+            if var_8 != 0:
+                secondary = mf.get("secondary", 0)
+                buf.write_method_6(secondary, class_64_const_218)
+                usedlist = mf.get("usedlist", 0)
+                buf.write_method_6(usedlist, class_111_const_432)
+        var_2675 = min(mf.get("var_2675", 0), 65535)
+        var_2316 = min(mf.get("var_2316", 0), 65535)
+        buf.write_method_91(var_2675)
+        buf.write_method_91(var_2316)
 
-    if news_event_id in NEWS_EVENTS:
-        event = NEWS_EVENTS[news_event_id]
-        buf.write_utf_string(event["icon"])       # _loc66_
-        buf.write_utf_string(event["url"])        # _loc67_
-        buf.write_utf_string(event["title"])      # _loc68_
-        buf.write_utf_string(event["description"]) # _loc69_
-        buf.write_method_4(event["end_time"])    # _loc70_
-    else:
-        # No active event
-        buf.write_utf_string("")  # _loc66_
-        buf.write_utf_string("")  # _loc67_
-        buf.write_utf_string("")  # _loc68_
-        buf.write_utf_string("")  # _loc69_
-        buf.write_method_4(0)    # _loc70_
+    var_2434 = mf.get("var_2434", False)
+    buf._append_bits(1 if var_2434 else 0, 1)
 
-    # ───────── (X) Specialization (_loc33_) ─────────
-    spec_id = _MASTERCLASS_TO_ID.get(char.get("masterClass", ""), 0)
-    buf._append_bits(spec_id, GAME_CONST_209)
-    has_spec = spec_id != 0
-    buf._append_bits(1 if has_spec else 0, 1)
-    if has_spec:
-        for i in range(CLASS_118_CONST_43):
-            has_pt = char.get("specPoints", {}).get(i, False)
-            buf._append_bits(1 if has_pt else 0, 1)
-            if has_pt:
-                buf._append_bits(char["rankIncrements"][i], CLASS_118_CONST_127)
-                buf._append_bits(char["currentRanks"][i], master_bits_for_slot(i))
-
-    # ───────── (Y) Equipped gear slots (_loc150_) ─────────
-    for slot in range(1, ENT_MAX_SLOTS):
-        gid = char.get("gearList", [[0] * 6] * ENT_MAX_SLOTS)[slot - 1][0]
-        buf._append_bits(1 if gid else 0, 1)
-        if gid:
-            buf._append_bits(gid, GearType.GEARTYPE_BITSTOSEND)
-
-    # ───────── (Z) Mount, pet, buff & potion (_loc37_, _loc39_, _loc40_, _loc42_, _loc43_) ─────────
-    buf.write_method_4(char.get("equippedMountID", 0))
-    buf.write_method_4(char.get("activePetID", 0))
-    buf.write_method_4(char.get("activePetIteration", 0))
-    buf.write_method_4(char.get("currentBuffTypeID", 0))
-    buf.write_method_4(char.get("queuedPotionTypeID", 0))
-
-    # ───────── (A) Friends update (method_933) ─────────
-    friends = char.get("friends", [])
-    buf._append_bits(1 if friends else 0, 1)
-    if friends:
-        buf.write_utf_string(char.get("friendHeader", ""))
-        buf._append_bits(char.get("friendStateVersion", 0), Entity_const_172)
-        buf.write_method_4(len(friends))
-        for f in friends:
-            buf.write_utf_string(f["name"])
-            cls_id = CLASS_NAME_TO_ID.get(f.get("className", ""), 0)
-            buf._append_bits(cls_id, ENTITY_CONST_244)
-            buf._append_bits(f.get("level", 1), MAX_CHAR_LEVEL_BITS)
-            buf._append_bits(f.get("stateVersion", 0), Entity_const_172)
-
-    # Level data (_loc46_)
-    levels = char.get("knownLevels", [{"name": "NewbieRoad", "swf": "LevelsNR.swf/a_Level_NewbieRoad"}])
-    buf.write_method_4(len(levels))
-    for lvl in levels:
-        buf.write_utf_string(lvl["name"])
-        buf.write_utf_string(lvl["swf"])
-
-    # Room data (_loc47_)
-    rooms = char.get("knownRooms", [{"id": 0, "name": "Room_Main", "type": "Main"}])
-    buf.write_method_4(len(rooms))
-    for room in rooms:
-        buf.write_method_4(room["id"])
-        buf.write_utf_string(room["name"])
-        buf.write_utf_string(room["type"])
-
-    # ────────────── (48) Collision geometry ──────────────
-    geom = char.get("geometry", [])
-    buf.write_method_4(len(geom))          # segmentCount
-    for seg in geom:
-        buf.write_method_4(seg["x1"])
-        buf.write_method_4(seg["y1"])
-        buf.write_method_4(seg["x2"])
-        buf.write_method_4(seg["y2"])
-        buf.write_method_4(seg["type"])
-        buf.write_method_4(seg["flags"])
-        tags = seg.get("tags", [])
-        buf.write_method_4(len(tags))
-        for tag in tags:
-            buf.write_utf_string(tag)
-        buf._append_bits(seg["roomId"], 4)
-        buf.write_method_4(seg.get("extra1", 0))
-        buf.write_method_4(seg.get("extra2", 0))
-
-     """
     payload = buf.to_bytes()
     return struct.pack(">HH", 0x10, len(payload)) + payload
-
 
 def build_enter_world_packet(
         transfer_token: int,
@@ -433,8 +336,8 @@ def build_enter_world_packet(
         has_old_coord: bool,
         old_x: int,
         old_y: int,
-        old_flashvars: str,
-        user_id: int,
+        host: str,
+        port: int,
         new_level_swf: str,
         new_map_lvl: int,
         new_base_lvl: int,
@@ -444,40 +347,30 @@ def build_enter_world_packet(
         new_is_inst: bool
 ) -> bytes:
     buf = BitBuffer()
-
     # 1) transferToken + oldLevelId
     buf.write_method_4(transfer_token)
     buf.write_method_4(old_level_id)
-
     # 2) old SWF path
     buf.write_utf_string(old_swf)
-
     # 3) old coords?
     buf._append_bits(1 if has_old_coord else 0, 1)
     if has_old_coord:
         buf.write_method_4(old_x)
         buf.write_method_4(old_y)
-
     # 4) old flashVars
-    buf.write_utf_string(old_flashvars)
-
+    buf.write_utf_string(host)
     # 5) userID
-    buf.write_method_4(user_id)
-
+    buf.write_method_4(port)
     # 6) new SWF path
     buf.write_utf_string(new_level_swf)
-
     # 7) map/base levels (6 bits each)
     buf.write_method_6(new_map_lvl, 6)
     buf.write_method_6(new_base_lvl, 6)
-
     # 8) new strings
     buf.write_utf_string(new_internal)
     buf.write_utf_string(new_moment)
     buf.write_utf_string(new_alter)
-
     # 9) new isInstanced
     buf._append_bits(1 if new_is_inst else 0, 1)
-
     payload = buf.to_bytes()
     return struct.pack(">HH", 0x21, len(payload)) + payload

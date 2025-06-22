@@ -1,5 +1,6 @@
 ﻿#!/usr/bin/env python3
 import random
+import json
 import socket, struct, hashlib, sys, time, secrets, threading
 from accounts import get_or_create_user_id, load_accounts
 from Character import (
@@ -9,6 +10,7 @@ from Character import (
     load_characters,
     save_characters
 )
+from Commands import handle_hotbar_packet
 from level_config import DOOR_MAP, LEVEL_CONFIG
 from BitUtils import BitBuffer
 from constants import EntType, DyeType
@@ -19,7 +21,7 @@ from PolicyServer import start_policy_server
 from static_server import start_static_server
 
 HOST = "127.0.0.1"
-PORTS = [8080]
+PORTS = [8080]# add port 7498 for Developer mode
 pending_world = {}  # token → character dict
 
 def build_handshake_response(sid):
@@ -35,17 +37,19 @@ def new_transfer_token():
 
 class ClientSession:
     def __init__(self, conn, addr):
-        self.conn = conn; self.addr = addr
+        self.conn = conn
+        self.addr = addr
+
         self.user_id = None
         self.char_list = []
         self.active_tokens = set()
         self.authenticated = False
-        self.current_char     = None
-        self.current_internal = ""
-        self.current_swf      = ""
-        self.current_map_lvl  = 0
-        self.player_x         = 0
-        self.player_y         = 0
+
+        self.player_data = {}
+        self.current_character = None   # ← initialize here
+        self.current_level = None
+        self.world_loaded = False    # ← add this
+
     def issue_token(self, char):
         tk = new_transfer_token()
         pending_world[tk] = char
@@ -53,8 +57,6 @@ class ClientSession:
         return tk
 
     def cleanup(self):
-        # Don’t pop pending_world here!
-        # Just close the socket.
         try:
             self.conn.close()
         except:
@@ -89,9 +91,13 @@ def handle_client(session: ClientSession):
               email = br.read_string().strip().lower()
               session.user_id = get_or_create_user_id(email)
               session.char_list = load_characters(session.user_id)
+              try:
+                  with open(f"saves/{session.user_id}.json", "r", encoding="utf-8") as f:
+                      session.player_data = json.load(f)
+              except FileNotFoundError:
+                  session.player_data = {}
               session.authenticated = True  # ← grant auth
               conn.sendall(build_login_character_list_bitpacked(session.char_list))
-
 
             elif pkt == 0x14:
                 # Existing-account login (0x14)
@@ -111,12 +117,16 @@ def handle_client(session: ClientSession):
                 user_id = accounts.get(email)
                 if not user_id:
                     print(f"[{session.addr}] Login failed—no account for {email}")
-                    # Send error popup (0x1B)
                     err = "Account not found".encode("utf-8")
                     err_pl = struct.pack(">H", len(err)) + err
                     conn.sendall(struct.pack(">HH", 0x1B, len(err_pl)) + err_pl)
                     continue
                 session.user_id = user_id
+                try:
+                    with open(f"saves/{session.user_id}.json", "r", encoding="utf-8") as f:
+                        session.player_data = json.load(f)
+                except FileNotFoundError:
+                    session.player_data = {}
                 session.char_list = load_characters(user_id)
                 session.authenticated = True  # ← grant auth
                 conn.sendall(build_login_character_list_bitpacked(session.char_list))
@@ -149,7 +159,6 @@ def handle_client(session: ClientSession):
                 new_char = make_character_dict_from_tuple(tup)
                 session.char_list.append(new_char)
                 save_characters(session.user_id, session.char_list)
-                # send updated list + paperdoll + popup
                 conn.sendall(build_login_character_list_bitpacked(session.char_list))
                 pd = build_paperdoll_packet(new_char)
                 conn.sendall(struct.pack(">HH",0x1A,len(pd))+pd)
@@ -158,7 +167,6 @@ def handle_client(session: ClientSession):
                 conn.sendall(pl)
 
             elif pkt == 0x19:
-                # paperdoll refresh
                 name = BitReader(data[4:]).read_string()
                 for c in session.char_list:
                     if c["name"] == name:
@@ -172,46 +180,30 @@ def handle_client(session: ClientSession):
                 name = BitReader(data[4:]).read_string()
                 for c in session.char_list:
                     if c["name"] == name:
+                        # Remember which character was selected
+                        session.current_character = name
+                        session.current_level = "NewbieRoad"
+                        # **Inject the user_id so char carries it forward**
+                        c["user_id"] = session.user_id
                         tk = session.issue_token(c)
-
-
-                        level_swf = "LevelsHome.swf/a_Level_Home"
-                        level_internal = "CraftTown"
-                        is_inst = False
-
-                        pending_world[tk] = {
-                            "char": c,
-                            "new_internal": level_internal,
-                            "new_swf": level_swf,
-                            "new_map_lvl": 1,
-                            "new_base_lvl": 1,
-                            "is_inst": is_inst,
-                            "spawn_x": 0,
-                            "spawn_y": 0,
-                        }
-                        conn.sendall(build_enter_world_packet(
+                        pkt_out = build_enter_world_packet(
                             transfer_token=tk,
                             old_level_id=0,
                             old_swf="",
                             has_old_coord=False,
                             old_x=0,
                             old_y=0,
-                            old_flashvars="",
-                            user_id=1,
-                            new_level_swf=level_swf,
+                            host="127.0.0.1",
+                            port=8080,
+                            new_level_swf="LevelsHome.swf/a_Level_Home",
                             new_map_lvl=1,
                             new_base_lvl=1,
-                            new_internal=level_internal,
+                            new_internal="CraftTown",
                             new_moment="",
                             new_alter="",
-                            new_is_inst=is_inst
-                        ))
-                        session.current_char = c
-                        session.current_internal = level_internal
-                        session.current_swf = level_swf
-                        session.current_map_lvl = 1
-                        session.player_x = 0
-                        session.player_y = 0
+                            new_is_inst=False
+                        )
+                        conn.sendall(pkt_out)
                         print("Transfer begin:", name, "tk=", tk)
                         break
 
@@ -220,95 +212,128 @@ def handle_client(session: ClientSession):
                     print("Malformed 0x1F (too short)")
                     continue
                 token = int.from_bytes(data[4:8], 'big')
-                info = pending_world.pop(token, None)
-                # fallback if exactly one left
-                if info is None and len(pending_world) == 1:
-                    ft, fi = next(iter(pending_world.items()))
-                    pending_world.pop(ft, None)
-                    token, info = ft, fi
+                print("Pending tokens:", list(pending_world.keys()))
+                print("Client asked for token:", token)
+                char = pending_world.pop(token, None)
+                if char is None and len(pending_world) == 1:
+                    fallback_token, fallback_char = next(iter(pending_world.items()))
+                    print(f"Falling back to sole pending token {fallback_token}")
+                    char = fallback_char
+                    token = fallback_token
+                    pending_world.pop(fallback_token, None)
                 session.active_tokens.discard(token)
-                if info:
-                    c = info["char"]
-                    ni = info["new_internal"]
-                    sp, ml, bl = info["new_swf"], info["new_map_lvl"], info["new_base_lvl"]
-                    inst = info.get("is_inst", False)
-                    sx, sy = info.get("spawn_x", 0), info.get("spawn_y", 0)
-                    session.current_char = c
-                    session.current_internal = ni
-                    session.current_swf = sp
-                    session.current_map_lvl = ml
-                    session.player_x = sx
-                    session.player_y = sy
-                    conn.sendall(Player_Data_Packet(c, transfer_token=token))
-                    print("Welcome:", c["name"], "(used token", token, ")")
-                else:
-                    print("Unknown token", token)
-                """
+                if char:
+                    # Now this returns the right user_id
+                    session.user_id = char["user_id"]
+                    # Load their save
+                    with open(f"saves/{session.user_id}.json", "r") as f:
+                        session.player_data = json.load(f)
+                    # Also set current_character if you haven’t already
+                    session.current_character = char["name"]
+                     # The server just sent them into `char["knownLevels"][0]`, so:
+                    first_level = char.get("knownLevels", [{}])[0].get("name", "NewbieRoad")
+                    session.current_level = first_level
+                    welcome = Player_Data_Packet(char, transfer_token=token)
+                    conn.sendall(welcome)
+                    print("Welcome:", char["name"], "(used token", token, ")")
+
             elif pkt == 0x2D:
                 door_id = BitReader(data[4:]).read_method_4()
-                key = (session.current_internal, door_id)
-                next_i = DOOR_MAP.get(key)
-                if not next_i:
-                    print(f"No DOOR_MAP entry for {key!r}; ignoring")
-                    return
-                swf, ml, bl, inst = LEVEL_CONFIG[next_i]
-                token = session.issue_token(session.current_char)
-                pending_world[token] = {
-                    "char": session.current_char,
-                    "new_internal": next_i,
-                    "new_swf": swf,
-                    "new_map_lvl": ml,
-                    "new_base_lvl": bl,
-                    "is_inst": inst,
-                    "spawn_x": session.player_x,
-                    "spawn_y": session.player_y,
-                }
-                conn.sendall(build_enter_world_packet(
-                    transfer_token=token,
-                    old_level_id=session.current_map_lvl,
-                    old_swf=session.current_swf,
+                print(f"[{session.addr}] OPEN_DOOR packet received, door_id={door_id}")
+                # Only send Enter‑World once:
+                if session.world_loaded:
+                    print("World already loaded; skipping world‑change on door click.")
+                    continue
+                current = getattr(session, "current_level", None)
+                if current is None:
+                    print(f"No current_level; cannot open door {door_id}")
+                    continue
+                key = (current, door_id)
+                if key not in DOOR_MAP:
+                    print(f"Unknown door key: {key}")
+                    continue
+                next_level = DOOR_MAP[key]
+                swf_path, map_lvl, base_lvl, is_inst = LEVEL_CONFIG[next_level]
+                tk = session.issue_token(session.player_data)
+                enter_pkt = build_enter_world_packet(
+                    transfer_token=tk,
+                    old_level_id=LEVEL_CONFIG[current][1],
+                    old_swf=LEVEL_CONFIG[current][0],
                     has_old_coord=True,
-                    old_x=session.player_x,
-                    old_y=session.player_y,
-                    old_flashvars=session.current_internal,
-                    user_id=1,
-                    new_level_swf=swf,
-                    new_map_lvl=ml,
-                    new_base_lvl=bl,
-                    new_internal=next_i,
-                    new_moment="",
-                    new_alter="",
-                    new_is_inst=inst
-                ))
-                session.current_internal = next_i
-                session.current_swf = swf
-                session.current_map_lvl = ml
-                print(f"SENT ENTER_WORLD to {next_i}")
-                """
+                    old_x=session.player_data.get("x", 0),
+                    old_y=session.player_data.get("y", 0),
+                    host=HOST, port=8080,
+                    new_level_swf=swf_path,
+                    new_map_lvl=map_lvl,
+                    new_base_lvl=base_lvl,
+                    new_internal=next_level,
+                    new_moment="", new_alter="",
+                    new_is_inst=is_inst
+                )
+                conn.sendall(enter_pkt)
+                print(f"Sent level‑change: {current} → {next_level} (token={tk})")
+                session.current_level = next_level
+                session.world_loaded = True  # ← mark that we've done it
 
-            elif pkt == 0x08:
-              # Heartbeat / time‐sync from client
-              # The client sends back the timestamp we gave it in 0x10,
-              # so just echo it verbatim.
-                        conn.sendall(data)
+            elif pkt == 0xBD:
+                handle_hotbar_packet(session, data)
 
-            elif pkt == 0x41:
-              # SWF load‐progress notification (1-byte 0–100)
-              # We don’t need to do anything—just swallow it.
-              pass
+            elif pkt == 0xCC: #no idea what this does
+                pass
 
             elif pkt == 0xA2:
-              # Flash ExternalInterface / JS bridge handshake
-              # Also safe to ignore.
-              pass
+                #print(f"[{session.addr}] Received packet 0xA2 (2-byte zero payload).")
+                # Optional: parse it
+                flag = int.from_bytes(data[4:6], 'big')
+                #print(f"  Parsed flag value = {flag}")
+                # Do nothing for now
 
-            elif pkt == 0x07:
-                # movement: just broadcast it back to the client (or to other clients)
-                # so the game’s own client‐side code will animate the player.
-                #conn.sendall(data)
-                # optionally log the raw hex if you still want to see it:
-                #print(f"[{session.addr}] MOVE raw: {data.hex()}")
-                pass
+            elif pkt == 0x08:
+                print(f"[{session.addr}] Packet 0x08: sync/startup payload ({len(data[4:])} bytes): {data[4:].hex()}")
+
+            elif pkt == 0x41:
+                val = int.from_bytes(data[4:6], 'big')
+                print(f"[{session.addr}] Packet 0x41: Sync ID or state = {val}")
+
+            elif pkt == 0x107:
+                CAT_BITS = 3  # class_18.var_1846
+                ID_BITS = 6  # class_18.var_1776
+                PACK_ID = 1  # Lockbox01's RewardpackID
+                # Full 0–19 mapping from your XML:
+                reward_map = {
+                    0: ("MountLockbox01L01", True),  # Mount
+                    1: ("Lockbox01L01", True),  # Pet
+                    #2: ("GenericBrown", True),  # Egg
+                    #3: ("CommonBrown", True),  # Egg
+                    #4: ("OrdinaryBrown", True),  # Egg
+                    #5: ("PlainBrown", True),  # Egg
+                    6: ("RarePetFood", True),  # Consumable
+                    7: ("PetFood", True),  # Consumable
+                    #8: ("Lockbox01Gear", True),  # Gear (will crash if invalid)
+                    9: ("TripleFind", True),  # Charm
+                    10: ("DoubleFind1", True),  # Charm
+                    11: ("DoubleFind2", True),  # Charm
+                    12: ("DoubleFind3", True),  # Charm
+                    13: ("MajorLegendaryCatalyst", True),  # Consumable
+                    14: ("MajorRareCatalyst", True),  # Consumable
+                    15: ("MinorRareCatalyst", True),  # Consumable
+                    16: (None, False),  # Gold (3 000 000)
+                    17: (None, False),  # Gold (1 500 000)
+                    18: (None, False),  # Gold (750 000)
+                    19: ("DyePack01Legendary", True),  # Dye‐pack
+                }
+                idx, (name, needs_str) = random.choice(list(reward_map.items()))
+                bb = BitBuffer()
+                bb.write_method_6(PACK_ID, CAT_BITS)
+                bb.write_method_6(idx, ID_BITS)
+                bb.write_bits(1 if needs_str else 0, 1)
+                if needs_str:
+                    bb.write_utf_string(name)
+                payload = bb.to_bytes()
+                packet = struct.pack(">HH", 0x108, len(payload)) + payload
+                session.conn.sendall(packet)
+                print(f"Lockbox reward: idx={idx}, name={name}, needs_str={needs_str}")
+                continue
 
             elif pkt == 0x7C:
                 # Client crash/error report
@@ -320,67 +345,6 @@ def handle_client(session: ClientSession):
                 except Exception:
                     msg = repr(payload)
                 print(f"[{session.addr}] CLIENT ERROR (0x7C): {msg}")
-
-            elif pkt == 0x09:
-                # Melee‐attack *request* (0x09) from client
-                #   payload = [ts:4B] + optional [attackIndex:1B]
-                _, length = struct.unpack_from(">HH", data, 0)
-                payload = data[4:4 + length]
-                if len(payload) == 4:
-                    # implicit index 0
-                    ts = struct.unpack_from(">I", payload, 0)[0]
-                    idx = 0
-                elif len(payload) >= 5:
-                    ts = struct.unpack_from(">I", payload, 0)[0]
-                    idx = payload[4]
-                else:
-                    print(f"[{session.addr}] ATTACK_REQ malformed (<4B): {payload.hex()}")
-                    continue
-                #print(f"[{session.addr}] ATTACK_REQ (0x09)  ts={ts}  idx={idx}")
-
-            elif pkt == 0x0E:
-                # Ranged‐attack / projectile fire from client
-                # Format: [0x0E][length:2B][ts:4B][…projectile data…]
-                _, length = struct.unpack_from(">HH", data, 0)
-                payload = data[4:4+length]
-                if len(payload) >= 4:
-                    ts = struct.unpack_from(">I", payload, 0)[0]
-                    extra = payload[4:]
-                    #print(f"[{session.addr}] RANGED_REQ (0x0E)  ts={ts}  data={extra.hex()}")
-                else:
-                    print(f"[{session.addr}] RANGED_REQ malformed: {payload.hex()}")
-
-            elif pkt == 0x0A:
-                # Melee‐attack *response* / hit packet
-                # Format: [0x0A][length:2B][ts:4B][…rest varies…]
-                _, length = struct.unpack_from(">HH", data, 0)
-                payload = data[4:4+length]
-                if len(payload) >= 4:
-                    ts = struct.unpack_from(">I", payload, 0)[0]
-                    rest = payload[4:]
-                    #print(f"[{session.addr}] ATTACK_RES (0x0A)  ts={ts}  data={rest.hex()}")
-                else:
-                    print(f"[{session.addr}] ATTACK_RES malformed: {payload.hex()}")
-
-
-
-            elif pkt == 0x31:
-                # strip off the 4-byte header, give us the raw payload
-                payload = data[4:]
-                br = BitReader(payload)
-                # 1) match the client’s `method_9` varint for entity ID:
-                entity_id = br.read_method_4()
-                # 2) read the 3-bit “padded bit-count header”:
-                header = br.read_bits(3)
-                bit_count = (header + 1) * 2
-                # 3) read exactly bit_count bits for the slot:
-                slot = br.read_bits(bit_count)
-                # 4) finally read the 11-bit gear ID:
-                gear_id = br.read_bits(11)
-                print(f"Equip request: entity={entity_id}, slot={slot}, gear={gear_id}")
-                # …now update your character and send out a paperdoll refresh…
-                continue
-
 
             elif pkt == 0xBA:
                 payload = data[4:]
@@ -408,80 +372,9 @@ def handle_client(session: ClientSession):
                       f"preview={preview_only}, primary={primary_dye}, secondary={secondary_dye}")
                 # …apply & broadcast…
                 continue
-            elif pkt == 0xBD:
-                payload = data[4:]
-                if len(payload) < 1:
-                    print(f"Malformed 0xBD packet: too short, payload={payload.hex()}")
-                    continue
-                if payload.hex() == '2640':
-                    print(f"0xBD packet: possible hotbar clear or default action, payload={payload.hex()} ")
-                    continue
-                br = BitReader(payload)
-                max_slots = 4
-                slot = 0
-                ability_id = 0
-                for i in range(max_slots):
-                    changed = br.read_bits(1)
-                    if changed:
-                        slot = i + 1
-                        ability_id = br.read_bits(7)
-                        break
-                if slot == 0:
-                    print(f"0xBD packet: no slots changed, payload={payload.hex()}")
-                    continue
-                remaining_bits = br.remaining_bits()
-                entity_id = br.read_bits(remaining_bits) if remaining_bits > 0 else 0
-                print(f"Ability equip: slot={slot}, ability_id={ability_id}, entity_id={entity_id} ")
-                continue
-
-            #TODO... Sigils reward are missing and the commented out rewards currently crash the game
-            elif pkt == 0x107:
-                CAT_BITS = 3  # class_18.var_1846
-                ID_BITS = 6  # class_18.var_1776
-                PACK_ID = 1  # Lockbox01's RewardpackID
-                # Full 0–19 mapping from your XML:
-                reward_map = {
-                    0: ("MountLockbox01L01", True),  # Mount
-                    1: ("Lockbox01L01", True),  # Pet
-                    #2: ("GenericBrown", True),  # Egg
-                    #3: ("CommonBrown", True),  # Egg
-                    #4: ("OrdinaryBrown", True),  # Egg
-                    #5: ("PlainBrown", True),  # Egg
-                    6: ("RarePetFood", True),  # Consumable
-                    7: ("PetFood", True),  # Consumable
-                    8: ("Lockbox01Gear", True),  # Gear (will crash if invalid)
-                    9: ("TripleFind", True),  # Charm
-                    10: ("DoubleFind1", True),  # Charm
-                    11: ("DoubleFind2", True),  # Charm
-                    12: ("DoubleFind3", True),  # Charm
-                    13: ("MajorLegendaryCatalyst", True),  # Consumable
-                    14: ("MajorRareCatalyst", True),  # Consumable
-                    15: ("MinorRareCatalyst", True),  # Consumable
-                    16: (None, False),  # Gold (3 000 000)
-                    17: (None, False),  # Gold (1 500 000)
-                    18: (None, False),  # Gold (750 000)
-                    19: ("DyePack01Legendary", True),  # Dye‐pack
-                }
-                # Pick a random index 0–19
-                idx, (name, needs_str) = random.choice(list(reward_map.items()))
-                # Build the packet
-                bb = BitBuffer()
-                bb.write_method_6(PACK_ID, CAT_BITS)
-                bb.write_method_6(idx, ID_BITS)
-                bb.write_bits(1 if needs_str else 0, 1)
-                if needs_str:
-                    bb.write_utf_string(name)
-                payload = bb.to_bytes()
-                packet = struct.pack(">HH", 0x108, len(payload)) + payload
-                session.conn.sendall(packet)
-                print(f"Lockbox reward: idx={idx}, name={name}, needs_str={needs_str}")
-                continue
 
             else:
-                # Log any packet we haven't explicitly handled
                 print(f"[{session.addr}] Unhandled packet type: 0x{pkt:02X}, raw payload = {data.hex()}")
-
-
 
     except Exception as e:
         print("Session error:", e)
@@ -518,21 +411,15 @@ def start_servers():
         server = start_server(port)
         if server:
             servers.append((server, port))
-            # Start a thread to accept connections for this server
             threading.Thread(target=accept_connections, args=(server, port), daemon=True).start()
     return servers
 
 if __name__ == "__main__":
-    # 1) Flash policy server on loopback only:
     start_policy_server(host="127.0.0.1", port=843)
-
-    # 2) Static HTTP server, serving your "p" folder on localhost:80
     start_static_server(host="127.0.0.1", port=80, directory="content/localhost")
-
-    # 3) Start TCP game servers on both ports
     servers = start_servers()
     print("running on : http://localhost/index.html")
-    # Keep the main thread alive
+    #print("running on : http://localhost/DeveloperMode.html")
     try:
         while True:
             time.sleep(1)

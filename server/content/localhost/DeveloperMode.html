@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Play Dungeon Blitz</title>
+  <!-- SWFObject library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/swfobject/2.2/swfobject.min.js"></script>
+  <style>
+    body {
+     margin: 0;
+     background: #000;
+     height: 100vh;
+     width: 100vw;
+     overflow: hidden;
+    }
+    #flash-container {
+      width: 100vw;
+      height: 100vh;
+       }
+  </style>
+</head>
+<body>
+  <div id="flash-container">
+    <p>Flash Player required. <a href="https://www.adobe.com/support/flashplayer/debug_downloads.html">Get Flash Player</a>.</p>
+  </div>
+
+    <script>
+    // Embed via SWFObject
+    var swfUrl = "p/cbv/DungeonBlitzDevOn.swf?fv=cbq&gv=cbv";
+    var flashvars = { fv: "cbq", gv: "cbv" };
+    var params = { allowScriptAccess: "always", allowFullScreen: "true" };
+    var attrs = { id: "DungeonBlitz", name: "DungeonBlitz" };
+
+    swfobject.embedSWF(
+    swfUrl,
+    "flash-container",
+    "100%", "100%",
+    "10.0.0",
+    null,
+    flashvars,
+    params,
+    attrs
+    );
+
+    // Fallback: if no plugin, inject an <object> tag directly
+    window.addEventListener('load', function() {
+      if (!swfobject.hasFlashPlayerVersion('10.0.0')) {
+        var obj = document.createElement('object');
+        obj.width = '1500'; obj.height = '950';
+        obj.data = swfUrl;
+        obj.type = 'application/x-shockwave-flash';
+        obj.id = 'DungeonBlitz';
+        obj.name = 'DungeonBlitz';
+        var fvParam = document.createElement('param');
+        fvParam.name = 'flashvars'; fvParam.value = 'fv=cbq&gv=cbv';
+        var asParam = document.createElement('param'); asParam.name = 'allowScriptAccess'; asParam.value = 'always';
+        var fsParam = document.createElement('param'); fsParam.name = 'allowFullScreen'; fsParam.value = 'true';
+        obj.appendChild(fvParam);
+        obj.appendChild(asParam);
+        obj.appendChild(fsParam);
+        var container = document.getElementById('flash-container');
+        container.innerHTML = '';
+        container.appendChild(obj);
+      }
+    });
+  </script>
+</body>
+</html>

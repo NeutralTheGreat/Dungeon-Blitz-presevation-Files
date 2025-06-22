@@ -1,3 +1,4 @@
+#BitUtils.py
 class BitBuffer:
     def __init__(self):
         self.bits = []
@@ -57,3 +58,35 @@ class BitBuffer:
                 byte = (byte << 1) | bit
             out.append(byte)
         return bytes(out)
+
+    def write_method_9(self, val: int):
+        # 1) compute how many bits we need
+        bitlen = val.bit_length()
+        # round up to next even number
+        if bitlen % 2:
+            bitlen += 1
+        # unary prefix = (bitlen / 2) − 1
+        prefix = (bitlen // 2) - 1
+
+        # 2) write 4-bit prefix
+        self._append_bits(prefix, 4)
+        # 3) write the value in exactly bitlen bits
+        self._append_bits(val, bitlen)
+
+
+    def write_int24(self, val: int):
+        # 1) sign‐bit
+        self._append_bits(1 if val < 0 else 0, 1)
+        # 2) absolute using method_9
+        self.write_method_9(abs(val))
+
+    def write_method_91(self, val: int):
+        # Determine the smallest n where val < 2^(2*(n+1))
+        n = 0
+        while (1 << (2 * (n + 1))) <= val:
+            n += 1
+        # Write n (3 bits)
+        self.write_method_6(n, 3)
+        # Write val in (2*(n+1)) bits
+        bitlen = 2 * (n + 1)
+        self.write_method_6(val, bitlen)
