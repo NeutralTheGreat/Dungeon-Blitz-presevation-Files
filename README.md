@@ -1,6 +1,10 @@
 # 🏰 Dungeon Blitz - Flash Reboot
+### This project exists to prevent Dungeon Blitz from being lost to time, preserving its gameplay and server functionality as it originally existed.
 >
-> Play Dungeon Blitz on your own computer — Flash is dead, but the game lives on.
+>
+>
+>
+>
 >
 ## ⚡ What is this?
 >
