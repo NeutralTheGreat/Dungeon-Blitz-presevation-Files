@@ -21,7 +21,7 @@ from PolicyServer import start_policy_server
 from static_server import start_static_server
 
 HOST = "127.0.0.1"
-PORTS = [8080]# add port 7498 for Developer mode
+PORTS = [8080]#7498 for Developer mode
 pending_world = {}  # token → character dict
 
 def build_handshake_response(sid):
@@ -144,7 +144,7 @@ def handle_client(session: ClientSession):
                 tup = (
                     br.read_string(),  # name
                     br.read_string(),  # class
-                    1,                 # level
+                    50,                 # level
                     br.read_string(),  # gender
                     br.read_string(),  # head
                     br.read_string(),  # hair
@@ -182,7 +182,7 @@ def handle_client(session: ClientSession):
                     if c["name"] == name:
                         # Remember which character was selected
                         session.current_character = name
-                        session.current_level = "NewbieRoad"
+                        session.current_level = "CraftTown"
                         # **Inject the user_id so char carries it forward**
                         c["user_id"] = session.user_id
                         tk = session.issue_token(c)

@@ -20,10 +20,19 @@ from constants import (
     class_111_const_432,
     var_238,
     const_228,
-    class_64_const_218
+    class_64_const_218,
+class_9_const_129,
+class_66_const_571,
+class_16_const_167,
+class_7_const_19,
+NEWS_EVENTS,
+GAME_CONST_209,
+CLASS_118_CONST_127,
+SLOT_BIT_WIDTHS,
+NUM_TALENT_SLOTS
 )
 def Player_Data_Packet(char: dict,
-                      event_index: int = 2,
+                      event_index: int = 1,
                       transfer_token: int = 1,
                       scaling_factor: int = 0,
                       bonus_levels: int = 0) -> bytes:
@@ -325,6 +334,93 @@ def Player_Data_Packet(char: dict,
 
     var_2434 = mf.get("var_2434", False)
     buf._append_bits(1 if var_2434 else 0, 1)
+
+   # Skill Research
+    research = char.get("research")
+    if research:
+        buf._append_bits(1, 1)  # the method_11() flag
+        buf.write_method_6(research["abilityID"], class_10_const_83)
+        buf.write_method_4(research["finishTime"])
+    else:
+        buf._append_bits(0, 1)
+
+    # (7) buildingResearch
+    bld = char.get("buildingResearch")
+    if bld:
+        buf._append_bits(1, 1)
+        buf.write_method_6(bld["slotID"], class_9_const_129)
+        buf.write_method_4(bld["finishTime"])
+    else:
+        buf._append_bits(0, 1)
+
+    # (8) towerResearch
+    tower = char.get("towerResearch")
+    if tower:
+        buf._append_bits(1, 1)
+        buf.write_method_6(tower["masterClassID"], class_66_const_571)
+        buf.write_method_4(tower["finishTime"])
+    else:
+        buf._append_bits(0, 1)
+
+    # 1) Optional “SetEggData” (egg type + reset timer)
+    egg_data = char.get("eggData")
+    if egg_data:
+        buf._append_bits(1, 1)
+        buf.write_method_6(egg_data["typeID"], class_16_const_167)
+        buf.write_method_4(egg_data["resetEndTime"])
+    else:
+        buf._append_bits(0, 1)
+
+    # 2) Egg-ID list
+    eggPetIDs = char.get("eggPetIDs", [])
+    buf.write_method_6(len(eggPetIDs), class_16_const_167)
+    for eid in eggPetIDs:
+        buf.write_method_6(eid, class_16_const_167)
+
+    # 3) Active-egg count
+    activeEggCount = char.get("activeEggCount", 0)
+    buf.write_method_4(activeEggCount)
+
+   #TODO... _loc119_: null
+    # 4) Resting-pet loops (four distinct if-method_11() blocks)
+    rest_loops = char.get("restingPets", [])[:4]
+
+    for i in range(4):
+        if i < len(rest_loops):
+            r = rest_loops[i]
+            buf._append_bits(1, 1)
+            buf.write_method_6(r["typeID"], class_7_const_19)
+            buf.write_method_4(r["level"])
+            if i == 3 and "extraValue" in r:
+                buf.write_method_4(r["extraValue"])
+        else:
+            buf._append_bits(0, 1)
+
+    icon, headline, body, tooltip, ts = NEWS_EVENTS.get(
+        event_index,
+        ["", "", "", "", 0]           # fallback: no news
+    )
+    buf.write_utf_string(icon)       # _loc66_
+    buf.write_utf_string(headline)   # _loc67_
+    buf.write_utf_string(body)       # _loc68_
+    buf.write_utf_string(tooltip)    # _loc69_
+    buf.write_method_4(ts)           # _loc70_
+
+    selected = str(char.get("MasterClass", 0))
+    mastery_data = char.get("Mastery", {}).get(selected, {"classID": 0, "slots": []})
+
+    # Write the chosen classID & slots exactly as before:
+    buf.write_method_6(mastery_data["classID"], GAME_CONST_209)
+    buf._append_bits(1, 1)  # we always send a tree
+    for i in range(NUM_TALENT_SLOTS):
+        slot = mastery_data["slots"][i] if i < len(mastery_data["slots"]) else {"filled": False}
+        if slot.get("filled"):
+            buf._append_bits(1, 1)
+            bits = SLOT_BIT_WIDTHS[i]
+            buf.write_method_6(slot["points"] - 1, bits)
+            buf.write_method_6(slot["nodeIdx"], CLASS_118_CONST_127)
+        else:
+            buf._append_bits(0, 1)
 
     payload = buf.to_bytes()
     return struct.pack(">HH", 0x10, len(payload)) + payload
