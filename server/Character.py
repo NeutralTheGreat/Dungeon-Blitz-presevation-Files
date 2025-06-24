@@ -3,7 +3,7 @@
 import os
 import json
 from BitUtils import BitBuffer
-from Items import inventory_gears,default_learned_abilities, Starting_Mounts, Starting_Pets, Starting_Charms, Starting_Materials, Starting_Consumables, Active_master_Class, Mastery_Class
+from Items import inventory_gears,default_learned_abilities, Starting_Mounts, Starting_Pets, Starting_Charms, Starting_Materials, Starting_Consumables, Active_master_Class, Mastery_Class, Starter_Weapons, Active_Abilities
 
 #Hints Do not delete
 """
@@ -96,8 +96,6 @@ def save_characters(user_id: str, char_list: list[dict]):
     with open(path, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
 
-
-
 def make_character_dict_from_tuple(character):
     """
     character is a tuple of:
@@ -131,6 +129,8 @@ def make_character_dict_from_tuple(character):
     starting_abilities = default_learned_abilities.get(cls, [])
     starting_talent = Active_master_Class.get(cls, [])
     Starting_Mastery = Mastery_Class.get(cls, [])
+    starter_gear = Starter_Weapons.get(cls, [])
+    Starting_Active_Abilities = Active_Abilities.get(cls, [])
 
     char_dict = {
         "name":       name,
@@ -145,6 +145,7 @@ def make_character_dict_from_tuple(character):
         "skinColor":  skin_color,
         "shirtColor": shirt_color,
         "pantColor":  pant_color,
+        "equippedGears": starter_gear,
         "xp":             10,
         "gold":           100000,
         "Gems":           100000,# this is the XP for the magic forge
@@ -158,19 +159,19 @@ def make_character_dict_from_tuple(character):
         #=================
         "magicForge": {
         "stats": [1, 0, 0, 1, 1, 1, 1],
-        "hasSession": True,  # true if the forge is active : false if the forge is idle or has finished the rune
-        "primary": 1,  # Rune 1
-        "secondary": 1,  # Rune 2
-        "status": 2,  # Crafting in progress
-        "var_8": 1,  # Unknown (i assume this is Likely a gem counter or flag.)
-        "usedlist": 2,  # Number of gems used (primary + secondary)
+        "hasSession": False,  # true if the forge is active : false if the forge is idle or has finished the rune
+        "primary": 0,  # Rune 1
+        "secondary": 0,  # Rune 2
+        "status": 0,  # Crafting in progress
+        "var_8": 0,  # Unknown (i assume this is Likely a gem counter or flag.)
+        "usedlist": 0,  # Number of gems used (primary + secondary)
         "var_2675": 0,  # Unknown (timers maybe ?)
         "var_2316": 0,  # Unknown (timers maybe ?)
         "var_2434": True},
         #===================
-        "activeAbilities": [0, 0, 0],
+        "activeAbilities": Starting_Active_Abilities,
         "craftTalentPoints": [5, 5, 5, 5, 5],# these are the Magic Forge upgrade points Max value is 10 each
-        "towerPoints": [50, 50, 50],# Talent Upgrade Points likely
+        "towerPoints": [50, 50, 50],# Talent upgrade 50 Max each
         "research": {
             "abilityID": 0,
             "finishTime": 0
@@ -195,11 +196,15 @@ def make_character_dict_from_tuple(character):
             {"typeID": 30, "level": 1, "extraValue": 0},
             {"typeID": 27, "level": 1, "extraValue": 0}
         ],
-
+        "missions": {
+            "10": {
+                "state": 2
+            }
+        },
         "learnedAbilities": starting_abilities,
         "inventoryGears":  starting_inventory,
         "lockboxes": [{"lockboxID": 1, "count": 100}],
-        "gearList": gear_list,
+
         "gearSets": [
             {
                 "name": "PvP Build",
@@ -257,10 +262,10 @@ def build_paperdoll_packet(character_dict):
     buf.write_bits(character_dict["shirtColor"], 24)
     buf.write_bits(character_dict["pantColor"], 24)
 
-
-    for slot in character_dict.get("gearList", []):
-        gear_id = slot[0]
-        buf.write_bits(gear_id, 11)
+    #TODO....
+    #for slot in character_dict.get("gearList", []):
+        #gear_id = slot[0]
+        #buf.write_bits(gear_id, 11)
 
     return buf.to_bytes()
 
@@ -269,7 +274,7 @@ def build_login_character_list_bitpacked(characters):
     Builds the 0x15 login-character-list packet.
     """
     buf = BitBuffer()
-    user_id   = 1       
+    user_id   = 1       # you’ll overwrite this per-session
     max_chars = 8
     char_count= len(characters)
 

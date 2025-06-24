@@ -16,6 +16,9 @@ class BitReader:
             self.bit_index += 1
         return result
 
+    def read_bit(self) -> int:
+        return self.read_bits(1)
+
     def remaining_bits(self) -> int:
         """
         Return the number of bits remaining in the data buffer.

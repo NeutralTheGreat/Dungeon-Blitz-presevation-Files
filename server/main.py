@@ -11,12 +11,10 @@ from Character import (
     save_characters
 )
 from Commands import handle_hotbar_packet
-from level_config import DOOR_MAP, LEVEL_CONFIG
 from BitUtils import BitBuffer
 from constants import EntType, DyeType
 from WorldEnter import build_enter_world_packet, Player_Data_Packet
 from bitreader import BitReader
-
 from PolicyServer import start_policy_server
 from static_server import start_static_server
 
@@ -75,8 +73,8 @@ def handle_client(session: ClientSession):
             if not data:
                 break
 
-            #hex_data = data.hex()
-            #print("Received raw data:", hex_data)
+            hex_data = data.hex()
+            print("Received raw data:", hex_data)
 
             pkt = int(data.hex()[:4], 16)
             if pkt == 0x11:
@@ -241,6 +239,7 @@ def handle_client(session: ClientSession):
                 door_id = BitReader(data[4:]).read_method_4()
                 print(f"[{session.addr}] OPEN_DOOR packet received, door_id={door_id}")
                 # Only send Enter‑World once:
+                """"
                 if session.world_loaded:
                     print("World already loaded; skipping world‑change on door click.")
                     continue
@@ -274,7 +273,7 @@ def handle_client(session: ClientSession):
                 print(f"Sent level‑change: {current} → {next_level} (token={tk})")
                 session.current_level = next_level
                 session.world_loaded = True  # ← mark that we've done it
-
+                 """
             elif pkt == 0xBD:
                 handle_hotbar_packet(session, data)
 
@@ -370,7 +369,7 @@ def handle_client(session: ClientSession):
                     secondary_dye = br.read_bits(DyeType.BITS)
                 print(f"Dyes: ent={entity_id}, slots={dyes_by_slot}, "
                       f"preview={preview_only}, primary={primary_dye}, secondary={secondary_dye}")
-                # …apply & broadcast…
+
                 continue
 
             else:
