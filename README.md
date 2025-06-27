@@ -1,61 +1,73 @@
 # 🏰 Dungeon Blitz - Flash Reboot
-### This project exists to prevent Dungeon Blitz from being lost to time, preserving its gameplay and server functionality as it originally existed.
->
->
->
->
->
->
-## ⚡ What is this?
->
->This repo lets you run **Dungeon Blitz**, the classic browser MMO, directly on your machine using a localy run server. 
->
-### 🧰 Requirements
->
- 1 - the game files
->
- 2 - [Python](https://www.python.org/)
->
- 3 - a Flash-compatible browser you have a few options down below 
->
-### 4 - after installing all the Requirements simply run the main.py for the server to start then open your flash compatible browser and navigate to http://localhost/index.html"
->
->To play Dungeon Blitz you'll need the *Adobe Flash Player* and a *browser with Flash support*:
->
->:flashlight: **Adobe Flash Player**
->
->[Flash browser](https://github.com/radubirsan/FlashBrowser) a open source flash browser 
->
-> [Download Flash Player](https://archive.org/download/flashplayerarchive/pub/flashplayer/installers/archive/fp_32.0.0.371_archive.zip/32_0_r0_371%2Fflashplayer32_0r0_371_win.exe) for **Firefox** and **Basilisk** – NPAPI
-> 
-> [Download Flash Player](https://archive.org/download/flashplayerarchive/pub/flashplayer/installers/archive/fp_32.0.0.371_archive.zip/32_0_r0_371%2Fflashplayer32_0r0_371_winpep.exe) for Opera and **Chromium** based applications – PPAPI
->
-> *Note:* All downloads are for Flash Player [32.0.0.371](https://archive.org/download/flashplayerarchive/pub/flashplayer/installers/archive/fp_32.0.0.371_archive.zip/), the last version without [End-of-Life](https://www.adobe.com/products/flashplayer/end-of-life.html) kill switch, from the Adobe Inc. [Flash Player Archive](https://archive.org/download/flashplayerarchive/).
 
-:mag: **Browsers with Flash support**
+### Reviving the original Dungeon Blitz experience for archival and preservation purposes.
 
-> [Chromium 82.0](https://chromium.en.uptodown.com/windows/download/2181158), the open-source projects behind the Google Chrome browser.
->
-> [Firefox 84.0 64-bit](https://download-installer.cdn.mozilla.net/pub/firefox/releases/84.0/win64/en-US/Firefox%20Setup%2084.0.exe) or [32-bit](https://download-installer.cdn.mozilla.net/pub/firefox/releases/84.0/win32/en-US/Firefox%20Setup%2084.0.exe) (14 Dec 2020), the final version to support Flash.
-> 
-> **Important:** By default, Firefox is set for automatic updates. To prevent Firefox from automatically updating itself after you install an older version, you'll need to change your Firefox update settings: Click the menu button (三) and select *Options*. In the *General* panel, go to the *Firefox Updates* section.
-> 
-> **Important:** By default, Flash is disabled in Chromium. You need to enable Flash in Chromium settings.
-> 
-> [Basilisk Browser](https://www.basilisk-browser.org/), which fully supports all NPAPI plugins (i.e. Flash). It's a fork of the Mozilla/Firefox code.
+---
 
-## 📁 Folder Structure
+## ⚡ How to Play
 
-```bash
-Dungeon-Blitz-presevation-Files/
-├── flashplayer-debugger/        # Flash Player
-├── game-files/                  # SWF files and original assets of Dungeon Blitz (you need to use modified version of DungeonBlitz.swf)
-├── server/                      # Scripts to start the game
-└── README.md                    # This file
-```
+1. **Install Requirements** (listed below)
+2. **Run** `main.py`
+3. Choose how you'd like to play:
 
-### 📜 Legal Notice
+   * **Option 1:** Flash Projector
 
-This project is for **archival** and **educational purposes**. All assets belong to their original creators. We do not monetize, alter, or distribute copyrighted material.
+     * Open the projector
+     * Go to `File` > `Open` > Paste this URL:
+       `http://localhost/p/cbv/DungeonBlitz.swf?fv=cbq&gv=cbv`
+   * **Option 2:** Flash-Compatible Browser
 
-If you're the rights holder and want this removed, open an issue.
+     * Open `http://localhost/index.html` in your browser
+
+---
+
+## 🪠 Requirements
+
+1. This repository (game files)
+2. [Python](https://www.python.org/)
+3. A Flash-compatible browser **OR** a standalone Flash projector
+
+---
+
+## \:flashlight: Flash Options
+
+### Option 1: Flash Projector
+
+* Download from [this GitHub archive](https://github.com/Grubsic/Adobe-Flash-Player-Debug-Downloads-Archive)
+
+### Option 2: Flash-Compatible Browser
+
+* [Flash Browser](https://github.com/radubirsan/FlashBrowser) — Open-source project with built-in Flash support
+
+#### Flash Player Installers:
+
+* **For Firefox / Basilisk (NPAPI):**
+  [Download NPAPI Flash Player](https://archive.org/download/flashplayerarchive/pub/flashplayer/installers/archive/fp_32.0.0.371_archive.zip/32_0_r0_371%2Fflashplayer32_0r0_371_win.exe)
+
+* **For Opera / Chromium (PPAPI):**
+  [Download PPAPI Flash Player](https://archive.org/download/flashplayerarchive/pub/flashplayer/installers/archive/fp_32.0.0.371_archive.zip/32_0_r0_371%2Fflashplayer32_0r0_371_winpep.exe)
+
+> These installers are for version **32.0.0.371**, the last build without Adobe's end-of-life (EOL) kill switch. All files come from the [Adobe Flash Player Archive](https://archive.org/download/flashplayerarchive/).
+
+---
+
+## \:mag: Flash-Supported Browsers
+
+* **[Chromium 82.0](https://chromium.en.uptodown.com/windows/download/2181158)**
+* **[Firefox 84.0 (64-bit)](https://download-installer.cdn.mozilla.net/pub/firefox/releases/84.0/win64/en-US/Firefox%20Setup%2084.0.exe)** or [32-bit](https://download-installer.cdn.mozilla.net/pub/firefox/releases/84.0/win32/en-US/Firefox%20Setup%2084.0.exe)
+* **[Basilisk Browser](https://www.basilisk-browser.org/)** (NPAPI compatible)
+
+> ⚠️ Firefox will auto-update by default. Disable this in:
+> `Menu (三) > Options > General > Firefox Updates`
+
+> ⚠️ Chromium disables Flash by default. You must manually enable it in settings.
+
+---
+
+## 📜 Legal Notice
+
+This project is for **archival** and **educational purposes only**. All assets remain the property of their original creators. No monetization, redistribution, or alteration of copyrighted material.
+
+If you are a rights holder and wish this project removed, please open an issue.
+
+---
