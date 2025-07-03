@@ -3,8 +3,10 @@
 import os
 import json
 from BitUtils import BitBuffer
-from Items import inventory_gears,default_learned_abilities, Starting_Mounts, Starting_Pets, Starting_Charms, Starting_Materials, Starting_Consumables, Active_master_Class, Mastery_Class, Starter_Weapons, Active_Abilities
-
+from Items import  Starting_Mounts, Starting_Pets, Starting_Charms, Starting_Materials, Starting_Consumables, Active_master_Class, Starter_Weapons, Active_Abilities
+from constants import inventory_gears
+from default_abilities import default_learned_abilities
+from constants import Mastery_Class
 #Hints Do not delete
 """
 
@@ -18,12 +20,12 @@ from Items import inventory_gears,default_learned_abilities, Starting_Mounts, St
   "gearSets": [
     {
       "name": "PvP Build",    
-        "slots": [ 1181, (ChestPlate)
-                   1180, (Gloves)
-                   1182, (Boots)
-                   1181, (Hat)
-                   1177, (Sword)
-                   1178  (Shield)
+        "slots": [4 1181, (ChestPlate)
+                  5 1180, (Gloves)
+                  6 1182, (Boots)
+                  3 1181, (Hat)
+                  1 1177, (Sword)
+                  2 1178  (Shield)
         ]
     }
   ]
@@ -133,6 +135,7 @@ def make_character_dict_from_tuple(character):
     Starting_Active_Abilities = Active_Abilities.get(cls, [])
 
     char_dict = {
+        "CurrentLevel": "CraftTown",
         "name":       name,
         "class":      class_name,
         "level":      level,
@@ -158,7 +161,7 @@ def make_character_dict_from_tuple(character):
         "Mastery" : Starting_Mastery,
         #=================
         "magicForge": {
-        "stats": [1, 0, 0, 1, 1, 1, 1],
+        "stats": [10, 0, 10, 10, 10, 10, 10],
         "hasSession": False,  # true if the forge is active : false if the forge is idle or has finished the rune
         "primary": 0,  # Rune 1
         "secondary": 0,  # Rune 2
@@ -172,21 +175,26 @@ def make_character_dict_from_tuple(character):
         "activeAbilities": Starting_Active_Abilities,
         "craftTalentPoints": [5, 5, 5, 5, 5],# these are the Magic Forge upgrade points Max value is 10 each
         "towerPoints": [50, 50, 50],# Talent upgrade 50 Max each
+        "equippedMount": 5,
+        "equippedPetID": 1,
+        "petIteration": 0,
+        "activeConsumableID": 13,
+        "queuedConsumableID": 12,
         "research": {
-            "abilityID": 0,
-            "finishTime": 0
+        "abilityID": 0,
+        "ReadyTime": 0
         },
         "buildingResearch": {
-            "slotID": 0,
-            "finishTime": 0
+        "slotID": 0,
+        "finishTime": 0
         },
         "towerResearch": {
-            "masterClassID": 0,
-            "finishTime": 0
+        "masterClassID": 0,
+        "endTime": 0
         },
         "eggData": {
-            "typeID": 1,
-            "resetEndTime": 5000
+        "typeID": 1,
+        "resetEndTime": 5000
         },
         "eggPetIDs": [1, 2, 30, 27, 5,35,20,17],
         "activeEggCount": 8,
@@ -197,19 +205,20 @@ def make_character_dict_from_tuple(character):
             {"typeID": 27, "level": 1, "extraValue": 0}
         ],
         "missions": {
-            "10": {
+            "1": {
+                "state": 2
+            },
+            "2": {
+                "state": 2
+            },
+            "3": {
                 "state": 2
             }
         },
         "learnedAbilities": starting_abilities,
         "inventoryGears":  starting_inventory,
         "lockboxes": [{"lockboxID": 1, "count": 100}],
-
         "gearSets": [
-            {
-                "name": "PvP Build",
-                "slots": [1180, 1181, 1182, 1179, 1177, 1178]
-            }
         ],
         "mounts":Starting_Mounts,
         "pets":Starting_Pets,
@@ -241,7 +250,103 @@ def make_character_dict_from_tuple(character):
                 "level": 23,
                 "stateVersion": 5
             }
-        ]
+        ],
+        "guild": {
+            "name": "KnightsOfValor",
+            "rank": 2,
+            "onlineMembers": [
+                {
+                    "name": "Teggdel",
+                    "classID": 0,
+                    "level": 45,
+                    "status": 1
+                },
+                {
+                    "name": "ProGooner",
+                    "classID": 1,
+                    "level": 50,
+                    "status": 3
+                },
+                {
+                    "name": "Fitler",
+                    "classID": 2,
+                    "level": 47,
+                    "status": 3
+                },
+                {
+                    "name": "DrHouse",
+                    "classID": 2,
+                    "level": 22,
+                    "status": 3
+                },
+                {
+                    "name": "FriendlyNephit",
+                    "classID": 1,
+                    "level": 43,
+                    "status": 3
+                },
+                {
+                    "name": "SneakyMcStab",
+                    "classID": 1,
+                    "level": 48,
+                    "status": 1
+                },
+                {
+                    "name": "HolyTickler",
+                    "classID": 0,
+                    "level": 42,
+                    "status": 1
+                },
+                {
+                    "name": "WizzyMcFizzle",
+                    "classID": 2,
+                    "level": 46,
+                    "status": 0
+                },
+                {
+                    "name": "PwnyThePaladin",
+                    "classID": 0,
+                    "level": 40,
+                    "status": 1
+                },
+                {
+                    "name": "StabbyMcSneak",
+                    "classID": 1,
+                    "level": 44,
+                    "status": 0
+                },
+                {
+                    "name": "SparkleFart",
+                    "classID": 2,
+                    "level": 39,
+                    "status": 1
+                },
+                {
+                    "name": "SirGiggles",
+                    "classID": 0,
+                    "level": 41,
+                    "status": 2
+                },
+                {
+                    "name": "RogueyMcRoguface",
+                    "classID": 1,
+                    "level": 47,
+                    "status": 2
+                },
+                {
+                    "name": "MagicTickler",
+                    "classID": 2,
+                    "level": 43,
+                    "status": 1
+                },
+                {
+                    "name": "ShieldyMcBloop",
+                    "classID": 0,
+                    "level": 38,
+                    "status": 0
+                }
+            ]
+        },
 
     }
 

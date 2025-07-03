@@ -1,0 +1,1270 @@
+
+{
+    "paladin": {
+        "4": {
+          "classID": 4,
+          "slots": [
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 1
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 2
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 3
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 4
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 5
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 6
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 7
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 8
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 9
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 10
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 11
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 12
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 13
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 14
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 15
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 16
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 17
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 18
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 19
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 20
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 21
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 22
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 23
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 24
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 25
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 26
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 27
+              }
+          ]
+        },
+        "5": { 
+          "classID": 5,
+          "slots": [
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 1
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 2
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 3
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 4
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 5
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 6
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 7
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 8
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 9
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 10
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 11
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 12
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 13
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 14
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 15
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 16
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 17
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 18
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 19
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 20
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 21
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 22
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 23
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 24
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 25
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 26
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 27
+              }
+          ]
+        },
+        "6": {
+          "classID": 5,
+          "slots": [
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 1
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 2
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 3
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 4
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 5
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 6
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 7
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 8
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 9
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 10
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 11
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 12
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 13
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 14
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 15
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 16
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 17
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 18
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 19
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 20
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 21
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 22
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 23
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 24
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 25
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 26
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 27
+              }
+          ]
+        }
+      },
+    "rogue": {
+        "1": {
+          "classID": 1,
+          "slots": [
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 1
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 2
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 3
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 4
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 5
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 6
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 7
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 8
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 9
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 10
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 11
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 12
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 13
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 14
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 15
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 16
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 17
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 18
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 19
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 20
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 21
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 22
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 23
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 24
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 25
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 26
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 27
+              }
+          ]
+        },
+        "2": {
+          "classID": 2,
+          "slots": [
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 1
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 2
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 3
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 4
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 5
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 6
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 7
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 8
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 9
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 10
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 11
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 12
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 13
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 14
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 15
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 16
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 17
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 18
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 19
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 20
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 21
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 22
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 23
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 24
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 25
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 26
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 27
+              }
+          ]
+        },
+        "3": {
+          "classID": 3,
+          "slots": [
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 1
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 2
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 3
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 4
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 5
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 6
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 7
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 8
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 9
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 10
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 11
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 12
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 13
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 14
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 15
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 16
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 17
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 18
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 19
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 20
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 21
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 22
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 23
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 24
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 25
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 26
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 27
+              }
+          ]
+        }
+      },
+    "mage": {
+        "7": {
+          "classID": 7,
+          "slots": [
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 1
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 2
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 3
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 4
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 5
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 6
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 7
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 8
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 9
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 10
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 11
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 12
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 13
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 14
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 15
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 16
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 17
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 18
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 19
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 20
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 21
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 22
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 23
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 24
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 25
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 26
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 27
+              }
+          ]
+        },
+        "8": {
+          "classID": 8,
+          "slots": [
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 1
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 2
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 3
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 4
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 5
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 6
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 7
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 8
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 9
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 10
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 11
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 12
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 13
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 14
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 15
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 16
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 17
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 18
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 19
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 20
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 21
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 22
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 23
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 24
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 25
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 26
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 27
+              }
+          ]
+        },
+        "9": {
+          "classID": 9,
+          "slots": [
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 1
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 2
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 3
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 4
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 5
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 6
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 7
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 8
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 9
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 10
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 11
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 12
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 13
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 14
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 15
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 16
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 17
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 18
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 19
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 20
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 21
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 22
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 23
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 24
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 25
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 26
+              },
+              {
+                  "filled": true,
+                  "points": 2,
+                  "nodeIdx": 27
+              }
+          ]
+        }
+      }
+}
+

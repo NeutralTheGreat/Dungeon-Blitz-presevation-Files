@@ -1,13 +1,19 @@
-#BitUtils.py
+# BitUtils.py
 class BitBuffer:
-    def __init__(self):
+    def __init__(self, debug=False):
         self.bits = []
+        self.debug = debug
+        self.debug_log = [] if debug else None
 
     def align_to_byte(self):
         while len(self.bits) % 8 != 0:
             self.bits.append(0)
+            if self.debug:
+                self.debug_log.append("align_pad=0")
 
     def _append_bits(self, value, bit_count):
+        if self.debug:
+            self.debug_log.append(f"write_bits={value:0{bit_count}b} ({bit_count} bits)")
         for i in reversed(range(bit_count)):
             self.bits.append((value >> i) & 1)
 
@@ -18,32 +24,51 @@ class BitBuffer:
         length = len(data)
         self._append_bits((length >> 8) & 0xFF, 8)
         self._append_bits(length & 0xFF, 8)
+        if self.debug:
+            self.debug_log.append(f"write_string={text}, length={length}")
         for b in data:
             self._append_bits(b, 8)
 
-    def write_method_4(self, val):
-        if val == 0:
-            self._append_bits(0, 4)
-            self._append_bits(0, 2)
-            return
-        n = val.bit_length()
-        if n % 2 != 0:
-            n += 1
-        self._append_bits((n >> 1) - 1, 4)
-        self._append_bits(val, n)
+    def write_method_4(self, val: int):
+        bits_needed = val.bit_length() if val > 0 else 1
+        bits_to_use = max(2, (bits_needed + 1) & ~1)
+        prefix = (bits_to_use // 2) - 1
+        assert 0 <= prefix <= 15, f"Value too large for method_4: {val}"
+        self._append_bits(prefix, 4)
+        self._append_bits(val, bits_to_use)
+        if self.debug:
+            self.debug_log.append(f"method_4={val}, prefix={prefix}, bits={bits_to_use}")
+
+    def write_method_45(self, val):
+        self.align_to_byte()
+        import struct
+        b = struct.pack(">f", float(val))
+        for byte in b:
+            self._append_bits(byte, 8)
+
+    def write_method_739(self, value: int):
+        if value < 0:
+            self._append_bits(1, 1)
+            self.write_method_91(-value)
+        else:
+            self._append_bits(0, 1)
+            self.write_method_91(value)
+        if self.debug:
+            self.debug_log.append(f"method_739={value}")
 
     def write_method_393(self, val):
         self._append_bits(val & 0xFF, 8)
 
-    def write_method_6(self, val, bit_count):
+    def write_method_6(self, val: int, bit_count: int):
         self._append_bits(val, bit_count)
+        if self.debug:
+            self.debug_log.append(f"method_6={val}, bits={bit_count}")
 
     def write_bits(self, value, nbits):
         for i in reversed(range(nbits)):
             self._append_bits((value >> i) & 1, 1)
 
     def write_uint48(self, value: int) -> None:
-        """Write a 48-bit unsigned integer."""
         if value < 0 or value > 0xFFFFFFFFFFFF:
             raise ValueError(f"Value {value} out of range for 48-bit integer")
         self._append_bits(value, 48)
@@ -51,6 +76,8 @@ class BitBuffer:
     def to_bytes(self):
         while len(self.bits) % 8 != 0:
             self.bits.append(0)
+            if self.debug:
+                self.debug_log.append("pad_to_byte=0")
         out = bytearray()
         for i in range(0, len(self.bits), 8):
             byte = 0
@@ -60,33 +87,44 @@ class BitBuffer:
         return bytes(out)
 
     def write_method_9(self, val: int):
-        # 1) compute how many bits we need
         bitlen = val.bit_length()
-        # round up to next even number
         if bitlen % 2:
             bitlen += 1
-        # unary prefix = (bitlen / 2) − 1
         prefix = (bitlen // 2) - 1
-
-        # 2) write 4-bit prefix
         self._append_bits(prefix, 4)
-        # 3) write the value in exactly bitlen bits
         self._append_bits(val, bitlen)
 
-
     def write_int24(self, val: int):
-        # 1) sign‐bit
         self._append_bits(1 if val < 0 else 0, 1)
-        # 2) absolute using method_9
         self.write_method_9(abs(val))
 
     def write_method_91(self, val: int):
-        # Determine the smallest n where val < 2^(2*(n+1))
-        n = 0
-        while (1 << (2 * (n + 1))) <= val:
-            n += 1
-        # Write n (3 bits)
-        self.write_method_6(n, 3)
-        # Write val in (2*(n+1)) bits
-        bitlen = 2 * (n + 1)
-        self.write_method_6(val, bitlen)
+        bits_needed = val.bit_length() if val > 0 else 1
+        bits_to_use = max(2, (bits_needed + 1) & ~1)
+        n = (bits_to_use // 2) - 1
+        self._append_bits(n, 3)
+        self._append_bits(val, bits_to_use)
+        if self.debug:
+            self.debug_log.append(f"method_91={val}, n={n}, bits={bits_to_use}")
+
+    def write_method_13(self, val: str):
+        encoded = val.encode('utf-8')
+        length = min(len(encoded), 65535)
+        self._append_bits(length, 16)
+        for byte in encoded[:length]:
+            self._append_bits(byte, 8)
+        if self.debug:
+            self.debug_log.append(f"method_13={val}, length={length}")
+
+    def write_signed_method_45(self, val: int):
+        if val < 0:
+            self._append_bits(1, 1)
+            self.write_method_4(-val)
+        else:
+            self._append_bits(0, 1)
+            self.write_method_4(val)
+        if self.debug:
+            self.debug_log.append(f"method_45={val}, sign={1 if val < 0 else 0}")
+
+    def get_debug_log(self):
+        return self.debug_log if self.debug else []

@@ -1,0 +1,5125 @@
+
+ [
+        {
+            "gearID": 53,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 54,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 55,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 56,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 57,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 58,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 59,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 60,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 61,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 62,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 63,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 64,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 65,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 66,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 67,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 68,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 69,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 70,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 71,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 72,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 73,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 74,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 75,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 76,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 77,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 78,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 139,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 140,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 141,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 142,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 143,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 144,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 145,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 146,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 147,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 148,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 149,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 150,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 151,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 152,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 153,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 154,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 155,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 156,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 157,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 158,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 159,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 160,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 161,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 162,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 163,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 164,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 165,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 166,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 167,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 168,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 229,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 230,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 231,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 232,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 233,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 234,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 235,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 236,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 237,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 238,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 239,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 240,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 241,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 242,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 243,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 244,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 245,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 246,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 247,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 248,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 249,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 250,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 251,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 252,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 253,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 254,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 255,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 256,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 257,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 258,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 319,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 320,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 321,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 322,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 323,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 324,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 325,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 326,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 327,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 328,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 329,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 330,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 331,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 332,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 333,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 334,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 335,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 336,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 337,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 338,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 339,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 340,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 341,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 342,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 343,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 344,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 345,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 346,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 347,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 348,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 409,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 410,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 411,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 412,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 413,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 414,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 415,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 416,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 417,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 418,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 419,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 420,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 421,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 422,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 423,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 424,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 425,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 426,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 427,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 428,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 429,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 430,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 431,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 432,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 433,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 434,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 435,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 436,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 437,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 438,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 499,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 500,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 501,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 502,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 503,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 504,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 505,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 506,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 507,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 508,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 509,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 510,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 511,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 512,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 513,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 514,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 515,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 516,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 517,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 518,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 519,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 520,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 521,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 522,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 523,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 524,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 525,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 526,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 527,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 528,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 589,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 590,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 591,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 592,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 593,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 594,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 595,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 596,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 597,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 598,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 599,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 600,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 601,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 602,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 603,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 604,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 605,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 606,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 607,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 608,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 609,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 610,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 611,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 612,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 613,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 614,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 615,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 616,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 617,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 618,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 679,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 680,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 681,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 682,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 683,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 684,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 685,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 686,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 687,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 688,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 689,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 690,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 691,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 692,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 693,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 694,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 695,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 696,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 697,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 698,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 699,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 700,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 701,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 702,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 703,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 704,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 705,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 706,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 707,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 708,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 769,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 770,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 771,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 772,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 773,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 774,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 775,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 776,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 777,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 778,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 779,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 780,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 781,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 782,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 783,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 784,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 785,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 786,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 787,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 788,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 789,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 790,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 791,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 792,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 793,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 794,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 795,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 796,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 797,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 798,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 859,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 860,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 861,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 862,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 863,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 864,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 865,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 866,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 867,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 868,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 869,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 870,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 871,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 872,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 873,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 874,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 875,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 876,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 877,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 878,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 879,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 880,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 881,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 882,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 883,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 884,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 885,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 886,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 887,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 888,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 949,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 950,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 951,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 952,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 953,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 954,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 955,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 956,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 957,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 958,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 959,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 960,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 961,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 962,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 963,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 964,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 965,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 966,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 967,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 968,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 969,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 970,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 971,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 972,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 973,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 974,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 975,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 976,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 977,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 978,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 1039,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 1040,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 1041,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 1042,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 1043,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 1044,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 1045,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 1046,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 1047,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 1048,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 1049,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 1050,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 1051,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 1052,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 1053,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 1054,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 1055,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 1056,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 1057,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 1058,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 1059,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 1060,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 1061,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 1062,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 1063,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 1064,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 1065,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 1066,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 1067,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 1068,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 1129,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 1130,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 1131,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 1132,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 1133,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 1134,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 1135,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 1136,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 1137,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 1138,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 1139,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 1140,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 1141,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 1142,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 1143,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 1144,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 1145,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 1146,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 1147,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 1148,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 1149,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 1150,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 1151,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 1152,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 1153,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 1154,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 1155,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 1156,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 1157,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 1158,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 1160,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 1164,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 1165,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 1166,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 1167,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 1168,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 1169,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        },
+        {
+            "gearID": 1170,
+            "tier": 1,
+            "runes": [
+                0,
+                0,
+                0
+            ],
+            "colors": [
+                0,
+                0
+            ]
+        }
+    ]
