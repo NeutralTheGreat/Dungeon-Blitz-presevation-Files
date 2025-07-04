@@ -175,6 +175,7 @@ def make_character_dict_from_tuple(character):
         "activeAbilities": Starting_Active_Abilities,
         "craftTalentPoints": [5, 5, 5, 5, 5],# these are the Magic Forge upgrade points Max value is 10 each
         "towerPoints": [50, 50, 50],# Talent upgrade 50 Max each
+
         "equippedMount": 5,
         "equippedPetID": 1,
         "petIteration": 0,
@@ -206,13 +207,13 @@ def make_character_dict_from_tuple(character):
         ],
         "missions": {
             "1": {
-                "state": 2
+                "state": 0
             },
             "2": {
-                "state": 2
+                "state": 0
             },
             "3": {
-                "state": 2
+                "state": 0
             }
         },
         "learnedAbilities": starting_abilities,

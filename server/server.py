@@ -418,7 +418,6 @@ def handle_client(session: ClientSession):
                 continue
 
             #TODO...
-
             elif pkt == 0x2D:
                 print(f"[{session.addr}] Handling OPEN_DOOR (0x2D), raw payload = {data.hex()}")
                 if len(data) < 6:
@@ -574,7 +573,7 @@ def handle_client(session: ClientSession):
 
             elif pkt == 0x08:
                 if session.world_loaded:
-                    #print(f"[{session.addr}] World already loaded; skipping NPC spawn.")
+                    print(f"[{session.addr}] World already loaded; skipping NPC spawn.")
                     continue
                 try:
                     npcs = load_npc_data_for_level(session.current_level)
@@ -593,14 +592,11 @@ def handle_client(session: ClientSession):
                 continue
 
             elif pkt_id == 0xDE:
-                # … your cost‐deduction logic here …
-                # Build a minimal “building upgraded” packet:
                 bb = BitBuffer()
                 bb.write_bits(1, 16)  # test-building ID = 1
                 bb.write_bits(2, 8)  # test-new level = 2
                 bb.write_bits(0, 32)  # end-time = 0 (instant)
                 payload = bb.to_bytes()
-                # send it as const_XXXX (replace 0xDA with the real packet‐type you found)
                 conn.sendall(struct.pack(">HH", 0xbf, len(payload)) + payload)
                 print(f"[{addr}] TEST: sent BUILDING-UPDATE 0xDA len={len(payload)}")
                 continue

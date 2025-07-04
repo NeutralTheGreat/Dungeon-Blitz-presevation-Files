@@ -1,6 +1,6 @@
 import json
 
-def load_npc_data_for_level(level_name: str, json_path: str = r"data\npc_data.json") -> list:
+def load_npc_data_for_level(level_name: str, json_path: str = r"data/npc_data.json") -> list:
     """
     Args:
         level_name (str): The level identifier (e.g., 'TutorialBoat').
@@ -17,7 +17,4 @@ def load_npc_data_for_level(level_name: str, json_path: str = r"data\npc_data.js
         print(f"Error loading NPC data: {e}")
         return []
 
-# Usage Example:
-npc_list = load_npc_data_for_level("TutorialBoat")
-for npc in npc_list:
-    print(npc["name"])
+

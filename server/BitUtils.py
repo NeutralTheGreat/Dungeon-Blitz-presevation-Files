@@ -1,4 +1,5 @@
 # BitUtils.py
+import struct
 class BitBuffer:
     def __init__(self, debug=False):
         self.bits = []
@@ -125,6 +126,14 @@ class BitBuffer:
             self.write_method_4(val)
         if self.debug:
             self.debug_log.append(f"method_45={val}, sign={1 if val < 0 else 0}")
+
+    def write_float(self, val: float):
+        self.align_to_byte()  # Ensure byte alignment for float
+        b = struct.pack(">f", val)  # Pack float as 4 bytes, big-endian
+        for byte in b:
+            self._append_bits(byte, 8)
+        if self.debug:
+            self.debug_log.append(f"write_float={val}")
 
     def get_debug_log(self):
         return self.debug_log if self.debug else []

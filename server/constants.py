@@ -1,7 +1,6 @@
 # constants.py
 import json
 import os
-import time
 NUM_TALENT_SLOTS = 27
 CONST_529 = [5,2,3,5,5,3,2,3,2,5,2,3,5,5,3,2,3,2,5,2,3,5,5,3,2,3,2]
 CLASS_118_CONST_127 = 6
@@ -71,6 +70,8 @@ class Entity:
     const_467 = 2  # Drama state
     VELOCITY_INFLATE = 10000  # 1 / VELOCITY_DEFLATE
     const_6 = 3
+    const_526 = 0
+    MAX_CHAR_LEVEL_BITS = 6
 
 
 class LinkUpdater:
