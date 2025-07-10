@@ -1,0 +1,17 @@
+[
+  {
+    "RewardpackName": "TreasureTrove",
+    "RewardpackID": "42",
+    "RewardType": "Rewardpack",
+    "Rarity": "L"
+  },
+  { "RewardItem":"Ivorystorm Guardian",  "RewardType":"Mount",      "Rarity":"L" },
+  { "RewardItem":"Darkheart Apparition","RewardType":"Pet",        "Rarity":"L" },
+  { "RewardItem":"ClassGear01",          "RewardType":"Gear",       "Rarity":"L" },
+  { "RewardItem":"ExoticCharms01",       "RewardType":"Charm",      "Rarity":"L" },
+  { "RewardItem":"TopTierDyesPack",      "RewardType":"Dye",        "Rarity":"L" },
+  { "RewardItem":"ForgeCatalysts01",     "RewardType":"Consumable","Rarity":"L" },
+  { "RewardItem":"RandomLvl10PetPack",   "RewardType":"Pet",        "Rarity":"L" },
+  { "RewardItem":"PetFood02",            "RewardType":"Consumable","Rarity":"L" },
+  { "RewardItem":"PileOfGold10000",      "RewardType":"Gold",       "Rarity":"L" }
+]

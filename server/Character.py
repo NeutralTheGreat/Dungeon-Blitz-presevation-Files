@@ -29,18 +29,19 @@ from constants import Mastery_Class
         ]
     }
   ]
-    "magicForge": {
-            (Forge) (Keep) (Tower1)(Tower2)(Tower3)(Tome)(Barn)
-    "stats": [    1,    0,       0,      1,     1,     1,    1],
-    "hasSession": true, # true if the forge is active : false if the forge is idle or has finished the rune
-    "primary": 1, # Rune 1 
-    "secondary": 1, # Rune 2 
-    "status": 2, # Crafting in progress
-    "var_8": 1, # Unknown (i assume this is Likely a gem counter or flag.)
-    "usedlist": 2,# Number of gems used (primary + secondary)
-    "var_2675": 5000, #Unknown (timers maybe ?)
-    "var_2316": 6000, #Unknown (timers maybe ?)
-    "var_2434": true
+   "magicForge": {
+           (Forge) (Keep) (Tower1)(Tower2)(Tower3)(Tome)(Barn)
+  "stats": [    1,    0,       0,      1,     1,     1,    1],
+  "hasSession": true,    // 1bit: whether a forge session exists (controls reading the session block)
+  "primary": 90,         // primary gem/charm type ID (6 bits)
+  "secondary": 5,        // secondary buff ID (only read if status==2 and var_8==1)
+  "status": 1,           // 1=in‑progress (timer), 2=completed (secondary buffs)
+  "duration": 900000,    // remaining time in ms (used to compute endtime when status==1)
+  "var_8": 1,            // flag for “secondary present” (1 bit, read only when status!=1)
+  "usedlist": 2,         // number of items/idols used or buff count (read if var_8==1)
+  "var_2675": 2,         // extra small stat #1 (16 bits, always read)
+  "var_2316": 2,         // extra small stat #2 (16 bits, always read)
+  "var_2434": true       // final continuation flag (1 bit; often used to toggle UI)
 }
   
 """
@@ -161,16 +162,26 @@ def make_character_dict_from_tuple(character):
         "Mastery" : Starting_Mastery,
         #=================
         "magicForge": {
-        "stats": [10, 0, 10, 10, 10, 10, 10],
-        "hasSession": False,  # true if the forge is active : false if the forge is idle or has finished the rune
-        "primary": 0,  # Rune 1
-        "secondary": 0,  # Rune 2
-        "status": 0,  # Crafting in progress
-        "var_8": 0,  # Unknown (i assume this is Likely a gem counter or flag.)
-        "usedlist": 0,  # Number of gems used (primary + secondary)
-        "var_2675": 0,  # Unknown (timers maybe ?)
-        "var_2316": 0,  # Unknown (timers maybe ?)
-        "var_2434": True},
+            "stats": [
+                10,
+                0,
+                10,
+                10,
+                10,
+                10,
+                10
+            ],
+            "hasSession": False,
+            "primary": 0,
+            "secondary": 0,
+            "status": 0,
+            "duration": 0,
+            "var_8": 0,
+            "usedlist": 0,
+            "var_2675": 0,
+            "var_2316": 0,
+            "var_2434": False
+        },
         #===================
         "activeAbilities": Starting_Active_Abilities,
         "craftTalentPoints": [5, 5, 5, 5, 5],# these are the Magic Forge upgrade points Max value is 10 each
@@ -194,8 +205,8 @@ def make_character_dict_from_tuple(character):
         "endTime": 0
         },
         "eggData": {
-        "typeID": 1,
-        "resetEndTime": 5000
+        "typeID": 0,
+        "resetEndTime": 0
         },
         "eggPetIDs": [1, 2, 30, 27, 5,35,20,17],
         "activeEggCount": 8,

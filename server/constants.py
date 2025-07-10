@@ -42,6 +42,14 @@ for x in CONST_529:
         w = 3
     SLOT_BIT_WIDTHS.append(w)
 
+def method_277(idx: int) -> int:
+    x = CONST_529[idx]
+    w = 0
+    if x <= 2: w = 1
+    if x <= 4: w = 2
+    if x <= 5: w = 3
+    return w
+
 class Mission:
     const_213 = 0
     const_58  = 1
@@ -55,7 +63,9 @@ CLASS_NAME_TO_ID = {
     "Rogue":   1,
     "Mage":    2,
 }
-
+class class_8:
+    const_658 = 7
+    const_731 = 7
 class class_7 :
     const_19 = 7
     const_75 = 6
@@ -63,19 +73,27 @@ class class_20 :
     const_297 = 7
 class class_3 :
     const_69 = 5
+    var_1415 = 1  # ForgeXP
+    var_2082 = 2  # RareBoost
+    var_1374 = 3  # LegendaryBoost
+    var_1462 = 4  # ArtisanBoost
+
+
 class Entity:
     TEAM_BITS = 2
     const_316 = 2  # Entity state bit count
     const_399 = 1  # Sleep state
     const_467 = 2  # Drama state
-    VELOCITY_INFLATE = 10000  # 1 / VELOCITY_DEFLATE
     const_6 = 3
     const_526 = 0
     MAX_CHAR_LEVEL_BITS = 6
+    VELOCITY_INFLATE = 10000
+    const_78 = 0
+    PLAYER = 1
 
 
 class LinkUpdater:
-    VELOCITY_INFLATE = 10000
+    VELOCITY_DEFLATE = 10000
 class Game :
     const_209 = 4
 class class_118 :

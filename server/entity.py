@@ -2,30 +2,6 @@ from BitUtils import BitBuffer
 from constants import Entity, class_7, class_20, class_3, Game, CLASS_NAME_TO_ID, class_118, SLOT_BIT_WIDTHS
 from typing import Dict, Any
 
-entity = {
-    "id": 1001,              # Unique player ID
-    "name": "Aebyelez",
-    "x": 1000.0,             # Starting position in CraftTown (example)
-    "y": 1300.0,
-    "z": 0.0,
-    "team": 1,               # Example team
-    "entState": 1,           # Active state
-    "facing_left": False,
-    "health_delta": 0,
-    "buffs": [],             # No active buffs in save
-    "is_player": True,
-    "player_level": 50,
-    "mount_data": 5,         # Equipped mount ID
-    "has_equipment": True,
-    "equipment": {
-        "0": {"index": 0, "value": 0},
-        "1": {"index": 0, "value": 0},
-        "2": {"index": 0, "value": 0},
-        "3": {"index": 0, "value": 0},
-        "4": {"index": 1, "value": 0},
-        "5": {"index": 13, "value": 0}
-    }
-}
 
 def scale_coordinates(x: float, y: float, z: float):
     """Convert floats to integers for method_45."""
@@ -44,7 +20,7 @@ def Send_Entity_Data(entity: Dict[str, Any], is_player: bool = False) -> bytes:
     bb.write_method_13(entity_name)
     #print(f"Send_Entity_Data: Wrote entity name: {entity_name}")
 
-    bb.write_bits(0, 1)  # Appearance flag (0 for simplicity; adjust if needed)
+    bb.write_bits(0, 1)  # Appearance flag  for players (0 for simplicity; adjust if needed)
     #print("Send_Entity_Data: Wrote appearance flag: 0")
 
     # Coordinates
