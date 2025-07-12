@@ -7,7 +7,7 @@
 ## ⚡ How to Play
 
 1. **Install Requirements** (listed below)
-2. **Run** `server.py`
+2. **Run** `server.py` (don't forget to cd into server first)
 3. Choose how you'd like to play:
 
    * **Option 1:** Flash Projector
