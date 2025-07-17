@@ -227,6 +227,7 @@ DOOR_MAP = {
     ('BridgeTownHard', 103): 'BT_Mission3Hard',
     ('BridgeTownHard', 104): 'BT_Mission4Hard',
     ('BridgeTownHard', 300): 'BridgeTown',
+	('BridgeTown', 999): 'CraftTown',
     # from 'Castle'
     ('Castle', 1): 'BridgeTown',
     ('Castle', 4): 'ShazariDesert',

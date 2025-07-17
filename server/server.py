@@ -76,10 +76,11 @@ class ClientSession:
         self.entities = {}
         self.clientEntID = None
         self.running = True
-        self.current_char_dict = None  # Add this line
+        self.current_char_dict = None 
+        self.home_exit_level = None
+
 
     def restore_from_persistent(self, user_id):
-        """Restore session data from persistent storage"""
         if user_id in persistent_sessions:
             data = persistent_sessions[user_id]
             self.user_id = data.get('user_id')
@@ -87,20 +88,25 @@ class ClientSession:
             self.current_char_dict = data.get('current_char_dict')
             self.player_data = data.get('player_data', {})
             self.char_list = data.get('char_list', [])
-            print(f"[DEBUG] Restored session for {user_id}: char={self.current_character}")
+            # restore the saved exit‐level too
+            self.home_exit_level = data.get('home_exit_level')
+            print(f"[DEBUG] Restored session for {user_id}: char={self.current_character}, home_exit={self.home_exit_level}")
             return True
         return False
 
+
     def save_to_persistent(self):
-        """Save session data to persistent storage"""
         if self.user_id:
             persistent_sessions[self.user_id] = {
                 'user_id': self.user_id,
                 'current_character': self.current_character,
                 'current_char_dict': self.current_char_dict,
                 'player_data': self.player_data,
-                'char_list': self.char_list
+                'char_list': self.char_list,
+                # persist the exit‐level so it survives reconnects
+                'home_exit_level': self.home_exit_level
             }
+
 
     def attack_entity(self, attacker_id, target_id, damage):
             target_ent = self.entities.get(target_id)
@@ -812,34 +818,39 @@ def handle_client(session: ClientSession):
             elif pkt == 0x2D:
                 br = BitReader(data[4:])
                 door_id = br.read_method_9()
-                print(f"[DEBUG] DOOR_TARGET request: level={session.current_level}, door_id={door_id}")
-                level_name = DOOR_MAP.get((session.current_level, door_id))
-                if not level_name:
-                    print(f"[ERROR] No door mapping found for ({session.current_level}, {door_id})")
-                    print(f"[DEBUG] Available doors for {session.current_level}: {[k for k in DOOR_MAP.keys() if k[0] == session.current_level]}")
+                orig = session.current_level
+                mapped = DOOR_MAP.get((orig, door_id))
 
-                    # Send error response to client
+                # when entering CraftTown, remember where we came from
+                if mapped == "CraftTown" and orig != "CraftTown":
+                    session.home_exit_level = orig
+                    session.save_to_persistent()
+                # when leaving CraftTown, redirect back to saved level
+                if orig == "CraftTown" and session.home_exit_level:
+                    level_name = session.home_exit_level
+                else:
+                    level_name = mapped
+
+                if not level_name:
                     error_msg = f"Door {door_id} not found in {session.current_level}"
                     error_bytes = error_msg.encode("utf-8")
-                    error_packet = struct.pack(">HH", 0x1B, len(error_bytes) + 2) + struct.pack(">H", len(error_bytes)) + error_bytes
+                    error_packet = struct.pack(">HH", 0x1B,
+                        len(error_bytes) + 2) + struct.pack(">H",
+                        len(error_bytes)) + error_bytes
                     conn.sendall(error_packet)
                     continue
-                print(f"[DEBUG] Door target found: {level_name}")
 
-                # Track this door request for session linking
-                session_data = {
+                track_door_activity(session.current_level, door_id, level_name, {
                     'user_id': session.user_id,
                     'current_character': session.current_character,
                     'current_char_dict': session.current_char_dict,
                     'current_level': session.current_level
-                }
-                track_door_activity(session.current_level, door_id, level_name, session_data)
-
+                })
                 bb = BitBuffer()
                 bb.write_method_4(door_id)
                 bb.write_method_13(level_name)
-                conn.sendall(struct.pack(">HH", 0x2E, len(bb.to_bytes())) + bb.to_bytes())
-                print("Sent DOOR_TARGET (0x2E)")
+                conn.sendall(struct.pack(">HH", 0x2E,
+                    len(bb.to_bytes())) + bb.to_bytes())
                 continue
 
             elif pkt == 0x1D:
