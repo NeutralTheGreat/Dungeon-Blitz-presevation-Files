@@ -28,6 +28,10 @@ HOST = "127.0.0.1"
 PORTS = [8080]
 pending_world = {}
 all_sessions = []
+# Add this global dictionary to store session data by user_id
+persistent_sessions = {}
+# Track recent activity to help link sessions
+recent_activity = {}
 
 def build_handshake_response(sid):
     b = sid.to_bytes(2, "big")
@@ -39,6 +43,21 @@ def new_transfer_token():
     while (t := secrets.randbits(16)) in pending_world:
         pass
     return t
+
+def track_door_activity(level, door_id, target_level, session_data):
+    """Track door requests to help link sessions across reconnections"""
+    import time
+    key = f"{level}:{door_id}:{target_level}"
+    recent_activity[key] = {
+        'timestamp': time.time(),
+        'session_data': session_data,
+        'target_level': target_level
+    }
+    # Clean old entries (older than 30 seconds)
+    current_time = time.time()
+    to_remove = [k for k, v in recent_activity.items() if current_time - v['timestamp'] > 30]
+    for k in to_remove:
+        del recent_activity[k]
 
 class ClientSession:
     def __init__(self, conn, addr):
@@ -57,6 +76,31 @@ class ClientSession:
         self.entities = {}
         self.clientEntID = None
         self.running = True
+        self.current_char_dict = None  # Add this line
+
+    def restore_from_persistent(self, user_id):
+        """Restore session data from persistent storage"""
+        if user_id in persistent_sessions:
+            data = persistent_sessions[user_id]
+            self.user_id = data.get('user_id')
+            self.current_character = data.get('current_character')
+            self.current_char_dict = data.get('current_char_dict')
+            self.player_data = data.get('player_data', {})
+            self.char_list = data.get('char_list', [])
+            print(f"[DEBUG] Restored session for {user_id}: char={self.current_character}")
+            return True
+        return False
+
+    def save_to_persistent(self):
+        """Save session data to persistent storage"""
+        if self.user_id:
+            persistent_sessions[self.user_id] = {
+                'user_id': self.user_id,
+                'current_character': self.current_character,
+                'current_char_dict': self.current_char_dict,
+                'player_data': self.player_data,
+                'char_list': self.char_list
+            }
 
     def attack_entity(self, attacker_id, target_id, damage):
             target_ent = self.entities.get(target_id)
@@ -229,9 +273,14 @@ def handle_client(session: ClientSession):
                 for c in session.char_list:
                     if c["name"] == name:
                         session.current_character = name
+                        session.current_char_dict = c  # Store the character dict
                         current_level = c.get("CurrentLevel", "CraftTown")
                         session.current_level = current_level
                         c["user_id"] = session.user_id
+                        
+                        # Save session data for transfers
+                        session.save_to_persistent()
+                        
                         tk = session.issue_token(c)
                         level_config = LEVEL_CONFIG.get(current_level, ("LevelsNR.swf/a_Level_NewbieRoad", 1, 1, False))
                         pkt_out = build_enter_world_packet(
@@ -266,20 +315,51 @@ def handle_client(session: ClientSession):
                 if len(data) < 8:
                     continue
                 token = int.from_bytes(data[4:8], 'big')
+                print(f"[DEBUG] Looking for token {token} in pending_world. Available tokens: {list(pending_world.keys())}")
                 char = pending_world.pop(token, None)
                 if char is None and len(pending_world) == 1:
                     fallback_token, fallback_char = next(iter(pending_world.items()))
                     char = fallback_char
                     token = fallback_token
                     pending_world.pop(fallback_token, None)
+                    print(f"[DEBUG] Used fallback token {fallback_token}")
+                    print(f"[DEBUG] Fallback char data: name={char.get('name', 'MISSING')}, user_id={char.get('user_id', 'MISSING')}")
                 session.active_tokens.discard(token)
                 if char:
+                    print(f"[DEBUG] Character data found: name={char.get('name', 'MISSING')}, user_id={char.get('user_id', 'MISSING')}")
                     session.user_id = char["user_id"]
-                    with open(f"saves/{session.user_id}.json", "r") as f:
-                        session.player_data = json.load(f)
+
+                    # Restore session data from persistent storage
+                    if not session.restore_from_persistent(session.user_id):
+                        print(f"[DEBUG] No persistent session found for {session.user_id}, creating new session data")
+                    # Try to load save file, create default if not found
+                    try:
+                        with open(f"saves/{session.user_id}.json", "r") as f:
+                            session.player_data = json.load(f)
+                    except FileNotFoundError:
+                        print(f"[DEBUG] Save file not found for {session.user_id}, creating default")
+                        session.player_data = {
+                            "name": char["name"],
+                            "level": char.get("level", 50),
+                            "class": char.get("class", "Mage"),
+                            "hp": char.get("hp", 100),
+                            "max_hp": char.get("max_hp", 100)
+                        }
+                        # Create the save file
+                        import os
+                        os.makedirs("saves", exist_ok=True)
+                        with open(f"saves/{session.user_id}.json", "w") as f:
+                            json.dump(session.player_data, f, indent=2)
+                    except Exception as e:
+                        print(f"Session error: {e}")
+                        continue
+
                     session.current_character = char["name"]
                     session.current_char_dict = char
                     session.current_level = char.get("CurrentLevel", "CraftTown")
+
+                    # Save session data for future transfers
+                    session.save_to_persistent()
                     session.entities[token] = {
                         "id": token,
                         "x": 360.0,
@@ -295,6 +375,8 @@ def handle_client(session: ClientSession):
                     conn.sendall(welcome)
                     session.clientEntID = token
                     print(f"Welcome: {char['name']} (used token {token}) on level {session.current_level}")
+                else:
+                    print(f"[DEBUG] No character data found for token {token}, pending_world is empty")
 
             elif pkt == 0x7C:
                 _, length = struct.unpack_from(">HH", data, 0)
@@ -728,12 +810,31 @@ def handle_client(session: ClientSession):
                 pass
 
             elif pkt == 0x2D:
-                print("Sent DOOR_TARGET (0x2E)")
                 br = BitReader(data[4:])
                 door_id = br.read_method_9()
+                print(f"[DEBUG] DOOR_TARGET request: level={session.current_level}, door_id={door_id}")
                 level_name = DOOR_MAP.get((session.current_level, door_id))
                 if not level_name:
+                    print(f"[ERROR] No door mapping found for ({session.current_level}, {door_id})")
+                    print(f"[DEBUG] Available doors for {session.current_level}: {[k for k in DOOR_MAP.keys() if k[0] == session.current_level]}")
+
+                    # Send error response to client
+                    error_msg = f"Door {door_id} not found in {session.current_level}"
+                    error_bytes = error_msg.encode("utf-8")
+                    error_packet = struct.pack(">HH", 0x1B, len(error_bytes) + 2) + struct.pack(">H", len(error_bytes)) + error_bytes
+                    conn.sendall(error_packet)
                     continue
+                print(f"[DEBUG] Door target found: {level_name}")
+
+                # Track this door request for session linking
+                session_data = {
+                    'user_id': session.user_id,
+                    'current_character': session.current_character,
+                    'current_char_dict': session.current_char_dict,
+                    'current_level': session.current_level
+                }
+                track_door_activity(session.current_level, door_id, level_name, session_data)
+
                 bb = BitBuffer()
                 bb.write_method_4(door_id)
                 bb.write_method_13(level_name)
@@ -746,9 +847,132 @@ def handle_client(session: ClientSession):
                 door_id = br.read_method_9()
                 level_name = br.read_method_13()
                 print(f"TRANSFER_READY for door {door_id} → {level_name}")
-                token = session.issue_token(session.player_data)
-                pending_world[token] = session.player_data
+
+                # Enhanced session restoration logic
+                if not session.current_character or not session.user_id:
+                    print(f"[DEBUG] Missing session data, attempting restoration...")
+                    print(f"[DEBUG] Available pending_world tokens: {list(pending_world.keys())}")
+                    print(f"[DEBUG] Available persistent_sessions: {list(persistent_sessions.keys())}")
+                    print(f"[DEBUG] Recent door activity: {list(recent_activity.keys())}")
+
+                    # First, try to match recent door activity for this transfer
+                    for activity_key, activity_data in recent_activity.items():
+                        if activity_data['target_level'] == level_name:
+                            stored_session = activity_data['session_data']
+                            if stored_session.get('user_id') and stored_session.get('current_character'):
+                                print(f"[DEBUG] Found matching door activity: {activity_key}")
+                                session.user_id = stored_session['user_id']
+                                session.current_character = stored_session['current_character']
+                                session.current_char_dict = stored_session['current_char_dict']
+                                session.current_level = stored_session['current_level']
+                                print(f"[DEBUG] Restored session from recent activity: {session.current_character}")
+                                break
+
+                    # Second, try to get character data from pending_world (most recent)
+                    if not session.current_character and len(pending_world) > 0:
+                        # Get the most recent character data from pending_world
+                        for token, char_data in pending_world.items():
+                            if char_data.get('user_id') and char_data.get('name'):
+                                print(f"[DEBUG] Found character in pending_world: {char_data.get('name')} (user_id: {char_data.get('user_id')})")
+                                session.user_id = char_data['user_id']
+                                session.current_character = char_data['name']
+                                session.current_char_dict = char_data
+                                session.current_level = char_data.get('CurrentLevel', level_name)
+                                print(f"[DEBUG] Restored session from pending_world")
+                                break
+
+                    # Third, try persistent sessions
+                    if not session.current_character and session.user_id:
+                        if session.restore_from_persistent(session.user_id):
+                            print(f"[DEBUG] Successfully restored from persistent session")
+
+                    # If still missing data, try to reconstruct from available info
+                    if not session.current_character and hasattr(session, 'entities') and session.entities:
+                        # Try to get character name from entities
+                        for ent_id, ent_data in session.entities.items():
+                            if ent_data.get('name') and ent_data.get('name') != 'Unknown':
+                                session.current_character = ent_data['name']
+                                print(f"[DEBUG] Reconstructed character name from entities: {session.current_character}")
+                                break
+
+                # Debug session state before transfer
+                print(f"[DEBUG] Transfer: current_character={session.current_character}, char_list_count={len(getattr(session, 'char_list', []))}")
+                print(f"[DEBUG] Session user_id: {getattr(session, 'user_id', 'MISSING')}")
+                print(f"[DEBUG] Session current_char_dict: {getattr(session, 'current_char_dict', 'MISSING')}")
+
+                # Ensure we have proper character data for transfer
+                transfer_data = None
+
+                # First try to use current_char_dict if it exists and has proper data
+                if hasattr(session, 'current_char_dict') and session.current_char_dict and session.current_char_dict.get('name') not in [None, 'Unknown']:
+                    transfer_data = session.current_char_dict.copy()
+                    transfer_data["CurrentLevel"] = level_name
+                    # Ensure user_id is set
+                    if not transfer_data.get('user_id') and hasattr(session, 'user_id'):
+                        transfer_data["user_id"] = session.user_id
+                    print(f"[DEBUG] Using current_char_dict: name={transfer_data.get('name')}, user_id={transfer_data.get('user_id')}")
+
+                # If no valid current_char_dict, try to find character from char_list
+                elif hasattr(session, 'char_list') and session.char_list:
+                    # Find the character that matches current_character name
+                    for char in session.char_list:
+                        if char.get('name') == session.current_character:
+                            transfer_data = char.copy()
+                            transfer_data["CurrentLevel"] = level_name
+                            if not transfer_data.get('user_id') and hasattr(session, 'user_id'):
+                                transfer_data["user_id"] = session.user_id
+                            print(f"[DEBUG] Found char in char_list: name={transfer_data.get('name')}, user_id={transfer_data.get('user_id')}")
+                            break
+
+                # If still no data, try to get from pending_world directly
+                elif len(pending_world) > 0:
+                    print(f"[DEBUG] Trying to get character data from pending_world")
+                    for token, char_data in pending_world.items():
+                        if char_data.get('name') and char_data.get('name') != 'Unknown' and char_data.get('user_id'):
+                            transfer_data = char_data.copy()
+                            transfer_data["CurrentLevel"] = level_name
+                            print(f"[DEBUG] Using pending_world data: name={transfer_data.get('name')}, user_id={transfer_data.get('user_id')}")
+                            break
+
+                # If still no data, create from session info as fallback
+                if not transfer_data:
+                    print(f"[DEBUG] No char data found, using session fallback")
+                    # Use session data if available
+                    char_name = session.current_character if hasattr(session, 'current_character') and session.current_character else 'Unknown'
+                    user_id = session.user_id if hasattr(session, 'user_id') and session.user_id else None
+
+                    # If we still don't have user_id, try to get it from player_data
+                    if not user_id and hasattr(session, 'player_data') and session.player_data:
+                        user_id = session.player_data.get('user_id')
+
+                    transfer_data = {
+                        "name": char_name,
+                        "user_id": user_id,
+                        "CurrentLevel": level_name,
+                        "class": "Mage",  # Default
+                        "level": 50,
+                        "hp": 100,
+                        "max_hp": 100
+                    }
+
+                print(f"[DEBUG] Final transfer_data: name={transfer_data.get('name')}, user_id={transfer_data.get('user_id')}")
+
+                # Enhanced validation and error handling
+                if not transfer_data.get('name') or transfer_data.get('name') == 'Unknown' or not transfer_data.get('user_id'):
+                    print(f"[ERROR] Cannot transfer with invalid character data: name={transfer_data.get('name')}, user_id={transfer_data.get('user_id')}")
+                    print(f"[ERROR] Session state: current_character={getattr(session, 'current_character', 'MISSING')}, user_id={getattr(session, 'user_id', 'MISSING')}")
+
+                    # Send error response to client
+                    error_msg = "Transfer failed: Invalid character data"
+                    error_bytes = error_msg.encode("utf-8")
+                    error_packet = struct.pack(">HH", 0x1B, len(error_bytes) + 2) + struct.pack(">H", len(error_bytes)) + error_bytes
+                    conn.sendall(error_packet)
+                    continue
+
+                token = session.issue_token(transfer_data)
+                pending_world[token] = transfer_data
                 swf_path, map_id, base_id, is_inst = LEVEL_CONFIG[level_name]
+
                 pkt21 = build_enter_world_packet(
                     transfer_token=token,
                     old_level_id=0, old_swf="", has_old_coord=False, old_x=0, old_y=0,
@@ -756,8 +980,8 @@ def handle_client(session: ClientSession):
                     new_level_swf=swf_path, new_map_lvl=map_id,
                     new_base_lvl=base_id, new_internal=level_name,
                     new_moment="", new_alter="", new_is_inst=is_inst,
-                    new_has_coord=True, new_x=1000, new_y=1000,
-                    char=session.player_data
+                    new_has_coord=False, new_x=0, new_y=0,  # Let the game use default spawn
+                    char=transfer_data
                 )
                 conn.sendall(pkt21)
                 print("Sent ENTER_WORLD (0x21)")

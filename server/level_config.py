@@ -1,5 +1,3 @@
-
-
 _raw_level_config  = {
     "CraftTown": "LevelsHome.swf/a_Level_Home 1 1 true",
     "CraftTownTutorial": "LevelsHome.swf/a_Level_HomeTutorial 1 1 true",
@@ -287,6 +285,10 @@ DOOR_MAP = {
     ('CemeteryHillHard', 207): 'CH_MiniMission7Hard',
     ('CemeteryHillHard', 208): 'CH_MiniMission8Hard',
     ('CemeteryHillHard', 209): 'CH_MiniMission9Hard',
+    # from 'CraftTown'
+    ('CraftTown', 0): 'NewbieRoad',  # LeaveHome button
+    ('CraftTown', 1): 'NewbieRoad',
+    ('CraftTown', 2): 'NewbieRoad',
     # from 'CraftTownTutorial'
     ('CraftTownTutorial', 2): 'CraftTown',
     # from 'EmeraldGlades'
@@ -347,11 +349,13 @@ DOOR_MAP = {
     ('JadeCityHard', 300): 'JadeCity',
     # from 'NewbieRoad'
     ('NewbieRoad', 2): 'SwampRoadNorth',
+    ('NewbieRoad', 999): 'CraftTown',  # GoHome button (class_11.const_759)
     ('NewbieRoad', 101): 'TutorialDungeon',
     ('NewbieRoad', 102): 'GhostBossDungeon',
     ('NewbieRoad', 103): 'DreamDragonDungeon',
     ('NewbieRoad', 104): 'TutorialBoat',
     ('NewbieRoad', 105): 'GoblinRiverDungeon',
+    ('NewbieRoad', 3892): 'NewbieRoad',  # Self-referential door for area transitions
     # from 'NewbieRoadHard'
     ('NewbieRoadHard', 2): 'SwampRoadNorthHard',
     ('NewbieRoadHard', 101): 'TutorialDungeonHard',

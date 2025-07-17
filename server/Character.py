@@ -1,5 +1,3 @@
-# Character.py
-
 import os
 import json
 from BitUtils import BitBuffer
@@ -136,7 +134,7 @@ def make_character_dict_from_tuple(character):
     Starting_Active_Abilities = Active_Abilities.get(cls, [])
 
     char_dict = {
-        "CurrentLevel": "CraftTown",
+        "CurrentLevel": "BridgeTown",
         "name":       name,
         "class":      class_name,
         "level":      level,
