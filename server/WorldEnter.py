@@ -31,7 +31,13 @@ from constants import (
     GEARTYPE_BITS,
     Mission,
     class_119, class_111,
+
 )
+
+
+
+
+
 from missions import var_238
 def Player_Data_Packet(char: dict,
                       event_index: int = 1,
@@ -88,7 +94,7 @@ def Player_Data_Packet(char: dict,
     buf.write_method_6(char_level, MAX_CHAR_LEVEL_BITS)
     buf.write_method_4(char.get("xp", 0))  # xp
     buf.write_method_4(char.get("gold", 0))  # gold
-    buf.write_method_4(char.get("Gems", 0))  # Gems
+    buf.write_method_4(char.get("craftXP", 0))  # Gems
     buf.write_method_4(char.get("DragonOre", 0))  # DragonOre
     buf.write_method_4(char.get("mammothIdols", 0))  # mammoth idols
     buf._append_bits(int(char.get("showHigher", True)), 1)
@@ -573,6 +579,8 @@ def Player_Data_Packet(char: dict,
         buf.write_method_6(CLASS_NAME_TO_ID[char["class"]], 2)
         buf.write_method_6(char["level"], 6)
         buf.write_method_6(guild.get("rank", 0), 3)
+
+
 
     payload = buf.to_bytes()
     return struct.pack(">HH", 0x10, len(payload)) + payload

@@ -20,8 +20,32 @@ def Send_Entity_Data(entity: Dict[str, Any], is_player: bool = False) -> bytes:
     bb.write_method_13(entity_name)
     #print(f"Send_Entity_Data: Wrote entity name: {entity_name}")
 
-    bb.write_bits(0, 1)  # Appearance flag  for players (0 for simplicity; adjust if needed)
-    #print("Send_Entity_Data: Wrote appearance flag: 0")
+    has_appearance = is_player  # Enable for players
+    bb.write_bits(1 if has_appearance else 0, 1)
+    if has_appearance:
+        bb.write_method_13(entity.get("class", "Paladin"))
+        bb.write_method_13(entity.get("headSet", "Head01"))
+        bb.write_method_13(entity.get("hairSet", "Hair01"))
+        bb.write_method_13(entity.get("mouthSet", "Mouth01"))
+        bb.write_method_13(entity.get("faceSet", "Face01"))
+        bb.write_method_13("")  # Additional string (placeholder)
+        bb.write_bits(entity.get("hairColor", 0), 24)
+        bb.write_bits(entity.get("skinColor", 0), 24)
+        bb.write_bits(entity.get("shirtColor", 0), 24)
+        bb.write_bits(entity.get("pantColor", 0), 24)
+        # Gear slots (6 slots)
+        equipped_gears = entity.get("equippedGears", [[0, 0, 0, 0, 0, 0]] * 6)
+        for slot in range(6):
+            gear = equipped_gears[slot] if slot < len(equipped_gears) else [0, 0, 0, 0, 0, 0]
+            gear_id = gear[0]
+            bb.write_bits(1 if gear_id != 0 else 0, 1)
+            if gear_id != 0:
+                bb.write_bits(gear_id, 11)  # GearID
+                bb.write_bits(gear[1], 8)  # Rune1
+                bb.write_bits(gear[2], 8)  # Rune2
+                bb.write_bits(gear[3], 8)  # Rune3
+                bb.write_bits(gear[4], 8)  # Color1
+                bb.write_bits(gear[5], 8)  # Color2
 
     # Coordinates
     x_scaled, y_scaled, z_scaled = scale_coordinates(

@@ -1,10 +1,68 @@
 import json, struct
+import time
+
+from Character import save_characters
 from bitreader import BitReader
 from constants import GearType, EntType, class_64, class_1, DyeType, class_118, method_277, GAME_CONST_209, \
-    CLASS_118_CONST_127, class_111, class_1_const_254, class_8, class_3
+    CLASS_118_CONST_127, class_111, class_1_const_254, class_8, class_3, class_64_const_218, class_111_const_432, \
+    LinkUpdater, Entity
 from BitUtils import BitBuffer
 from constants import get_dye_color
+from entity import Send_Entity_Data
+
 SAVE_PATH_TEMPLATE = "saves/{user_id}.json"
+
+def tick_forge_status(session):
+    """
+    Called periodically to check if the forge session has finished naturally.
+    If duration is expired and session is still marked in-progress,
+    convert it to status=2 and send a 0xCD packet to client.
+    """
+    chars = session.player_data.get("characters", [])
+    char = next((c for c in chars if c.get("name") == session.current_character), None)
+    if char is None:
+        return
+
+    mf = char.get("magicForge", {})
+
+    # If no session or not in-progress, skip
+    if not mf.get("hasSession") or mf.get("status") != class_111.const_286:
+        return
+
+    duration_ms = mf.get("duration", 0)
+    if duration_ms <= 0:
+        return
+
+    # Determine when it started
+    forge_start = mf.get("_start_time")
+    if not forge_start:
+        return
+
+    now = time.time()
+    if now >= forge_start + (duration_ms / 1000):
+        mf["status"] = class_111.const_264  # completed state
+        mf["duration"] = 0
+        mf["var_8"] = 1 if mf.get("secondary") else 0
+
+        # Save the update
+        save_path = SAVE_PATH_TEMPLATE.format(user_id=session.user_id)
+        with open(save_path, "w", encoding="utf-8") as f:
+            json.dump(session.player_data, f, indent=2)
+
+        # Send 0xCD packet to update client
+        bb = BitBuffer()
+        bb.write_method_6(mf.get("primary", 0), class_1_const_254)
+        bb.write_method_91(mf.get("var_2675", 0))
+        bb.write_method_91(mf.get("var_2316", 0))
+        bb._append_bits(1 if mf.get("var_8") else 0, 1)
+        if mf.get("var_8"):
+            bb.write_method_6(mf.get("secondary", 0), class_64_const_218)
+            bb.write_method_6(mf.get("usedlist", 0), class_111_const_432)
+
+        payload = bb.to_bytes()
+        resp = struct.pack(">HH", 0xCD, len(payload)) + payload
+        session.conn.sendall(resp)
+        print(f"[{session.addr}] Forge auto-finish: 0xCD sent.")
 
 def handle_hotbar_packet(session, raw_data):
     payload = raw_data[4:]
@@ -22,8 +80,7 @@ def handle_hotbar_packet(session, raw_data):
     print(f"[Hotbar] Player {session.user_id} updates → {updates}")
 
     # 2) Locate the right character in the save
-    chars = session.player_data.get("characters", [])
-    for char in chars:
+    for char in session.char_list:
         if char.get("name") == session.current_character:
             # 3) Fetch existing list, or default to zeros
             active = char.get("activeAbilities", [])
@@ -44,26 +101,24 @@ def handle_hotbar_packet(session, raw_data):
         return
 
     # 6) Persist full JSON
-    save_path = SAVE_PATH_TEMPLATE.format(user_id=session.user_id)
-    with open(save_path, "w", encoding="utf-8") as f:
-        json.dump(session.player_data, f, indent=2)
-
-    print(f"[Save] activeAbilities for {session.current_character} = {active} saved to {save_path}")
+    session.player_data["characters"] = session.char_list
+    save_characters(session.user_id, session.char_list)
+    print(f"[Save] activeAbilities for {session.current_character} = {active} saved (user_id={session.user_id})")
 
 def send_mastery_packet(session, entity_id):
     # 1) Fetch slots for current MasterClass
-    pd = session.player_data
-    chars = pd.get("characters", pd if isinstance(pd, list) else [])
+
     mc = None
     slots = []
-    for char in chars:
+    for char in session.char_list:
         if char.get("name") == session.current_character:
-            mc = char.get("MasterClass", 1)
+            mc      = char.get("MasterClass", 1)
             mastery = char.get("Mastery", {}).get(str(mc), {})
-            slots = mastery.get("slots", [])
+            slots   = mastery.get("slots", [])
             break
-    if mc is None:
+    else:
         return
+    session.player_data["characters"] = session.char_list
 
     # Turn into a map 0-based index -> slot data
     slot_map = { s["nodeIdx"] - 1: s for s in slots }
@@ -88,7 +143,6 @@ def send_mastery_packet(session, entity_id):
     session.conn.sendall(pkt)
     print(f"[Reply 0xC1] Mastery for class {mc}, slot_map keys: {sorted(slot_map.keys())}")
 
-
 def handle_masterclass_packet(session, raw_data):
     payload = raw_data[4:]
     br = BitReader(payload)
@@ -96,17 +150,15 @@ def handle_masterclass_packet(session, raw_data):
     master_class_id = br.read_method_6(GAME_CONST_209)
     print(f"[MasterClass] Player {session.user_id} → classID={master_class_id}")
 
-    pd = session.player_data
-    chars = pd.get("characters", pd if isinstance(pd, list) else [])
-    for char in chars:
+    for char in session.char_list:
         if char.get("name") == session.current_character:
             char["MasterClass"] = master_class_id
             break
     else:
         return
 
-    with open(SAVE_PATH_TEMPLATE.format(user_id=session.user_id), "w", encoding="utf-8") as f:
-        json.dump(pd, f, indent=2)
+    session.player_data["characters"] = session.char_list
+    save_characters(session.user_id, session.char_list)
 
     bb = BitBuffer()
     bb.write_method_4(entity_id)
@@ -131,7 +183,6 @@ def handle_research_packet(session, raw_data):
     session.conn.sendall(struct.pack(">HH", 0xDF, 0))
     print(f"[Reply 0xDF] Cleared research for {session.current_character}")
 
-
 def handle_gear_packet(session, raw_data):
     payload = raw_data[4:]
     br = BitReader(payload)
@@ -144,10 +195,8 @@ def handle_gear_packet(session, raw_data):
     slot       = slot1 - 1
 
     print(f"[Gear] entity={entity_id}, slot={slot}, gear={gear_id}")
-
-    pd = session.player_data
-    chars = pd.get("characters", pd if isinstance(pd, list) else [])
-    for char in chars:
+    # 1) Locate and update the character in session.char_list
+    for char in session.char_list:
         if char.get("name") != session.current_character:
             continue
 
@@ -180,11 +229,11 @@ def handle_gear_packet(session, raw_data):
             inv.append(gear_data.copy())  # keep dye/rune info consistent
 
         break
+    # 2) Sync into session.player_data if still used
+    session.player_data["characters"] = session.char_list
 
-    # Save
-    save_path = SAVE_PATH_TEMPLATE.format(user_id=session.user_id)
-    with open(save_path, "w", encoding="utf-8") as f:
-        json.dump(pd, f, indent=2)
+    # 3) Persist via helper
+    save_characters(session.user_id, session.char_list)
     print(f"[Save] slot {slot} updated with gear {gear_id}, inventory count = {len(inv)}")
 
     # Echo back to client
@@ -197,12 +246,8 @@ def handle_gear_packet(session, raw_data):
     session.conn.sendall(resp)
     print(f"[Reply 0x31] echoed equip update")
 
-
 def handle_apply_dyes(session, entity_id, dyes_by_slot, preview_only, primary_dye, secondary_dye):
-    pd = session.player_data
-    chars = pd.get("characters", pd if isinstance(pd, list) else [])
-
-    for char in chars:
+    for char in session.char_list:
         if char.get("name") != session.current_character:
             continue
 
@@ -240,19 +285,24 @@ def handle_apply_dyes(session, entity_id, dyes_by_slot, preview_only, primary_dy
                 print(f"[Warning] Unknown secondary dye ID: {secondary_dye}")
 
         break  # Done updating current character
+    else:
+        print(f"[Dyes] ERROR: character {session.current_character} not found")
+        return
 
-    # Save updated data
-    save_path = SAVE_PATH_TEMPLATE.format(user_id=session.user_id)
-    with open(save_path, "w", encoding="utf-8") as f:
-        json.dump(pd, f, indent=2)
+    # 2) Sync session.player_data and persist
+    session.player_data["characters"] = session.char_list
+    save_characters(session.user_id, session.char_list)
+    print(f"[Save] Dye info applied for {session.current_character} and saved")
 
-    print("[Save] Dye info applied and synced to inventory.")
-    char_data = next((c for c in chars if c.get("name") == session.current_character), {})
-    shirt_rgb = char_data.get("shirtColor")
-    pant_rgb = char_data.get("pantColor")
-    send_dye_sync_packet(session, entity_id, dyes_by_slot, shirt_rgb, pant_rgb)
-
-
+    # 3) Send the sync packet
+    char_data = next(c for c in session.char_list if c.get("name") == session.current_character)
+    send_dye_sync_packet(
+                session,
+                entity_id,
+                dyes_by_slot,
+                char_data.get("shirtColor"),
+                char_data.get("pantColor")
+        )
 
 def send_dye_sync_packet(session, entity_id, dyes_by_slot, shirt_color=None, pant_color=None):
         bb = BitBuffer()
@@ -293,7 +343,6 @@ def send_dye_sync_packet(session, entity_id, dyes_by_slot, shirt_color=None, pan
         session.conn.sendall(pkt)
         print(f"[Sync] Sent dye update (0x111) to client for entity {entity_id}")
 
-
 def handle_rune_packet(session, raw_data):
     payload = raw_data[4:]
     br = BitReader(payload)
@@ -304,9 +353,7 @@ def handle_rune_packet(session, raw_data):
     rune_slot  = br.read_method_6(class_1.const_765)
     print(f"[Rune] entity={entity_id}, gear={gear_id}, tier={gear_tier}, rune_id={rune_id}, rune_slot={rune_slot}")
 
-    pd     = session.player_data
-    chars  = pd.get("characters", pd if isinstance(pd, list) else [])
-    for char in chars:
+    for char in session.char_list:
         if char.get("name") != session.current_character:
             continue
 
@@ -388,14 +435,10 @@ def handle_rune_packet(session, raw_data):
         print(f"[Warning] Character {session.current_character} not found")
         return
 
-
-
-
-
     # Save updated data
-    save_path = SAVE_PATH_TEMPLATE.format(user_id=session.user_id)
-    with open(save_path, "w", encoding="utf-8") as f:
-        json.dump(pd, f, indent=2)
+    # 2) Sync session.player_data and persist
+    session.player_data["characters"] = session.char_list
+    save_characters(session.user_id, session.char_list)
     print(f"[Save] Rune {rune_id} applied to slot {rune_slot} for gear {gear_id} (tier {gear_tier})")
 
     # Echo response to client
@@ -410,7 +453,6 @@ def handle_rune_packet(session, raw_data):
     session.conn.sendall(resp)
     print(
         f"[Reply 0xB0] Echoed rune update: entity={entity_id}, gear={gear_id}, tier={gear_tier}, rune={rune_id}, slot={rune_slot}")
-
 
 def send_look_update_packet(session, entity_id, head, hair, mouth, face, gender, hair_color, skin_color):
     """
@@ -451,7 +493,6 @@ def send_look_update_packet(session, entity_id, head, hair, mouth, face, gender,
 
     # Optional logging for debugging
     print(f"[LookUpdate] Sent packet 0x{packet_type:02X} for entity {entity_id}")
-
 
 def handle_change_look(session, raw_data, all_sessions):
     """
@@ -541,7 +582,6 @@ def handle_create_gearset(session, raw_data):
 
     # echo back so the client will show the "Enter name" popup
     session.conn.sendall(raw_data)
-
 
 def handle_name_gearset(session, raw_data):
     """
@@ -742,35 +782,35 @@ def magic_forge_packet(session, data):
 
     else:
         print(f"[{session.addr}] Speed‑up denied: hasSession={mf.get('hasSession')}, idols={available}")
-
+#TODO... for every collect the forge should gain level XP
 def collect_forge_charm(session, data):
     """
-    Handle 0xD0 “collect charm” from client:
-    - Grant the player the charm they just forged (primary ID)
+    Handle 0xD0 "collect charm" from client:
+    - Grant the player the charm they just forged (computed full ID)
     - Clear out the forge session
     - Persist save
-    - Reply an empty 0xD0 ack
+    - Reply with an empty 0xD0 ack
     """
-    #print(f"[{session.addr}] Collect‑forge‑charm request received")
-
-    # 1) Grab character
     chars = session.player_data.get("characters", [])
     char = next((c for c in chars if c.get("name") == session.current_character), None)
     if char is None:
-        #print(f"[{session.addr}] Character {session.current_character} not found")
+        print(f"[{session.addr}] Character {session.current_character} not found")
         return
 
     mf = char.get("magicForge", {})
     if not mf.get("hasSession", False):
-        #print(f"[{session.addr}] No active forge session to collect")
+        print(f"[{session.addr}] No active forge session to collect")
         return
 
-    # 2) Determine which charm to grant
-    charm_id = mf.get("primary", 0)
-    if charm_id <= 0:
-        print(f"[{session.addr}] Invalid primary charm ID: {charm_id}")
+    # Compute full charm ID
+    primary = mf.get("primary", 0)
+    secondary = mf.get("secondary", 0)
+    var_8 = mf.get("var_8", 0)
+    charm_id = (primary & 0x1FF) | ((secondary & 0x1F) << 9) | ((var_8 & 0x3) << 14)
+
+    if primary <= 0:
+        print(f"[{session.addr}] Invalid primary ID: {primary}")
     else:
-        # find or create an entry in char["charms"]
         charms = char.setdefault("charms", [])
         for entry in charms:
             if entry.get("charmID") == charm_id:
@@ -778,35 +818,38 @@ def collect_forge_charm(session, data):
                 break
         else:
             charms.append({"charmID": charm_id, "count": 1})
-        #print(f"[{session.addr}] Granted charmID={charm_id}. New counts: {char['charms']}")
+        print(f"[{session.addr}] Granted charmID={charm_id}. New charms: {char['charms']}")
 
-    # 3) Clear the forge session
-    mf["hasSession"] = False
-    mf["primary"]    = 0
-    mf["secondary"]  = 0
-    mf["duration"]   = 0
-    mf["usedlist"]   = 0
-    mf["var_2675"]   = 0
-    mf["var_2316"]   = 0
-    mf["var_2434"]   = False
-    mf["status"]     = 0
+    # Clear forge session
+    mf.update({
+        "hasSession": False,
+        "primary": 0,
+        "secondary": 0,
+        "status": 0,
+        "duration": 0,
+        "var_8": 0,
+        "usedlist": 0,
+        "var_2675": 0,
+        "var_2316": 0,
+        "var_2434": False
+    })
 
-    # 4) Persist the full save file
+    # Save file
     save_path = SAVE_PATH_TEMPLATE.format(user_id=session.user_id)
     with open(save_path, "w", encoding="utf-8") as f:
         json.dump(session.player_data, f, indent=2)
-    #print(f"[{session.addr}] Forge session cleared and save updated")
+    print(f"[{session.addr}] Forge session cleared and saved")
 
-    # 5) Reply with an empty 0xD0 packet to ACK
-    resp = struct.pack(">HH", 0xe3, 0)
+    # Reply with 0xD0 ACK
+    resp = struct.pack(">HH", 0xD0, 0)
     session.conn.sendall(resp)
-    #print(f"[{session.addr}] Sent 0xD0 collect‑ack")
-
-
+    print(f"[{session.addr}] Sent 0xD0 collect-ack")
+#TODO... implement the proper system to calculate the runnes  for each craft and the timers
 def start_forge_packet(session, data):
     """
     Handle 0xB1: client clicked Craft on the Magic Forge.
-    Also deducts materials and consumables from the character’s save.
+    Also deducts materials and consumables from the character’s save,
+    updates the session.char_list, and persists the result.
     """
     payload = data[4:]
     br = BitReader(payload)
@@ -819,7 +862,7 @@ def start_forge_packet(session, data):
     materials_used = {}
     while br.read_bit():  # method_15(true)
         mat_id = br.read_bits(class_8.const_658)
-        count  = br.read_bits(class_8.const_731)
+        count = br.read_bits(class_8.const_731)
         materials_used[mat_id] = count
     print(f"[{session.addr}] Forge materials: {materials_used}")
 
@@ -827,9 +870,9 @@ def start_forge_packet(session, data):
     consumable_flags = [br.read_bit() for _ in range(4)]
     print(f"[{session.addr}] Forge consumables flags: {consumable_flags}")
 
-    # 4) Locate the character dict
-    chars = session.player_data.setdefault("characters", [])
-    char = next((c for c in chars if c["name"] == session.current_character), None)
+    # 4) Locate the character dict in session.char_list
+    char = next((c for c in session.char_list
+                 if c["name"] == session.current_character), None)
     if not char:
         print(f"[{session.addr}] ERROR: character not found for forge start")
         return
@@ -837,17 +880,14 @@ def start_forge_packet(session, data):
     # 5) Deduct materials
     mats = char.setdefault("materials", [])
     for mat_id, used in materials_used.items():
-        # find existing material entry
         for entry in mats:
             if entry["materialID"] == mat_id:
                 entry["count"] = max(0, entry["count"] - used)
                 break
         else:
-            # If the entry doesn't exist, still record use (down to zero)
             mats.append({"materialID": mat_id, "count": 0})
 
-    # 6) Deduct consumables (by flag order)
-    # Assuming consumable IDs are in some known order class_3.var_1415,2082,1374,1462
+    # 6) Deduct consumables
     consumable_ids = [
         class_3.var_1415,
         class_3.var_2082,
@@ -864,25 +904,34 @@ def start_forge_packet(session, data):
             else:
                 cons.append({"consumableID": cid, "count": 0})
 
-    # 7) Start the forge session
+    # 7) Decide if the result has a secondary buff
+    import random, time
+    has_secondary = random.random() < 0.25  # 25%
+    secondary    = random.randint(1, 9) if has_secondary else 0
+    var_8        = 1 if has_secondary else 0
+
+    # 8) Start the forge session on the character
     mf = char.setdefault("magicForge", {})
     mf.update({
         "hasSession": True,
         "primary": primary,
-        "status": class_111.const_286,  # in‑progress
-        "duration": 60000,              # or your computed time
-        "var_8": 0,
+        "secondary": secondary,
+        "status": class_111.const_286,  # in-progress
+        "duration": 60000,              # ms
+        "_start_time": time.time(),     # timestamp
+        "var_8": var_8,
         "usedlist": 0,
         "var_2675": 0,
         "var_2316": 0,
         "var_2434": True
     })
 
-    # 8) Persist the full save
-    save_path = SAVE_PATH_TEMPLATE.format(user_id=session.user_id)
-    with open(save_path, "w", encoding="utf-8") as f:
-        json.dump(session.player_data, f, indent=2)
-    print(f"[{session.addr}] Materials and consumables deducted and forge session saved")
+    # 9) Sync session.player_data (if you still use it elsewhere)
+    session.player_data["characters"] = session.char_list
+
+    # 10) Persist to disk using your existing helper
+    save_characters(session.user_id, session.char_list)
+    print(f"[{session.addr}] Forge session started and saved")
 
 
 def cancel_forge_packet(session, data):
@@ -946,4 +995,166 @@ def allocate_talent_points(session, data):
         json.dump(session.player_data, f, indent=2)
     print(f"[{session.addr}] Saved new craftTalentPoints for {char['name']}")
 
+def use_forge_xp_consumable(session, data):
+    """
+    Handle 0x110: player used a forge‑XP consumable.
+    Deduct one consumable and award forge XP (capped at 159,948).
+    """
+    payload = data[4:]
+    br = BitReader(payload)
 
+    # Read consumableID
+    cid = br.read_bits(class_3.const_69)
+    print(f"[{session.addr}] Forge XP consumable used: consumableID={cid}")
+
+    # Get character
+    chars = session.player_data.get("characters", [])
+    char = next((c for c in chars if c.get("name") == session.current_character), None)
+    if not char:
+        print(f"[{session.addr}] ERROR: character not found")
+        return
+
+    # Deduct from inventory
+    cons = char.setdefault("consumables", [])
+    for entry in cons:
+        if entry["consumableID"] == cid:
+            entry["count"] = max(0, entry["count"] - 1)
+            break
+    else:
+        print(f"[{session.addr}] Warning: consumable {cid} not in inventory")
+
+    # Award XP (capped)
+    xp_gain = 4000
+    current_xp = char.get("craftXP", 0)
+    max_xp = 159_948
+    new_xp = min(current_xp + xp_gain, max_xp)
+    char["craftXP"] = new_xp
+
+    print(f"[{session.addr}] Forge XP +{xp_gain} (capped), total now = {char['craftXP']}")
+
+    # Save file
+    save_path = SAVE_PATH_TEMPLATE.format(user_id=session.user_id)
+    with open(save_path, "w", encoding="utf-8") as f:
+        json.dump(session.player_data, f, indent=2)
+    print(f"[{session.addr}] Save updated with capped forge XP")
+
+def handle_private_message(session, data, all_sessions):
+    payload = data[4:]
+    try:
+        br = BitReader(payload)
+        recipient_name = br.read_method_13()
+        message        = br.read_method_13()
+        print(f"[{session.addr}] [PKT46] Private message from {session.current_character} to {recipient_name}: {message}")
+
+        # find recipient session
+        recipient_session = next(
+            (s for s in all_sessions
+             if s.current_character
+             and s.current_character.lower() == recipient_name.lower()
+             and s.authenticated),
+            None
+        )
+
+        if recipient_session:
+            bb = BitBuffer()
+            bb.write_method_13(session.current_character)  # sender
+            bb.write_method_13(message)                   # message
+            payload_out = bb.to_bytes()
+
+            pkt = struct.pack(">HH", 0x47, len(payload_out)) + payload_out
+            recipient_session.conn.sendall(pkt)
+            print(f"[{session.addr}] [PKT47] Sent private message to {recipient_session.addr}")
+
+        else:
+            print(f"[{session.addr}] [PKT46] Recipient {recipient_name} not found")
+            err = f"Player {recipient_name} not found".encode("utf-8")
+            pl  = struct.pack(">H", len(err)) + err
+            session.conn.sendall(struct.pack(">HH", 0x1B, len(pl)) + pl)
+
+    except Exception as e:
+        print(f"[{session.addr}] [PKT46] Parse error: {e}, raw payload = {payload.hex()}")
+
+
+def handle_entity_update(session, data, all_sessions):
+    # Sanity check
+    if len(data) < 4:
+        #print(f"[{session.addr}] [PKT07] Invalid packet (too short): raw={data.hex()}")
+        return
+
+    payload = data[4:]
+    #print(f"[{session.addr}] [PKT07] Raw payload: {payload.hex()}")
+
+    br = BitReader(payload, debug=False)
+    try:
+        # --- Read & validate entity ID ---
+        ent_id = br.read_method_9()
+        #print(f"[{session.addr}] [PKT07] Read ent_id = {ent_id}")
+        if ent_id != session.clientEntID:
+           # print(f"[{session.addr}] [PKT07] WRONG ent_id: {ent_id} vs clientEntID {session.clientEntID}")
+            return
+
+        # Ensure we have an entry
+        if ent_id not in session.entities:
+            session.entities[ent_id] = {
+                "x": 360.0, "y": 1458.99, "z": 0.0,
+                "entState": Entity.const_6,
+                "is_player": True
+            }
+
+        entity = session.entities[ent_id]
+
+        # --- Read movement deltas ---
+        dx  = br.read_int24();  #print(f"[{session.addr}] [PKT07] dx = {dx}")
+        dy  = br.read_int24();  #(f"[{session.addr}] [PKT07] dy = {dy}")
+        dvx = br.read_int24();  #print(f"[{session.addr}] [PKT07] dvx = {dvx}")
+
+        # Compute new pos/vel
+        entity['x'] = entity.get('x', 360.0) + dx
+        entity['y'] = entity.get('y', 1458.99) + dy
+        entity['velocity_x'] = entity.get('velocity_x', 0) + (dvx * LinkUpdater.VELOCITY_DEFLATE)
+        #print(f"[{session.addr}] [PKT07] Updated x,y = ({entity['x']:.2f}, {entity['y']:.2f}), vx = {entity['velocity_x']:.2f}")
+
+        # --- Read entity state ---
+        ent_state = br.read_method_6(Entity.const_316)
+        #print(f"[{session.addr}] [PKT07] ent_state = {ent_state}")
+        entity['entState'] = ent_state
+
+        # --- Read input flags ---
+        flags = {
+            "left":     bool(br.read_bit()),
+            "running":  bool(br.read_bit()),
+            "jumping":  bool(br.read_bit()),
+            "dropping": bool(br.read_bit()),
+            "backpedal":bool(br.read_bit())
+        }
+        #print(f"[{session.addr}] [PKT07] flags = {flags}")
+        entity.update(flags)
+
+        # --- Airborne vs surface ---
+        is_airborne = bool(br.read_bit())
+        #print(f"[{session.addr}] [PKT07] is_airborne = {is_airborne}")
+        if is_airborne:
+            raw_vy = br.read_int24()
+            vy = raw_vy * LinkUpdater.VELOCITY_DEFLATE
+            #print(f"[{session.addr}] [PKT07] raw_vy={raw_vy}, vy={vy:.2f}")
+            if ent_state != Entity.const_6:
+                entity['velocity_y'] = vy
+                entity['surface']    = None
+        else:
+            entity['surface']     = True
+            entity['velocity_y']  = 0
+            #print(f"[{session.addr}] [PKT07] On surface → velocity_y=0")
+
+        # Write back and broadcast
+        session.entities[ent_id] = entity
+
+        for other in all_sessions:
+            if other is not session and other.world_loaded and other.current_level == session.current_level:
+                pkt_data = Send_Entity_Data(entity, is_player=True)
+                other.conn.sendall(struct.pack(">HH", 0x0F, len(pkt_data)) + pkt_data)
+                #print(f"[{session.addr}] [PKT07] Broadcast to {other.addr}: x={entity['x']:.2f}, y={entity['y']:.2f}")
+
+    except Exception as e:
+        #print(f"[{session.addr}] [PKT07] Parse error: {e}")
+        #print(f"[{session.addr}] [PKT07] Debug log: {br.get_debug_log()}")
+        pass

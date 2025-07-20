@@ -303,6 +303,8 @@ MISSION_DEFS = [
     MissionDef(var_1775=True, var_908=1, var_134=False),
     MissionDef(var_1775=True, var_908=1, var_134=False),
 ]
+
+
 var_238 = MISSION_DEFS
 
 def load_mission_defs(path: str):
