@@ -147,7 +147,7 @@ def make_character_dict_from_tuple(character):
 
     char_dict = {
         "CurrentLevel": "CraftTown",
-        "PreviousLevel": "NewbieRoad",
+        "PreviousLevel": "BridgeTown",
         "name": name,
         "class": class_name,
         "level": level,
