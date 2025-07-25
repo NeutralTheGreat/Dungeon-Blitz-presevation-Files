@@ -78,24 +78,22 @@ class class_3 :
     var_1374 = 3  # LegendaryBoost
     var_1462 = 4  # ArtisanBoost
 
-
 class Entity:
     TEAM_BITS = 2
     const_316 = 2  # Entity state bit count
     const_399 = 1  # Sleep state
     const_467 = 2  # Drama state
     const_6 = 3
-    const_526 = 0
-    MAX_CHAR_LEVEL_BITS = 6
-    VELOCITY_INFLATE = 10000
     const_78 = 0
-    PLAYER = 1
-
+    const_244 = 2
+    MAX_CHAR_LEVEL_BITS = 6
 
 class LinkUpdater:
     VELOCITY_DEFLATE = 10000
+    VELOCITY_INFLATE = 10000
 class Game :
     const_209 = 4
+    const_526 = 0
 class class_118 :
     const_127 = 6
     const_43 = 27

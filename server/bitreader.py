@@ -174,7 +174,25 @@ class BitReader:
         except UnicodeDecodeError:
             return result_bytes.decode('latin1')
 
+    def read_method_560(self) -> float:
+        if self.bit_index + 32 > len(self.data) * 8:
+            raise ValueError("Not enough data to read float")
+        bits = self.read_bits(32)
+        bytes_val = struct.pack('>I', bits)
+        float_val = struct.unpack('>f', bytes_val)[0]
+        if self.debug:
+            self.debug_log.append(f"read_method_560={float_val}")
+        return float_val
 
+    def read_method_24(self) -> int:
+        if self.bit_index + 1 > len(self.data) * 8:
+            raise ValueError("Not enough data to read sign bit for method_24")
+        sign = self.read_bit()
+        magnitude = self.read_method_9()
+        value = -magnitude if sign else magnitude
+        if self.debug:
+            self.debug_log.append(f"read_method_24={value}, sign={sign}, magnitude={magnitude}")
+        return value
 
     def get_debug_log(self) -> List[str]:
         return self.debug_log

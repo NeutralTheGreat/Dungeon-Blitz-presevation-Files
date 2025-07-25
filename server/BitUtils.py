@@ -1,7 +1,7 @@
 # BitUtils.py
 import struct
 class BitBuffer:
-    def __init__(self, debug=False):
+    def __init__(self, debug=True):
         self.bits = []
         self.debug = debug
         self.debug_log = [] if debug else None

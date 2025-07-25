@@ -1,5 +1,4 @@
 # WorldEnter.py
-from typing import Any
 from BitUtils import BitBuffer
 import struct
 import time
@@ -31,19 +30,17 @@ from constants import (
     GEARTYPE_BITS,
     Mission,
     class_119, class_111,
-
 )
-
-
-
-
-
 from missions import var_238
 def Player_Data_Packet(char: dict,
                       event_index: int = 1,
                       transfer_token: int = 1,
                       scaling_factor: int = 0,
-                      bonus_levels: int = 0) -> bytes:
+                      bonus_levels: int = 0,
+                      target_level: str = None,
+                      new_x: int = None,
+                      new_y: int = None,
+                      new_has_coord: bool = True) -> bytes:
     buf = BitBuffer()
 
     # ────────────── (1) Preamble ──────────────
@@ -108,8 +105,13 @@ def Player_Data_Packet(char: dict,
         buf._append_bits(0, 1)
 
     # ────────────── (6) Position‐presence ──────────────
-    buf._append_bits(0, 1)  # no door/teleport update
-
+    #buf._append_bits(0, 1)  # no door/teleport update
+    if new_has_coord and target_level and new_x is not None and new_y is not None:
+        buf._append_bits(1, 1)
+        buf.write_signed_method_45(new_x)
+        buf.write_signed_method_45(new_y)
+    else:
+        buf._append_bits(0, 1)
     # ────────────── (7) Extended‐data‐presence ──────────────
     buf._append_bits(1, 1)  # yes, sending extended data
 
@@ -579,8 +581,6 @@ def Player_Data_Packet(char: dict,
         buf.write_method_6(CLASS_NAME_TO_ID[char["class"]], 2)
         buf.write_method_6(char["level"], 6)
         buf.write_method_6(guild.get("rank", 0), 3)
-
-
 
     payload = buf.to_bytes()
     return struct.pack(">HH", 0x10, len(payload)) + payload

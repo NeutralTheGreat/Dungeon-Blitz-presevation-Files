@@ -2,8 +2,6 @@
 
 import os
 import json
-import uuid
-
 from BitUtils import BitBuffer
 from Items import Starting_Mounts, Starting_Pets, Starting_Charms, Starting_Materials, Starting_Consumables, \
     Active_master_Class, Starter_Weapons, Active_Abilities, Starting_Missions
@@ -13,7 +11,6 @@ from constants import Mastery_Class
 
 # Hints Do not delete
 """
-
 "research": {
         "abilityID": 113,
         "finishTime": 50
@@ -146,8 +143,8 @@ def make_character_dict_from_tuple(character):
     Starting_Active_Abilities = Active_Abilities.get(cls, [])
 
     char_dict = {
-        "CurrentLevel": "CraftTown",
-        "PreviousLevel": "BridgeTown",
+        "CurrentLevel": {"name": "CraftTown", "x": 360, "y": 1458.99},
+        "PreviousLevel": {"name": "NewbieRoad", "x": 0, "y": 0},
         "name": name,
         "class": class_name,
         "level": level,
@@ -198,7 +195,6 @@ def make_character_dict_from_tuple(character):
         "activeAbilities": Starting_Active_Abilities,
         "craftTalentPoints": [5, 5, 5, 5, 5],  # these are the Magic Forge upgrade points Max value is 10 each
         "towerPoints": [50, 50, 50],  # Talent upgrade 50 Max each
-
         "equippedMount": 5,
         "equippedPetID": 1,
         "petIteration": 0,
@@ -363,12 +359,10 @@ def make_character_dict_from_tuple(character):
         },
 
     }
-
     return char_dict
 
-
 def build_paperdoll_packet(character_dict):
-    buf = BitBuffer()
+    buf = BitBuffer(debug=True)  # Enable debug for tracing
     buf.write_utf_string(character_dict["name"])
     buf.write_utf_string(character_dict["class"])
     buf.write_utf_string(character_dict["gender"])
@@ -381,13 +375,28 @@ def build_paperdoll_packet(character_dict):
     buf.write_bits(character_dict["shirtColor"], 24)
     buf.write_bits(character_dict["pantColor"], 24)
 
-    # TODO....
-    # for slot in character_dict.get("gearList", []):
-    # gear_id = slot[0]
-    # buf.write_bits(gear_id, 11)
+    # Add gear slots (slots 1 to 6, as slot 0 is skipped)
+    cls = character_dict["class"].lower()
+    # Prefer equippedGears if available, else fall back to DEFAULT_GEAR
+    gear_list = character_dict.get("equippedGears", DEFAULT_GEAR.get(cls, [[0] * 6] * 6))
+
+    for i in range(6):  # Process exactly 6 slots (1 to 6)
+        if i < len(gear_list):
+            slot = gear_list[i]
+            # Handle both dictionary (equippedGears) and list (DEFAULT_GEAR) formats
+            if isinstance(slot, dict):
+                gear_id = slot.get("gearID", 0)
+            elif isinstance(slot, (list, tuple)) and len(slot) > 0:
+                gear_id = slot[0]
+            else:
+                gear_id = 0
+        else:
+            gear_id = 0
+        buf.write_bits(gear_id, 11)  # GearType.GEARTYPE_BITSTOSEND = 11
+        if buf.debug:
+            buf.debug_log.append(f"gear_slot_{i + 1}_gearID={gear_id}")
 
     return buf.to_bytes()
-
 
 def build_login_character_list_bitpacked(characters):
     """
@@ -410,3 +419,4 @@ def build_login_character_list_bitpacked(characters):
     import struct
     header = struct.pack(">HH", 0x15, len(buf.to_bytes()))
     return header + buf.to_bytes()
+

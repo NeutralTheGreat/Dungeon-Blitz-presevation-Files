@@ -1,7 +1,26 @@
+import json
+
 from BitUtils import BitBuffer
-from constants import Entity, class_7, class_20, class_3, Game, CLASS_NAME_TO_ID, class_118, SLOT_BIT_WIDTHS
+from constants import Entity, class_7, class_20, class_3, Game, CLASS_NAME_TO_ID, class_118, SLOT_BIT_WIDTHS, \
+    LinkUpdater
 from typing import Dict, Any
 
+def load_npc_data_for_level(level_name: str, json_path: str = r"data/npc_data.json") -> list:
+    """
+    Args:
+        level_name (str): The level identifier (e.g., 'TutorialBoat').
+        json_path (str): Path to the JSON file containing NPC data.
+
+    Returns:
+        list: List of dictionaries, each containing NPC data for the given level.
+    """
+    try:
+        with open(json_path, 'r') as file:
+            npc_data = json.load(file)
+        return npc_data.get(level_name, [])
+    except (FileNotFoundError, json.JSONDecodeError) as e:
+        print(f"Error loading NPC data: {e}")
+        return []
 
 def scale_coordinates(x: float, y: float, z: float):
     """Convert floats to integers for method_45."""
@@ -108,7 +127,7 @@ def Send_Entity_Data(entity: Dict[str, Any], is_player: bool = False) -> bytes:
         bb.write_bits(1 if behavior_speed > 0 else 0, 1)
         #print(f"Send_Entity_Data: Wrote behavior speed flag: {1 if behavior_speed > 0 else 0}")
         if behavior_speed > 0:
-            scaled_speed = int(behavior_speed * Entity.VELOCITY_INFLATE)
+            scaled_speed = int(behavior_speed * LinkUpdater.VELOCITY_INFLATE)
             bb.write_method_4(scaled_speed)
             #print(f"Send_Entity_Data: Wrote scaled behavior speed: {scaled_speed}")
 
@@ -165,7 +184,7 @@ def Send_Entity_Data(entity: Dict[str, Any], is_player: bool = False) -> bytes:
         bb.write_method_6(player_level, Entity.MAX_CHAR_LEVEL_BITS)
         #print(f"Send_Entity_Data: Wrote player level: {player_level}")
 
-        game_const = entity.get("game_const", Entity.const_526)
+        game_const = entity.get("game_const", Game.const_526)
         bb.write_method_6(game_const, Game.const_209)
         #print(f"Send_Entity_Data: Wrote game constant: {game_const}")
 

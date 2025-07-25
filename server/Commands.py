@@ -1,14 +1,15 @@
 import json, struct
+import secrets
 import time
 
 from Character import save_characters
 from bitreader import BitReader
 from constants import GearType, EntType, class_64, class_1, DyeType, class_118, method_277, GAME_CONST_209, \
-    CLASS_118_CONST_127, class_111, class_1_const_254, class_8, class_3, class_64_const_218, class_111_const_432, \
-    LinkUpdater, Entity
+    CLASS_118_CONST_127, class_111, class_1_const_254, class_8, class_3, class_64_const_218, class_111_const_432
+
 from BitUtils import BitBuffer
 from constants import get_dye_color
-from entity import Send_Entity_Data
+from level_config import SPAWN_POINTS, DOOR_MAP, LEVEL_CONFIG
 
 SAVE_PATH_TEMPLATE = "saves/{user_id}.json"
 
@@ -496,52 +497,75 @@ def send_look_update_packet(session, entity_id, head, hair, mouth, face, gender,
 
 def handle_change_look(session, raw_data, all_sessions):
     """
-    Handle the look change request from the client (e.g., packet 0x8E) and send back the update.
-
-    Args:
-        session: The client session object.
-        raw_data: The raw packet data.
+    Handle the look change request from the client (e.g., packet 0x8E),
+    update both the live entity and the saved character data, persist,
+    and broadcast the change.
     """
-    # Parse the incoming packet (assuming it matches the client's WriteChangeLook)
-    payload = raw_data[4:]  # Skip header (type and length)
-    br = BitReader(payload)  # Assuming you have a BitReader class
+    # ─── (1) Parse incoming packet ────────────────────────────────────────────────
+    payload = raw_data[4:]  # skip type+length
+    br = BitReader(payload)
 
-    head = br.read_string()
-    hair = br.read_string()
-    mouth = br.read_string()
-    face = br.read_string()
-    gender = br.read_string()
+    head       = br.read_string()
+    hair       = br.read_string()
+    mouth      = br.read_string()
+    face       = br.read_string()
+    gender     = br.read_string()
     hair_color = br.read_bits(EntType.CHAR_COLOR_BITSTOSEND)
     skin_color = br.read_bits(EntType.CHAR_COLOR_BITSTOSEND)
 
-    # Update the character's data
-    chars = session.player_data.get("characters", [])
-    for char in chars:
+    entity_id = session.clientEntID
+
+    # ─── (2) In‑memory entity update ─────────────────────────────────────────────
+    ent_states = getattr(session, "entity_states", None)
+    if ent_states and entity_id in ent_states:
+        ent = ent_states[entity_id]
+        ent["headSet"]   = head
+        ent["hairSet"]   = hair
+        ent["mouthSet"]  = mouth
+        ent["faceSet"]   = face
+        ent["gender"]    = gender
+        ent["hairColor"] = hair_color
+        ent["skinColor"] = skin_color
+
+    # ─── (3) Update per‑character saved data ────────────────────────────────────
+    for char in session.player_data.get("characters", []):
         if char.get("name") == session.current_character:
-            char["headSet"] = head
-            char["hairSet"] = hair
-            char["mouthSet"] = mouth
-            char["faceSet"] = face
-            char["gender"] = gender
+            char["headSet"]   = head
+            char["hairSet"]   = hair
+            char["mouthSet"]  = mouth
+            char["faceSet"]   = face
+            char["gender"]    = gender
             char["hairColor"] = hair_color
             char["skinColor"] = skin_color
             break
+    else:
+        print(f"[Look] ERROR: character {session.current_character} not found")
+        return
 
-    # Save updated data to disk
-    save_path = SAVE_PATH_TEMPLATE.format(user_id=session.user_id)
-    with open(save_path, "w", encoding="utf-8") as f:
-        json.dump(session.player_data, f, indent=2)
+    # ─── (4) Persist to disk ─────────────────────────────────────────────────────
+    save_characters(session.user_id, session.player_data["characters"])
+    print(f"[Save] Look updated for {session.current_character}")
 
-    # Send the look update packet to the requesting client
-    entity_id = session.clientEntID  # The entity ID of the character
-    send_look_update_packet(session, entity_id, head, hair, mouth, face, gender, hair_color, skin_color)
+    # ─── (5) Send update back to requester ──────────────────────────────────────
+    send_look_update_packet(
+        session,
+        entity_id,
+        head, hair, mouth, face,
+        gender, hair_color, skin_color
+    )
 
-    # Optionally broadcast to other clients in the same level
-    for other_session in all_sessions:  # all_sessions should be a global or accessible list
-        if (other_session != session and
-                other_session.world_loaded and
-                other_session.current_level == session.current_level):
-            send_look_update_packet(other_session, entity_id, head, hair, mouth, face, gender, hair_color, skin_color)
+    # ─── (6) Broadcast to nearby clients ────────────────────────────────────────
+    for other in all_sessions:
+        if (other is not session and
+            other.world_loaded and
+            other.current_level == session.current_level):
+            send_look_update_packet(
+                other,
+                entity_id,
+                head, hair, mouth, face,
+                gender, hair_color, skin_color
+            )
+
 
 def handle_create_gearset(session, raw_data):
     """
@@ -737,8 +761,6 @@ def handle_update_equipment(session, raw_data):
     session.conn.sendall(raw_data)
 
 def magic_forge_packet(session, data):
-    from constants import LinkUpdater, class_111, class_1_const_254, class_64_const_218, class_111_const_432
-
     payload = data[4:]
     br = BitReader(payload)
     idols_to_spend = br.read_method_9()
@@ -1043,10 +1065,10 @@ def handle_private_message(session, data, all_sessions):
     try:
         br = BitReader(payload)
         recipient_name = br.read_method_13()
-        message        = br.read_method_13()
+        message = br.read_method_13()
         print(f"[{session.addr}] [PKT46] Private message from {session.current_character} to {recipient_name}: {message}")
 
-        # find recipient session
+        # Find recipient session
         recipient_session = next(
             (s for s in all_sessions
              if s.current_character
@@ -1055,106 +1077,495 @@ def handle_private_message(session, data, all_sessions):
             None
         )
 
+        # Build 0x47 packet
+        bb = BitBuffer()
+        bb.write_method_13(session.current_character)  # Sender's name
+        bb.write_method_13(message)                   # Raw message
+        payload_out = bb.to_bytes()
+        pkt = struct.pack(">HH", 0x47, len(payload_out)) + payload_out
+
         if recipient_session:
-            bb = BitBuffer()
-            bb.write_method_13(session.current_character)  # sender
-            bb.write_method_13(message)                   # message
-            payload_out = bb.to_bytes()
-
-            pkt = struct.pack(">HH", 0x47, len(payload_out)) + payload_out
+            # Send to recipient
             recipient_session.conn.sendall(pkt)
-            print(f"[{session.addr}] [PKT47] Sent private message to {recipient_session.addr}")
-
+            print(f"[{session.addr}] [PKT47] Sent private message to {recipient_session.addr} ({recipient_session.current_character})")
+            # Send to sender
+            session.conn.sendall(pkt)
+            print(f"[{session.addr}] [PKT47] Sent private message to sender {session.addr} ({session.current_character})")
         else:
             print(f"[{session.addr}] [PKT46] Recipient {recipient_name} not found")
             err = f"Player {recipient_name} not found".encode("utf-8")
-            pl  = struct.pack(">H", len(err)) + err
+            pl = struct.pack(">H", len(err)) + err
             session.conn.sendall(struct.pack(">HH", 0x1B, len(pl)) + pl)
 
     except Exception as e:
         print(f"[{session.addr}] [PKT46] Parse error: {e}, raw payload = {payload.hex()}")
 
-
-def handle_entity_update(session, data, all_sessions):
-    # Sanity check
-    if len(data) < 4:
-        #print(f"[{session.addr}] [PKT07] Invalid packet (too short): raw={data.hex()}")
+def handle_entity_incremental_update(session, data, all_sessions):
+    if data[:2] != b'\x00\x07':
+        return
+    if not session.authenticated or not session.current_character:
+        print(f"[{session.addr}] [PKT07] Entity update ignored: not authenticated or no character")
         return
 
+    # Skip header and read payload
     payload = data[4:]
-    #print(f"[{session.addr}] [PKT07] Raw payload: {payload.hex()}")
-
     br = BitReader(payload, debug=False)
     try:
-        # --- Read & validate entity ID ---
-        ent_id = br.read_method_9()
-        #print(f"[{session.addr}] [PKT07] Read ent_id = {ent_id}")
-        if ent_id != session.clientEntID:
-           # print(f"[{session.addr}] [PKT07] WRONG ent_id: {ent_id} vs clientEntID {session.clientEntID}")
-            return
-
-        # Ensure we have an entry
-        if ent_id not in session.entities:
-            session.entities[ent_id] = {
-                "x": 360.0, "y": 1458.99, "z": 0.0,
-                "entState": Entity.const_6,
-                "is_player": True
-            }
-
-        entity = session.entities[ent_id]
-
-        # --- Read movement deltas ---
-        dx  = br.read_int24();  #print(f"[{session.addr}] [PKT07] dx = {dx}")
-        dy  = br.read_int24();  #(f"[{session.addr}] [PKT07] dy = {dy}")
-        dvx = br.read_int24();  #print(f"[{session.addr}] [PKT07] dvx = {dvx}")
-
-        # Compute new pos/vel
-        entity['x'] = entity.get('x', 360.0) + dx
-        entity['y'] = entity.get('y', 1458.99) + dy
-        entity['velocity_x'] = entity.get('velocity_x', 0) + (dvx * LinkUpdater.VELOCITY_DEFLATE)
-        #print(f"[{session.addr}] [PKT07] Updated x,y = ({entity['x']:.2f}, {entity['y']:.2f}), vx = {entity['velocity_x']:.2f}")
-
-        # --- Read entity state ---
-        ent_state = br.read_method_6(Entity.const_316)
-        #print(f"[{session.addr}] [PKT07] ent_state = {ent_state}")
-        entity['entState'] = ent_state
-
-        # --- Read input flags ---
-        flags = {
-            "left":     bool(br.read_bit()),
-            "running":  bool(br.read_bit()),
-            "jumping":  bool(br.read_bit()),
-            "dropping": bool(br.read_bit()),
-            "backpedal":bool(br.read_bit())
-        }
-        #print(f"[{session.addr}] [PKT07] flags = {flags}")
-        entity.update(flags)
-
-        # --- Airborne vs surface ---
+        entity_id = br.read_method_9()
+        delta_x = br.read_method_24()
+        delta_y = br.read_method_24()
+        delta_vx = br.read_method_24()
+        ent_state = br.read_method_6(2)
+        flags = { 'left': bool(br.read_bit()), 'running': bool(br.read_bit()),
+                  'jumping': bool(br.read_bit()), 'dropping': bool(br.read_bit()),
+                  'backpedal': bool(br.read_bit()) }
         is_airborne = bool(br.read_bit())
-        #print(f"[{session.addr}] [PKT07] is_airborne = {is_airborne}")
-        if is_airborne:
-            raw_vy = br.read_int24()
-            vy = raw_vy * LinkUpdater.VELOCITY_DEFLATE
-            #print(f"[{session.addr}] [PKT07] raw_vy={raw_vy}, vy={vy:.2f}")
-            if ent_state != Entity.const_6:
-                entity['velocity_y'] = vy
-                entity['surface']    = None
-        else:
-            entity['surface']     = True
-            entity['velocity_y']  = 0
-            #print(f"[{session.addr}] [PKT07] On surface → velocity_y=0")
+        velocity_y = br.read_method_24() if is_airborne else 0
 
-        # Write back and broadcast
-        session.entities[ent_id] = entity
+        # Determine spawn/origin based on memory and level type
+        current_level = session.current_level
+        lvl_cfg = LEVEL_CONFIG.get(current_level, (None,)*4)
+        is_dungeon = lvl_cfg[3]
 
+        # Try to use saved character coords for this level
+        spawn_x, spawn_y = SPAWN_POINTS.get(current_level, {'x':0,'y':0}).values()
+        for char in session.char_list:
+            if char['name'] == session.current_character:
+                lvl_rec = char.get('CurrentLevel', {})
+                if lvl_rec.get('name') == current_level and 'x' in lvl_rec:
+                    # use stored dynamic coords when re-entering non-dungeon
+                    spawn_x, spawn_y = lvl_rec['x'], lvl_rec['y']
+                elif is_dungeon:
+                    # if dungeon, fallback to last known position before entering
+                    prev_rec = char.get('PreviousLevel', {})
+                    spawn_x = prev_rec.get('x', spawn_x)
+                    spawn_y = prev_rec.get('y', spawn_y)
+                break
+
+        # Compute absolute positions
+        ent = session.entities.get(entity_id, {})
+        old_x = ent.get('pos_x', spawn_x)
+        old_y = ent.get('pos_y', spawn_y)
+        new_x = old_x + delta_x
+        new_y = old_y + delta_y
+
+        # Update or initialize entity record
+        ent.update({
+            'pos_x': new_x,
+            'pos_y': new_y,
+            'velocity_x': ent.get('velocity_x', 0) + delta_vx,
+            'ent_state': ent_state,
+            **{f'b_{k}': v for k,v in flags.items()},
+            'velocity_y': velocity_y,
+            'is_player': ent.get('is_player', False)
+        })
+        session.entities[entity_id] = ent
+        print(f"absolute_pos=({new_x:.2f},{new_y:.2f})")
+
+        # Persist player position when moving in non-dungeon
+        if ent.get('is_player') and not is_dungeon:
+            for char in session.char_list:
+                if char['name'] == session.current_character:
+                    char['CurrentLevel'] = {'name': current_level, 'x': new_x, 'y': new_y}
+                    save_characters(session.user_id, session.char_list)
+                    break
+
+        # Broadcast to peers
         for other in all_sessions:
-            if other is not session and other.world_loaded and other.current_level == session.current_level:
-                pkt_data = Send_Entity_Data(entity, is_player=True)
-                other.conn.sendall(struct.pack(">HH", 0x0F, len(pkt_data)) + pkt_data)
-                #print(f"[{session.addr}] [PKT07] Broadcast to {other.addr}: x={entity['x']:.2f}, y={entity['y']:.2f}")
+            if other is not session and other.world_loaded and other.current_level == current_level:
+                other.conn.sendall(data)
 
     except Exception as e:
-        #print(f"[{session.addr}] [PKT07] Parse error: {e}")
-        #print(f"[{session.addr}] [PKT07] Debug log: {br.get_debug_log()}")
+        # Silent fail to avoid spam
         pass
+
+
+def handle_power_cast(session, data, all_sessions):
+        if data[:2] != b'\x00\x09':
+            return  # Only handle 0x09 packets (PKTTYPE_ENT_POWER_CAST)
+        if not session.authenticated or not session.current_character:
+            #print(f"[{session.addr}] [PKT09] Power cast ignored: not authenticated or no character")
+            return
+        # Parse packet
+        payload = data[4:]
+        br = BitReader(payload, debug=False)
+        try:
+            # Read entity ID
+            ent_id = br.read_method_4()
+            if ent_id != session.clientEntID:
+                print(f"[{session.addr}] [PKT09] Entity ID {ent_id} does not match clientEntID {session.clientEntID}")
+                return
+            # Read power type ID
+            power_type = br.read_method_4()
+            # Read is_charged flag
+            is_charged = bool(br.read_bit())
+            # Read optional target point
+            has_target_point = bool(br.read_bit())
+            target_x, target_y = None, None
+            if has_target_point:
+                target_x = br.read_method_45()
+                target_y = br.read_method_45()
+            # Read optional target entity
+            has_target_entity = bool(br.read_bit())
+            target_entity_id = None
+            if has_target_entity:
+                target_entity_id = br.read_method_4()
+            # Read is_queued flag
+            is_queued = bool(br.read_bit())
+            # Read optional secondary/tertiary entity
+            has_extra_entity = bool(br.read_bit())
+            secondary_entity_id, tertiary_entity_id = None, None
+            if has_extra_entity:
+                is_secondary = bool(br.read_bit())
+                if is_secondary:
+                    secondary_entity_id = br.read_method_4()
+                else:
+                    tertiary_entity_id = br.read_method_4()
+            # Log the power cast
+            #print(f"[{session.addr}] [PKT09] Power cast: ent_id={ent_id}, power_type={power_type}, "
+            #      f"is_charged={is_charged}, target=({target_x},{target_y}), "
+            #      f"target_entity_id={target_entity_id}, is_queued={is_queued}, "
+            #      f"secondary={secondary_entity_id}, tertiary={tertiary_entity_id}")
+            # Broadcast the original packet to other clients in the same level
+            for other_session in all_sessions:
+                if other_session != session and other_session.world_loaded and other_session.current_level == session.current_level:
+                    other_session.conn.sendall(data)
+                    #print(f"[{session.addr}] [PKT09] Broadcasted power cast to {other_session.addr}")
+        except Exception as e:
+            #print(f"[{session.addr}] [PKT09] Error parsing packet: {e}, raw payload = {payload.hex()}")
+            pass
+
+def handle_power_hit(session, data, all_sessions):
+    if data[:2] != b'\x00\x0a':
+        return  # Only handle 0x0A packets
+    if not session.authenticated or not session.current_character:
+        print(f"[{session.addr}] [PKT0A] Power hit ignored: not authenticated or no character")
+        return
+    # Parse packet for logging or validation
+    payload = data[4:]
+    br = BitReader(payload, debug=False)
+    try:
+        target_id = br.read_method_4()  # Target entity ID
+        source_id = br.read_method_4()  # Source entity ID
+        value = br.read_method_45()  # Damage or effect value
+        power_id = br.read_method_4()  # Power ID
+        has_param5 = br.read_bit()  # Boolean for param5
+        param5 = br.read_method_4() if has_param5 else 0
+        has_param6 = br.read_bit()  # Boolean for param6
+        param6 = br.read_method_4() if has_param6 else 0
+        param7 = br.read_bit()  # Boolean flag (e.g., crit)
+        # Log the power hit
+        #print(f"[{session.addr}] [PKT0A] Power hit: source={source_id}, target={target_id}, value={value}, power_id={power_id}, param5={param5}, param6={param6}, param7={param7}")
+        # Broadcast the original packet to other clients in the same level
+        for other_session in all_sessions:
+            if other_session != session and other_session.world_loaded and other_session.current_level == session.current_level:
+                other_session.conn.sendall(data)
+                #print(f"[{session.addr}] [PKT0A] Broadcasted power hit to {other_session.addr}")
+    except Exception as e:
+        print(f"[{session.addr}] [PKT0A] Error parsing packet: {e}, raw payload = {payload.hex()}")
+
+def handle_projectile_explode(session, data, all_sessions):
+    if data[:2] != b'\x00\x0e':
+        return  # Only handle 0x0E packets
+    if not session.authenticated or not session.current_character:
+        print(f"[{session.addr}] [PKT0E] Projectile explode ignored: not authenticated or no character")
+        return
+    # Parse packet for logging
+    payload = data[4:]
+    br = BitReader(payload, debug=False)
+    try:
+        entity_id = br.read_method_4()
+        param2 = br.read_method_4()
+        x = br.read_method_45()
+        y = br.read_method_45()
+        flag = br.read_bit()
+        #print(f"[{session.addr}] [PKT0E] Projectile explode: entity_id={entity_id}, param2={param2}, pos=({x},{y}), flag={flag}")
+        # Broadcast to other clients in the same level
+        for other_session in all_sessions:
+            if other_session != session and other_session.world_loaded and other_session.current_level == session.current_level:
+                other_session.conn.sendall(data)
+                #print(f"[{session.addr}] [PKT0E] Broadcasted to {other_session.addr}")
+    except Exception as e:
+        print(f"[{session.addr}] [PKT0E] Error parsing packet: {e}, raw payload = {payload.hex()}")
+
+def handle_add_buff(session, data, all_sessions):
+    if data[:2] != b'\x00\x0b':
+        return  # Only handle 0x0B packets
+    if not session.authenticated or not session.current_character:
+        print(f"[{session.addr}] [PKT0B] Add buff ignored: not authenticated or no character")
+        return
+    # Parse packet for logging
+    payload = data[4:]
+    br = BitReader(payload, debug=False)
+    try:
+        entity_id = br.read_method_4()
+        param2 = br.read_method_4()
+        param3 = br.read_method_4()
+        param4 = br.read_method_4()
+        param5 = br.read_method_4()
+        param6 = br.read_method_4()
+        has_vector = br.read_bit()
+        vector_data = []
+        if has_vector:
+            vector_length = br.read_method_4()
+            for _ in range(vector_length):
+                power_node_type_id = br.read_method_4()
+                mod_value_length = br.read_method_4()
+                mod_values = [br.read_method_560() for _ in range(mod_value_length)]
+                vector_data.append((power_node_type_id, mod_values))
+        #print(f"[{session.addr}] [PKT0B] Add buff: entity_id={entity_id}, params=({param2},{param3},{param4},{param5},{param6}), vector={vector_data}")
+        # Broadcast to other clients in the same level
+        for other_session in all_sessions:
+            if other_session != session and other_session.world_loaded and other_session.current_level == session.current_level:
+                other_session.conn.sendall(data)
+                #print(f"[{session.addr}] [PKT0B] Broadcasted to {other_session.addr}")
+    except Exception as e:
+        print(f"[{session.addr}] [PKT0B] Error parsing packet: {e}, raw payload = {payload.hex()}")
+
+def handle_remove_buff(session, data, all_sessions):
+    if data[:2] != b'\x00\x0c':
+        return  # Only handle 0x0C packets
+    if not session.authenticated or not session.current_character:
+        print(f"[{session.addr}] [PKT0C] Remove buff ignored: not authenticated or no character")
+        return
+    # Parse packet for logging
+    payload = data[4:]
+    br = BitReader(payload, debug=False)
+    try:
+        entity_id = br.read_method_9()
+        param2 = br.read_method_9()
+        param3 = br.read_method_9()
+        print(f"[{session.addr}] [PKT0C] Remove buff: entity_id={entity_id}, param2={param2}, param3={param3}")
+        # Broadcast to other clients in the same level
+        for other_session in all_sessions:
+            if other_session != session and other_session.world_loaded and other_session.current_level == session.current_level:
+                other_session.conn.sendall(data)
+                print(f"[{session.addr}] [PKT0C] Broadcasted to {other_session.addr}")
+    except Exception as e:
+        print(f"[{session.addr}] [PKT0C] Error parsing packet: {e}, raw payload = {payload.hex()}")
+
+
+def handle_entity_full_update(session, data, all_sessions):
+    if data[:2] != b'\x00\x08':
+        return  # Only handle 0x08 packets
+    if not session.authenticated or not session.current_character:
+        print(f"[{session.addr}] [PKT08] Entity full update ignored: not authenticated or no character")
+        return
+    # Parse packet for logging and state update
+    payload = data[4:]
+    br = BitReader(payload, debug=False)
+    try:
+        entity_id = br.read_method_9()
+        pos_x = br.read_method_24()
+        pos_y = br.read_method_24()
+        velocity_x = br.read_method_24()
+        ent_name = br.read_method_13()
+        team = br.read_method_6(8)  # Assuming 8 bits for Entity.TEAM_BITS
+        is_player = bool(br.read_bit())
+        y_offset = br.read_method_560()  # Assuming float for method_706
+        has_cue = br.read_bit()
+        cue_data = {}
+        if has_cue:
+            has_char_name = br.read_bit()
+            cue_data['character_name'] = br.read_method_13() if has_char_name else None
+            has_drama_anim = br.read_bit()
+            cue_data['drama_anim'] = br.read_method_13() if has_drama_anim else None
+            has_sleep_anim = br.read_bit()
+            cue_data['sleep_anim'] = br.read_method_13() if has_sleep_anim else None
+        has_summoner = br.read_bit()
+        summoner_id = br.read_method_9() if has_summoner else None
+        has_power = br.read_bit()
+        power_id = br.read_method_9() if has_power else None
+        ent_state = br.read_method_6(8)  # Assuming 8 bits for Entity.const_316
+        b_left = bool(br.read_bit())
+        b_running = bool(br.read_bit())
+        b_jumping = bool(br.read_bit())
+        b_dropping = bool(br.read_bit())
+        b_backpedal = bool(br.read_bit())
+        # Log the update
+        print(f"[{session.addr}] [PKT08] Entity full update: entity_id={entity_id}, pos=({pos_x},{pos_y}), "
+              f"velocity_x={velocity_x}, ent_name={ent_name}, team={team}, is_player={is_player}, "
+              f"y_offset={y_offset}, cue_data={cue_data}, summoner_id={summoner_id}, power_id={power_id}, "
+              f"ent_state={ent_state}, flags=(left={b_left},running={b_running},jumping={b_jumping},"
+              f"dropping={b_dropping},backpedal={b_backpedal})")
+        # Update server-side entity state (optional, if you track entities)
+        if entity_id in session.entities:
+            session.entities[entity_id].update({
+                'pos_x': pos_x,
+                'pos_y': pos_y,
+                'velocity_x': velocity_x,
+                'ent_name': ent_name,
+                'team': team,
+                'is_player': is_player,
+                'y_offset': y_offset,
+                'cue_data': cue_data,
+                'summoner_id': summoner_id,
+                'power_id': power_id,
+                'ent_state': ent_state,
+                'b_left': b_left,
+                'b_running': b_running,
+                'b_jumping': b_jumping,
+                'b_dropping': b_dropping,
+                'b_backpedal': b_backpedal
+            })
+        # Broadcast to other clients in the same level
+        for other_session in all_sessions:
+            if other_session != session and other_session.world_loaded and other_session.current_level == session.current_level:
+                other_session.conn.sendall(data)
+                print(f"[{session.addr}] [PKT08] Broadcasted to {other_session.addr}")
+    except Exception as e:
+        print(f"[{session.addr}] [PKT08] Error parsing packet: {e}, raw payload = {payload.hex()}")
+
+def handle_position_sync(session, data, all_sessions):
+    if data[:2] != b'\x00\xa2':
+        return
+    if not session.authenticated or not session.current_character:
+        print(f"[{session.addr}] [PKTA2] Position sync ignored: not authenticated or no character")
+        return
+    payload = data[4:]  # Skip type (2 bytes) and length (2 bytes)
+    br = BitReader(payload, debug=False)
+    try:
+        client_time = br.read_method_24()  # _loc7_ (client time delta)
+        is_desync = bool(br.read_bit())   # _loc10_ (desync flag)
+        server_time = br.read_method_24()  # _loc8_ (server time delta)
+        #print(f"[{session.addr}] [PKTA2] Position sync: client_time={client_time}, is_desync={is_desync}, server_time={server_time}, bits_consumed={br.bit_index}")
+        # Broadcast to other clients in the same level
+        for other_session in all_sessions:
+            if other_session != session and other_session.world_loaded and other_session.current_level == session.current_level:
+                other_session.conn.sendall(data)
+                #print(f"[{session.addr}] [PKTA2] Broadcasted to {other_session.addr}")
+        #print("\n".join(br.get_debug_log()))
+    except Exception as e:
+        #print(f"[{session.addr}] [PKTA2] Error parsing packet: {e}, raw payload = {payload.hex()}")
+        #print("\n".join(br.get_debug_log()))
+        pass
+
+
+def handle_public_chat(session, data, all_sessions):
+    payload = data[4:]
+    try:
+        br = BitReader(payload)
+        entity_id = br.read_method_4()
+        message = br.read_method_13()
+        print(f"[{session.addr}] [PKT2C] Chat message from entity {entity_id} ({session.current_character}): {message}")
+        for other in all_sessions:
+            if other is not session and other.world_loaded and other.current_level == session.current_level:
+                bb = BitBuffer()
+                bb.write_method_4(entity_id)
+                bb.write_method_13(message)  # Send raw message
+                pkt_data = bb.to_bytes()
+                packet = struct.pack(">HH", 0x2C, len(pkt_data)) + pkt_data
+                other.conn.sendall(packet)
+                print(f"[{session.addr}] [PKT2C] Broadcasted chat to {other.addr} ({other.current_character}): \"{message}\" from entity {entity_id}")
+    except Exception as e:
+        print(f"[{session.addr}] [PKT2C] Error parsing packet: {e}, raw = {payload.hex()}")
+        if 'br' in locals():
+            print(f"[{session.addr}] [PKT2C] BitReader debug log: {br.get_debug_log()}")
+
+def _send_error(conn, msg):
+    encoded = msg.encode("utf-8")
+    payload = struct.pack(">H", len(encoded)) + encoded
+    conn.sendall(struct.pack(">HH", 0x102, len(payload)) + payload)
+
+def _send_info(conn, msg):
+    _send_error(conn, msg)  # same packet type used for info & errors
+
+def handle_group_invite(session, data, all_sessions):
+    payload = data[4:]
+    try:
+        br = BitReader(payload)
+        invitee_name = br.read_method_13()
+
+        print(f"[{session.addr}] [PKT65] Group invite from {session.current_character} to {invitee_name}")
+
+        if not invitee_name:
+            print(f"[{session.addr}] [PKT65] Empty invitee name")
+            _send_error(session.conn, "No player specified")
+            return
+
+        invitee_session = next(
+            (s for s in all_sessions
+             if s.current_character
+             and s.current_character.lower() == invitee_name.lower()
+             and s.authenticated),
+            None
+        )
+
+        if invitee_session:
+            # Initialize inviter's group if none exists
+            if not hasattr(session, 'group_id') or not session.group_id:
+                session.group_id = secrets.randbits(16)
+                session.group_members = [session]
+                print(f"[{session.addr}] [PKT65] Created group {session.group_id} for {session.current_character}")
+
+            # Check if invitee is already in a group
+            if hasattr(invitee_session, 'group_id') and invitee_session.group_id:
+                print(f"[{session.addr}] [PKT65] Invitee {invitee_name} already in group {invitee_session.group_id}")
+                _send_error(session.conn, f"{invitee_name} is already in a group")
+                return
+
+            # Compose invite (0x58) packet
+            bb = BitBuffer()
+            bb.write_method_4(session.clientEntID or 0)
+            bb.write_method_13(session.current_character)
+            bb.write_method_13(f"{session.current_character} has invited you to join a party")
+            payload_out = bb.to_bytes()
+            packet = struct.pack(">HH", 0x58, len(payload_out)) + payload_out
+            invitee_session.conn.sendall(packet)
+
+            print(f"[{session.addr}] [PKT65] Sent 0x58 to {invitee_session.addr} for {invitee_session.current_character}")
+            print(f"[{session.addr}] [PKT65] Packet HEX: {packet.hex()}")
+
+            # Send confirmation to inviter
+            _send_info(session.conn, f"Invited {invitee_session.current_character} to your group")
+
+        else:
+            print(f"[{session.addr}] [PKT65] Invitee {invitee_name} not found")
+            _send_error(session.conn, f"Player {invitee_name} not found")
+
+    except Exception as e:
+        print(f"[{session.addr}] [PKT65] Parse error: {e}, raw payload = {payload.hex()}")
+
+def handle_packet_0x7C(session, data):
+    """
+    Read a CLIENT ERROR (0x7C) packet and log it.
+    No response is sent back.
+    """
+    # unpack the two‐byte packet ID and two‐byte length
+    _, length = struct.unpack_from(">HH", data, 0)
+    # extract exactly `length` bytes of payload
+    payload = data[4:4 + length]
+    try:
+        msg = payload.decode("utf-8", errors="replace")
+    except Exception:
+        msg = repr(payload)
+    print(f"[{session.addr}] CLIENT ERROR (0x7C): {msg}")
+
+def handle_packet_0x41(session, data, conn):
+    if len(data) < 4:
+        return
+    payload_length = struct.unpack(">H", data[2:4])[0]
+    if len(data) != 4 + payload_length:
+        return
+    payload = data[4:4 + payload_length]
+    try:
+        br = BitReader(payload)
+        door_id = br.read_method_9()
+    except Exception:
+        return
+    door_info = DOOR_MAP.get((session.current_level, door_id))
+    bb = BitBuffer()
+    bb.write_method_4(door_id)
+    if door_info is None:
+        bb.write_method_91(1)
+        bb.write_method_13("")
+    else:
+        if isinstance(door_info, str):
+            bb.write_method_91(1)
+            bb.write_method_13(door_info)
+        else:
+            bb.write_method_91(door_info)
+            bb.write_method_13("")
+    payload = bb.to_bytes()
+    response = struct.pack(">HH", 0x42, len(payload)) + payload
+    conn.sendall(response)

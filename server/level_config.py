@@ -1,5 +1,111 @@
+def get_spawn_coordinates(char: dict, current_level: str, target_level: str) -> tuple[float, float, bool]:
 
+    # detect dungeon flag
+    is_dungeon = LEVEL_CONFIG.get(target_level, (None, None, None, False))[3]
+    # special exception (if you still want coords in CraftTown, for example)
+    if is_dungeon and target_level != "CraftTown":
+        return 0, 0, False
 
+    # Special cases
+    if current_level == "SwampRoadNorth" and target_level == "NewbieRoadHard":
+        return 20298.00, 639.00, True
+    if current_level == "SwampRoadNorthHard" and target_level == "NewbieRoadHard":
+        return 20298.00, 639.00, True
+
+    if current_level == "EmeraldGlades" and target_level == "OldMineMountain":
+        return 18552, 4021, True
+    if current_level == "EmeraldGladesHard" and target_level == "OldMineMountainHard":
+        return 18552, 4021, True
+
+    if current_level == "SwampRoadNorth" and target_level == "SwampRoadConnection":
+        return 325.00, 368.00, True
+    if current_level == "SwampRoadNorthHard" and target_level == "SwampRoadConnectionHard":
+        return 325.00, 368.00, True
+
+    if current_level == "BridgeTown" and target_level == "SwampRoadConnection":
+        return 10533.00, 461.00, True
+    if current_level == "BridgeTownHard" and target_level == "SwampRoadConnectionHard":
+        return 10533.00, 461.00, True
+
+    if current_level == "OldMineMountain" and target_level == "BridgeTown":
+        return 16986, -296.01, True
+    if current_level == "OldMineMountainHard" and target_level == "BridgeTownHard":
+        return 16986, -296.01, True
+
+    if current_level == "BridgeTown" and target_level == "BridgeTownHard":
+        return 11439, 2198.99, True
+    if current_level == "BridgeTownHard" and target_level == "BridgeTown":
+        return 11439, 2198.99, True
+
+    if current_level == "Castle" and target_level == "BridgeTown":
+        return 10566, 492.99, True
+    if current_level == "CastleHard" and target_level == "BridgeTownHard":
+        return 10566, 492.99, True
+
+    if current_level == "ShazariDesert" and target_level == "ShazariDesertHard":
+        return 14851.25, 638.4691666666666, True
+    if current_level == "ShazariDesertHard" and target_level == "ShazariDesert":
+        return 14851.25, 638.4691666666666, True
+
+    if current_level == "JadeCity" and target_level == "ShazariDesert":
+        return 25857.25, 1298.4691666666668, True
+    if current_level == "JadeCityHard" and target_level == "ShazariDesertHard":
+        return 25857.25, 1298.4691666666668, True
+
+    # Default spawn points for the (non-dungeon) target level
+    spawn = SPAWN_POINTS.get(target_level, {"x": 0.0, "y": 0.0})
+
+    # Check if target level is previously visited
+    current_level_data = char.get("CurrentLevel", {})
+    prev_level_data    = char.get("PreviousLevel", {})
+
+    if (target_level == current_level_data.get("name")) and "x" in current_level_data and "y" in current_level_data:
+        return int(round(current_level_data["x"])), int(round(current_level_data["y"])), True
+    elif prev_level_data.get("name") == target_level and "x" in prev_level_data and "y" in prev_level_data:
+        return int(round(prev_level_data["x"])), int(round(prev_level_data["y"])), True
+    else:
+        # new non-dungeon level → default spawn
+        return int(round(spawn["x"])), int(round(spawn["y"])), True
+
+# Default Player Spawn Point for handle_entity_incremental_update
+SPAWN_POINTS = {
+    "CraftTown":{"x": 360, "y": 1458.99},
+    "--------WOLFS END------------": "",
+    "NewbieRoad": {"x": 1421.25, "y": 826.615},
+    "NewbieRoadHard": {"x": 1421.25, "y": 826.615},
+
+    "--------BLACKROSE MIRE------------": "",
+    "SwampRoadNorth": {"x": 4360.5, "y": 595.615},
+    "SwampRoadNorthHard": {"x": 4360.5, "y": 595.615},
+
+    "--------FELBRIDGE------------": "",
+    "BridgeTown": {"x": 3944, "y": 838.99},
+    "BridgeTownHard": {"x": 3944, "y": 838.99},
+
+    "--------CEMETERY HILL------------": "",
+    "CemeteryHill": {"x": 00, "y": 00},#missing files Unknown spawn coordinates
+    "CemeteryHillHard": {"x": 00, "y": 00},
+
+    "--------STORMSHARD------------": "",
+    "OldMineMountain": {"x": 189.25, "y": 1335.99},
+    "OldMineMountainHard": {"x": 189.25, "y": 1335.99},
+
+    "--------EMERALD GLADES-----------": "",
+    "EmeraldGlades": {"x": -1433.75, "y": -1883.6236363636363},
+    "EmeraldGladesHard": {"x": -1433.75, "y": -1883.6236363636363},
+
+    "--------DEEPGARD CASTLE------------": "",
+    "Castle": {"x": -1280, "y": -1941.01},
+    "CastleHard": {"x": -1280, "y": -1941.01},
+
+    "--------SHAZARI DESERT------------": "",
+    "ShazariDesert": {"x": 618.25, "y": 647.4691666666666},
+    "ShazariDesertHard": {"x": 618.25, "y": 647.4691666666666},
+
+    "--------VALHAVEN------------": "",
+    "JadeCity": {"x": 10430.5, "y": 1058.99},
+    "JadeCityHard": {"x": 10430.5, "y": 1058.99},
+}
 _raw_level_config  = {
     "CraftTown": "LevelsHome.swf/a_Level_Home 1 1 true",
     "CraftTownTutorial": "LevelsHome.swf/a_Level_HomeTutorial 1 1 true",

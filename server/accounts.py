@@ -2,9 +2,12 @@
 
 import os
 import json
+import struct
 import tempfile
 from threading import Lock
 from uuid import uuid4
+
+from BitUtils import BitBuffer
 
 _ACCOUNTS_PATH = "Accounts.json"
 _SAVES_DIR     = "saves"
@@ -71,5 +74,34 @@ def get_or_create_user_id(email: str) -> str:
     _atomic_write(save_path, {"email": email, "characters": []})
 
     return user_id
+
+def is_character_name_taken(name: str) -> bool:
+    """
+    Check if a character name exists in any user's save file.
+    """
+    name = name.strip().lower()
+    accounts = load_accounts()
+    for user_id in accounts.values():
+        save_path = os.path.join(_SAVES_DIR, f"{user_id}.json")
+        try:
+            with open(save_path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                characters = data.get("characters", [])
+                for char in characters:
+                    if char.get("name", "").strip().lower() == name:
+                        return True
+        except (FileNotFoundError, json.JSONDecodeError):
+            continue
+    return False
+
+def build_popup_packet(message: str, disconnect: bool = False) -> bytes:
+    """
+    Build a 0x1B packet with a message and disconnect flag.
+    """
+    buf = BitBuffer(debug=True)
+    buf.write_utf_string(message)
+    buf.write_bits(1 if disconnect else 0, 1)
+    payload = buf.to_bytes()
+    return struct.pack(">HH", 0x1B, len(payload)) + payload
 
 
