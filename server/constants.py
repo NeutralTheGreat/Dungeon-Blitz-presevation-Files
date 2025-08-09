@@ -1,6 +1,26 @@
 # constants.py
 import json
 import os
+
+quest_val = 95
+
+FRAMEBITS_TO_CLASSKEY = {
+        533: "executioner",
+        545: "shadowwalker",
+        437: "soulthief",
+        442: "sentinel",
+        415: "justicar",
+        472: "templar",
+        479: "frostwarden",
+        491: "flameseer",
+        550: "necromancer",
+        # Add any others from the client as needed
+    }
+
+
+def method_233(frame_bits: int) -> str:
+    return FRAMEBITS_TO_CLASSKEY.get(frame_bits, "")
+
 NUM_TALENT_SLOTS = 27
 CONST_529 = [5,2,3,5,5,3,2,3,2,5,2,3,5,5,3,2,3,2,5,2,3,5,5,3,2,3,2]
 CLASS_118_CONST_127 = 6
@@ -24,14 +44,31 @@ class_10_const_83  = 7
 class_66_const_409 = 6
 class_16_const_167 = 6
 class_7_const_19 = 7
-quest_val = None
+
 class_9_const_129 = 5
 class_66_const_571 = 2
 class_7_const_75 = 6
-GEARTYPE_BITS = 11#
+GEARTYPE_BITS = 11
 Entity_const_172_bits = 3
-
 SLOT_BIT_WIDTHS = []
+
+MASTERCLASS_TO_BUILDING = {
+    # Rogue
+    1: 9,   # ExecutionerTower
+    2: 10,  # ShadowwalkerTower
+    3: 11,  # SoulthiefTower
+
+    # Paladin
+    4: 3,   # JusticarTower
+    5: 4,   # SentinelTower
+    6: 5,   # TemplarTower
+
+    # Mage
+    7: 6,   # FrostwardenTower
+    8: 7,   # FlameseerTower
+    9: 8    # NecromancerTower
+}
+
 for x in CONST_529:
     w = 0
     if x <= 2:
@@ -56,13 +93,44 @@ class Mission:
     const_72  = 2
 
 class class_119:
+    const_1398 = 10
+    const_1416 = 15
+    const_1331 = 115
+    const_1237 = 8
+    const_659 = 7
+    const_896 = 6
+    const_1283 = 5
+    const_597 = 4
+    const_1199 = 3
+    const_1150 = 2
+    const_1225 = 1
+    const_771 = 0
+    const_723 = 10
     const_228 = 4
+    const_679 = 600
+    const_490 = 810
+    const_1418 = 560
+
+ENTITYSTATE_DEAD   = 2    # 3
+ENTITYSTATE_ALIVE  = 1  # 1
 
 CLASS_NAME_TO_ID = {
     "Paladin": 0,
     "Rogue":   1,
     "Mage":    2,
 }
+class class_9:
+    const_851 = 2
+    const_129 = 5
+    const_28 = 5
+    const_1334 = 2
+    const_214 = 10
+    const_1404 = 0
+    const_1390 = 1
+class class_10:
+    const_83 = 7
+    const_665 = 4
+    const_105 = 10
 class class_8:
     const_658 = 7
     const_731 = 7
@@ -77,34 +145,67 @@ class class_3 :
     var_2082 = 2  # RareBoost
     var_1374 = 3  # LegendaryBoost
     var_1462 = 4  # ArtisanBoost
-
 class Entity:
     TEAM_BITS = 2
     const_316 = 2  # Entity state bit count
     const_399 = 1  # Sleep state
-    const_467 = 2  # Drama state
-    const_6 = 3
+    const_467 = 2  # Drama state The entity become untarketable
+    const_6 = 3 # Entity Dead State
     const_78 = 0
     const_244 = 2
     MAX_CHAR_LEVEL_BITS = 6
 
+class PowerType :
+    const_423 = 7
 class LinkUpdater:
     VELOCITY_DEFLATE = 10000
     VELOCITY_INFLATE = 10000
+
+
+
+
+
 class Game :
     const_209 = 4
     const_526 = 0
+    const_181 = 180
+    const_703 = 1200
+    const_390 = 5
+    # Sparse frameBits → classKey mapping (match client-side constants)
+
+
+
+
+
 class class_118 :
-    const_127 = 6
     const_43 = 27
+    const_529 = [5, 2, 3, 5, 5, 3, 2, 3, 2, 5, 2, 3, 5, 5, 3, 2, 3, 2, 5, 2, 3, 5, 5, 3, 2, 3, 2]
+    const_1304 = 90
+    const_1246 = 65
+    const_195 = 5
+    const_127 = 6
+    ABILITY6_POINTS_PREREQ = 40
+    ABILITY6_NODE_PREREQ  = 18
+    ABILITY5_POINTS_PREREQ = 20
+    ABILITY5_NODE_PREREQ = 8
+
+
+
 
 
 class class_111 :
-    const_286 = 1
     const_509 = 0
-    const_432 = 9
-    const_1101 = 511
+    const_286 = 1
     const_264 = 2
+    const_1101 = 511
+    const_432 = 9
+
+class class_21:
+    const_1338 = 20
+    const_1365 = 165
+    const_640 = 185
+    const_763 = 250
+    const_50 = 8
 
 class LockboxType:
     ID_BITS = 8
@@ -128,6 +229,44 @@ class GearType:
     GEARTYPE_BITSTOSEND = 11
     const_348          = 3
     const_176          = 2
+
+class class_66:
+    const_465 = 3
+    const_409 = 6
+    const_571 = 2
+    const_1412 = 1
+    const_1410 = 2
+    const_1420 = 3
+    const_185 = 0
+    const_200 = 1 # Entity Alive state
+    const_534 = 2
+    const_495 = 50
+    const_948 = 5
+    RESEARCH_DURATIONS = [0, Game.const_181, 7200, 14400, 21600, 37800, 54000, 70200, 86400, 108000, 129600, 150750,
+                          171900, 195750, 219600, 268500, 317400, 337500, 357600, 434850, 512100, 532575, 553050,
+                          575175, 597300, 621200, 645100, 670900, 696700, 724575, 752450, 782550, 812650, 845150,
+                          877650, 912750, 947850, 985775, 1023700, 1064650, 1105600, 1149825, 1194050, 1241800, 1289550,
+                          1341125, 1392700, 1448400, 1504100, 1564275, 1624450]
+    RESEARCH_COSTS = [0, 0, 2805, 6300, 11187, 18009, 27133, 39230, 55492, 76352, 103326, 138087, 182677, 238420,
+                      309610, 398435, 508501, 646504, 817051, 1028027, 1287751, 1608088, 2000327, 2479956, 3067822,
+                      3781585, 4084112, 4410841, 4763708, 5144805, 5556389, 6000900, 6480972, 6999450, 7559406, 8164158,
+                      8817291, 9522674, 10284488, 11107247, 11995827, 12955493, 13991932, 15111287, 16320190, 17625805,
+                      19035869, 20558739, 22203438, 23979713, 25898090]
+    const_1002 = [0, 0, 2, 4, 6, 10, 14, 20, 28, 37, 41, 45, 51, 59, 68, 80, 95, 113, 122, 132, 145, 161, 181, 193, 204,
+                  219, 225, 231, 238, 246, 254, 263, 273, 283, 291, 299, 308, 318, 329, 340, 352, 366, 380, 396, 412,
+                  431, 450, 471, 494, 519, 545]
+
+
+BUILDING_ID_TO_STATS_INDEX = {
+    2: 0,    # Magic Forge
+    12: 1,   # Keep
+    3: 2, 4: 3, 5: 4,  # Paladin Talents
+    6: 2, 7: 3, 8: 4,  # Mage Talents
+    9: 2, 10: 3, 11: 4,  # Rogue Talents
+    1: 5,    # Tome
+    13: 6,   # Hatcher
+}
+
 
 NEWS_EVENTS = {
     1: ["a_NewsGoldIcon",      "Double Gold Event",     "While this event is in place all gold will be doubled world wide",       "http://www.dungeonblitz.com/", 1387602000],
@@ -170,3 +309,75 @@ with open("data/MasteryClass.json", "r", encoding="utf-8") as f:
 
 def get_starting_mastery(cls):
     return Mastery_Class.get(cls, [])
+
+
+def load_ability_data():
+    try:
+        # Get the directory of Constants.py
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        json_path = os.path.join(base_dir, "data/AbilityTypes.json")
+        with open(json_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+            #print(f"Loaded {len(data)} ability entries from {json_path}")
+            return data
+    except FileNotFoundError:
+        print(f"Error: AbilityTypes.json not found at {json_path}")
+        return []
+    except json.JSONDecodeError as e:
+        print(f"Error: Failed to parse AbilityTypes.json: {e}")
+        return []
+
+ABILITY_DATA = load_ability_data()
+
+def get_ability_info(ability_id, rank):
+    """Retrieve ability data by abilityID and rank from ABILITY_DATA."""
+    for entry in ABILITY_DATA:
+        if (entry.get("AbilityID") == str(ability_id) and
+            entry.get("Rank") == str(rank)):
+            return {
+                "abilityID": int(entry["AbilityID"]),
+                "rank": int(entry["Rank"]),
+                "goldCost": int(entry["GoldCost"]),
+                "upgradeTime": int(entry["UpgradeTime"])
+            }
+    return None
+
+BUILDING_DATA = []
+
+def load_building_data():
+    global BUILDING_DATA
+    if not BUILDING_DATA:
+        with open("data/BuildingTypes.json", "r", encoding="utf-8") as f:
+            BUILDING_DATA = json.load(f)
+
+def find_building_data(building_id: int, rank: int):
+    for b in BUILDING_DATA:
+        if int(b["BuildingID"]) == building_id and int(b["Rank"]) == rank:
+            return b
+    return None
+
+"""
+# ─── Mission loader (runs on startup) ───
+DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
+with open(os.path.join(DATA_DIR, "MissionTypes.json"), "r", encoding="utf-8") as f:
+    defs = json.load(f)
+
+assert len(defs) == 293, "Need all 293 definitions!"
+
+mission_defs = {
+    m["MissionID"]: {
+        # instant_complete (var_1775) is only for that special 1‑bit missions list,
+        # so keep it False unless you know the client marks some as instant.
+        "var_1775": False,
+
+        # has_progress (var_134) = CompleteCount > 0
+        "has_progress": int(m.get("CompleteCount", 0)) > 0,
+    }
+    for m in defs
+}
+"""
+
+
+
+
+

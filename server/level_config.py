@@ -7,7 +7,7 @@ def get_spawn_coordinates(char: dict, current_level: str, target_level: str) -> 
         return 0, 0, False
 
     # Special cases
-    if current_level == "SwampRoadNorth" and target_level == "NewbieRoadHard":
+    if current_level == "SwampRoadNorth" and target_level == "NewbieRoad":
         return 20298.00, 639.00, True
     if current_level == "SwampRoadNorthHard" and target_level == "NewbieRoadHard":
         return 20298.00, 639.00, True

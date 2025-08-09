@@ -2,7 +2,7 @@ import json
 
 from BitUtils import BitBuffer
 from constants import Entity, class_7, class_20, class_3, Game, CLASS_NAME_TO_ID, class_118, SLOT_BIT_WIDTHS, \
-    LinkUpdater
+    LinkUpdater, EntType, GearType, class_64, class_21, method_277, method_233
 from typing import Dict, Any
 
 def load_npc_data_for_level(level_name: str, json_path: str = r"data/npc_data.json") -> list:
@@ -26,236 +26,168 @@ def scale_coordinates(x: float, y: float, z: float):
     """Convert floats to integers for method_45."""
     return int(x), int(y), int(z)
 
-def Send_Entity_Data(entity: Dict[str, Any], is_player: bool = False) -> bytes:
-    bb = BitBuffer(debug=False)
-    #print("Send_Entity_Data: Starting packet construction")
+def Send_Entity_Data(entity: Dict[str, Any]) -> bytes:
+    bb = BitBuffer(debug=True)
 
-    # Core Header
-    entity_id = entity.get("id", 0)
-    bb.write_method_4(entity_id)
-    #print(f"Send_Entity_Data: Wrote entity ID: {entity_id}")
+    # 1) Entity ID
+    bb.write_method_4(entity['id'])
 
-    entity_name = entity.get("name", "")
-    bb.write_method_13(entity_name)
-    #print(f"Send_Entity_Data: Wrote entity name: {entity_name}")
+    # 2) Name
+    bb.write_method_13(entity['name'])
 
-    has_appearance = is_player  # Enable for players
-    bb.write_bits(1 if has_appearance else 0, 1)
-    if has_appearance:
-        bb.write_method_13(entity.get("class", "Paladin"))
-        bb.write_method_13(entity.get("headSet", "Head01"))
-        bb.write_method_13(entity.get("hairSet", "Hair01"))
-        bb.write_method_13(entity.get("mouthSet", "Mouth01"))
-        bb.write_method_13(entity.get("faceSet", "Face01"))
-        bb.write_method_13("")  # Additional string (placeholder)
-        bb.write_bits(entity.get("hairColor", 0), 24)
-        bb.write_bits(entity.get("skinColor", 0), 24)
-        bb.write_bits(entity.get("shirtColor", 0), 24)
-        bb.write_bits(entity.get("pantColor", 0), 24)
-        # Gear slots (6 slots)
-        equipped_gears = entity.get("equippedGears", [[0, 0, 0, 0, 0, 0]] * 6)
-        for slot in range(6):
-            gear = equipped_gears[slot] if slot < len(equipped_gears) else [0, 0, 0, 0, 0, 0]
-            gear_id = gear[0]
-            bb.write_bits(1 if gear_id != 0 else 0, 1)
-            if gear_id != 0:
-                bb.write_bits(gear_id, 11)  # GearID
-                bb.write_bits(gear[1], 8)  # Rune1
-                bb.write_bits(gear[2], 8)  # Rune2
-                bb.write_bits(gear[3], 8)  # Rune3
-                bb.write_bits(gear[4], 8)  # Color1
-                bb.write_bits(gear[5], 8)  # Color2
+    # 3) Player Appearance block
+    if entity.get("hasCustomization", False):
+        bb.write_bits(1, 1)  # send visuals block
+        bb.write_method_13(entity.get("class", "Mage"))
+        bb.write_method_13(entity.get("gender", ""))
+        bb.write_method_13(entity.get("headSet", "basic"))
+        bb.write_method_13(entity.get("hairSet", "short"))
+        bb.write_method_13(entity.get("mouthSet", "default"))
+        bb.write_method_13(entity.get("faceSet", "neutral"))
+        bb.write_bits(entity.get("hairColor", 19940), 24)
+        bb.write_bits(entity.get("skinColor", 16764057), 24)
+        bb.write_bits(entity.get("shirtColor", 15263971), 24)
+        bb.write_bits(entity.get("pantColor", 15263971), 24)
+        equipped = entity.get('equippedGears', [])
+        for slot in range(1, EntType.MAX_SLOTS):
+            idx = slot - 1
+            if idx < len(equipped) and equipped[idx] is not None:
+                gear = equipped[idx]
+                bb.write_bits(1, 1)
+                bb.write_method_6(gear['gearID'], GearType.GEARTYPE_BITSTOSEND)
+                bb.write_method_6(gear['tier'], GearType.const_176)
+                runes = gear.get('runes', [0, 0, 0])
+                bb.write_method_6(runes[0], class_64.const_101)
+                bb.write_method_6(runes[1], class_64.const_101)
+                bb.write_method_6(runes[2], class_64.const_101)
+                colors = gear.get('colors', [0, 0])
+                bb.write_method_6(colors[0], class_21.const_50)
+                bb.write_method_6(colors[1], class_21.const_50)
+            else:
+                bb.write_bits(0, 1)
 
-    # Coordinates
-    x_scaled, y_scaled, z_scaled = scale_coordinates(
-        entity.get("x", 0.0), entity.get("y", 0.0), entity.get("z", 0.0)
-    )
-    bb.write_signed_method_45(x_scaled)
-    #print(f"Send_Entity_Data: Wrote X coordinate: {x_scaled}")
-    bb.write_signed_method_45(y_scaled)
-    #print(f"Send_Entity_Data: Wrote Y coordinate: {y_scaled}")
-    bb.write_signed_method_45(z_scaled)
-    #print(f"Send_Entity_Data: Wrote Z coordinate: {z_scaled}")
-
-    # Team Bits
-    team = entity.get("team", 0)
-    bb.write_method_6(team, Entity.TEAM_BITS)
-    #print(f"Send_Entity_Data: Wrote team bits: {team}")
-
-    # Entity Type and Related Data
-    if is_player:
-        #print("Send_Entity_Data: Entity is a player")
-        bb.write_bits(1, 1)  # Player flag
-        bb.write_bits(entity.get("flag1", False), 1)
-        #print(f"Send_Entity_Data: Wrote player flag1: {entity.get('flag1', False)}")
-        bb.write_bits(entity.get("flag2", False), 1)
-        #print(f"Send_Entity_Data: Wrote player flag2: {entity.get('flag2', False)}")
-        bb.write_method_6(entity.get("player_data1", 0), class_7.const_19)
-        #print(f"Send_Entity_Data: Wrote player data1: {entity.get('player_data1', 0)}")
-        bb.write_method_6(entity.get("player_data2", 0), class_7.const_75)
-        #print(f"Send_Entity_Data: Wrote player data2: {entity.get('player_data2', 0)}")
-        bb.write_method_6(entity.get("mount_data", 0), class_20.const_297)
-        #print(f"Send_Entity_Data: Wrote mount data: {entity.get('mount_data', 0)}")
-        bb.write_method_6(entity.get("additional_data", 0), class_3.const_69)
-        #print(f"Send_Entity_Data: Wrote additional data: {entity.get('additional_data', 0)}")
-
-        has_additional = entity.get("has_additional_player_data", False)
-        bb.write_bits(1 if has_additional else 0, 1)
-        #print(f"Send_Entity_Data: Wrote additional player data flag: {has_additional}")
-        if has_additional:
-            bb.write_method_6(entity.get("extra_data1", 0), class_7.const_19)
-            #print(f"Send_Entity_Data: Wrote extra player data1: {entity.get('extra_data1', 0)}")
-            bb.write_method_6(entity.get("extra_data2", 0), class_7.const_75)
-            #print(f"Send_Entity_Data: Wrote extra player data2: {entity.get('extra_data2', 0)}")
-            bb.write_method_6(entity.get("extra_data3", 0), class_7.const_19)
-            #print(f"Send_Entity_Data: Wrote extra player data3: {entity.get('extra_data3', 0)}")
-            bb.write_method_6(entity.get("extra_data4", 0), class_7.const_75)
-            #print(f"Send_Entity_Data: Wrote extra player data4: {entity.get('extra_data4', 0)}")
-            bb.write_method_6(entity.get("extra_data5", 0), class_7.const_19)
-            #print(f"Send_Entity_Data: Wrote extra player data5: {entity.get('extra_data5', 0)}")
-            bb.write_method_6(entity.get("extra_data6", 0), class_7.const_75)
-            #print(f"Send_Entity_Data: Wrote extra player data6: {entity.get('extra_data6', 0)}")
     else:
-        #print("Send_Entity_Data: Entity is not a player")
-        bb.write_bits(0, 1)  # Not a player
-        untargetable = entity.get("untargetable", False)
-        bb.write_bits(1 if untargetable else 0, 1)
-        #print(f"Send_Entity_Data: Wrote untargetable flag: {untargetable}")
-        bb.write_method_739(entity.get("behavior_id", 0))
-        #print(f"Send_Entity_Data: Wrote behavior ID: {entity.get('behavior_id', 0)}")
-        behavior_speed = entity.get("behavior_speed", 0.0)
-        bb.write_bits(1 if behavior_speed > 0 else 0, 1)
-        #print(f"Send_Entity_Data: Wrote behavior speed flag: {1 if behavior_speed > 0 else 0}")
-        if behavior_speed > 0:
-            scaled_speed = int(behavior_speed * LinkUpdater.VELOCITY_INFLATE)
-            bb.write_method_4(scaled_speed)
-            #print(f"Send_Entity_Data: Wrote scaled behavior speed: {scaled_speed}")
+        bb.write_bits(0, 1)  # skip entire visuals section
 
-    # Optional Strings
-    level_str = entity.get("level_str", "")
-    bb.write_bits(1 if level_str else 0, 1)
-    #print(f"Send_Entity_Data: Wrote level string flag: {1 if level_str else 0}")
-    if level_str:
-        bb.write_method_13(level_str)
-        #print(f"Send_Entity_Data: Wrote level string: {level_str}")
+    # 4) Position + rotation
+    bb.write_signed_method_45(int(entity['x']))  # x
+    bb.write_signed_method_45(int(entity['y']))  # y
+    bb.write_signed_method_45(int(entity['z']))  # rotation
+    # 4) team
+    bb.write_method_6(entity.get('team', 0), Entity.TEAM_BITS)
 
-    var_1958 = entity.get("var_1958", "")
-    bb.write_bits(1 if var_1958 else 0, 1)
-    #print(f"Send_Entity_Data: Wrote var_1958 flag: {1 if var_1958 else 0}")
-    if var_1958:
-        bb.write_method_13(var_1958)
-        #print(f"Send_Entity_Data: Wrote var_1958: {var_1958}")
+    # TODO... im not sure where exactly but this branch is causing the bitstream to break
+    #  leading to the player level reading wrong and some other things  if Player branches are off(False) the NPCs spawn properly
+    #  (at least i think so...)
+    # ── PLAYER VS NPC BRANCH ──
+    if entity.get('is_player', False):
+        # 5a) Signal “yes, player data follows”
+        bb.write_bits(1, 1)
 
-    var_1879 = entity.get("var_1879", "")
-    bb.write_bits(1 if var_1879 else 0, 1)
-    #print(f"Send_Entity_Data: Wrote var_1879 flag: {1 if var_1879 else 0}")
-    if var_1879:
-        bb.write_method_13(var_1879)
-        #print(f"Send_Entity_Data: Wrote var_1879: {var_1879}")
+        # 5b) Player level (6 bits on client)
+        bb.write_method_6(entity.get('PlayerLevel', 1), Entity.MAX_CHAR_LEVEL_BITS)
 
-    # Level and Power Type
-    level = entity.get("level", 0)
-    bb.write_bits(1 if level > 0 else 0, 1)
-    #print(f"Send_Entity_Data: Wrote level flag: {1 if level > 0 else 0}")
-    if level > 0:
-        bb.write_method_4(level)
-        #print(f"Send_Entity_Data: Wrote level: {level}")
+        # 5c)
+        bb.write_method_6(entity.get('game_mode', 0), Game.const_209)
 
-    power_id = entity.get("power_id", 0)
-    bb.write_bits(1 if power_id > 0 else 0, 1)
-    #print(f"Send_Entity_Data: Wrote power ID flag: {1 if power_id > 0 else 0}")
-    if power_id > 0:
-        bb.write_method_4(power_id)
-        #print(f"Send_Entity_Data: Wrote power ID: {power_id}")
+        # 5d) Talent‐points block
+        talents = entity.get('talents', [])  # list of (node_index, points_spent)
+        bb.write_bits(1 if talents else 0, 1)
+        if talents:
+            # client loops over const_43 slots
+            for slot_index in range(class_118.const_43):
+                matching = next((t for t in talents if t[0] == slot_index), None)
+                bb.write_bits(1 if matching else 0, 1)
+                if matching:
+                    node_id, points = matching
+                    # write tier modifier (computed client‐side via method_277)
+                    tier = method_277(slot_index)
+                    bb.write_method_6(tier, class_118.const_127)
+                    # write “points minus one” (client adds back 1)
+                    bb.write_method_6(points - 1, class_118.const_127)
+    else:
+        # 5a) NPCs skip the player block
+        bb.write_bits(0, 1)
 
-    # Entity State and Facing
-    ent_state = entity.get("entState", Entity.const_6)
-    bb.write_method_6(ent_state, Entity.const_316)
-    #print(f"Send_Entity_Data: Wrote entity state: {ent_state}")
+    bb.write_bits(1 if entity.get("untargetable", False) else 0, 1)
 
-    facing_left = entity.get("facing_left", False)
-    bb.write_bits(1 if facing_left else 0, 1)
-    #print(f"Send_Entity_Data: Wrote facing left: {facing_left}")
+    bb.write_method_739(entity.get("render_depth_offset", 0))
 
-    # Player-Specific Equipment
-    if is_player:
-        #print("Send_Entity_Data: Processing player equipment")
-        player_level = entity.get("player_level", 0)
-        bb.write_method_6(player_level, Entity.MAX_CHAR_LEVEL_BITS)
-        #print(f"Send_Entity_Data: Wrote player level: {player_level}")
+    speed = entity.get("behavior_speed", 0.0)
+    if speed > 0:
+        bb.write_bits(1, 1)
+        bb.write_method_4(int(speed * LinkUpdater.VELOCITY_INFLATE))
+    else:
+        bb.write_bits(0, 1)
 
-        game_const = entity.get("game_const", Game.const_526)
-        bb.write_method_6(game_const, Game.const_209)
-        #print(f"Send_Entity_Data: Wrote game constant: {game_const}")
+    # 6) optional strings
+    for key in ("level_str", "var_1958", "var_1879"):
+        val = entity.get(key, "")
+        bb.write_bits(1 if val else 0, 1)
+        if val:
+            bb.write_method_13(val)
 
-        has_equipment = entity.get("has_equipment", False)
-        bb.write_bits(1 if has_equipment else 0, 1)
-        #print(f"Send_Entity_Data: Wrote equipment flag: {has_equipment}")
+    # 7) NPC Entity Level
+    bb.write_bits(1, 1)
+    bb.write_method_4(entity.get("NPClevel", 0))
 
-        if has_equipment:
-            #print("Send_Entity_Data: Writing equipment data")
-            class_type = entity.get("class_type", "")
-            class_id = CLASS_NAME_TO_ID.get(class_type, 0)
-            for slot in range(class_118.const_43):
-                equipment = entity.get("equipment", {}).get(str(slot), None)
-                if equipment:
-                    #print(f"Send_Entity_Data: Equipment present in slot {slot}")
-                    slot_index = SLOT_BIT_WIDTHS(slot)
-                    bb.write_bits(1, 1)
-                    #print(f"Send_Entity_Data: Wrote equipment flag for slot {slot}: 1")
-                    bb.write_method_6(equipment.get("index", 0), class_118.const_127)
-                    #print(f"Send_Entity_Data: Wrote equipment index for slot {slot}: {equipment.get('index', 0)}")
-                    value = 1 + equipment.get("value", 0)
-                    bb.write_method_6(value, slot_index)
-                    #print(f"Send_Entity_Data: Wrote equipment value for slot {slot}: {value}")
-                else:
-                    bb.write_bits(0, 1)
-                    #print(f"Send_Entity_Data: Wrote equipment flag for slot {slot}: 0")
+    # 8) power type
+    pid = entity.get("power_id", 0)
+    bb.write_bits(1 if pid else 0, 1)
+    if pid:
+        bb.write_method_4(pid)
 
-    # Health Adjustment
-    health_delta = entity.get("health_delta", 0)
-    bb.write_signed_method_45(health_delta)
-    #print(f"Send_Entity_Data: Wrote health delta: {health_delta}")
+    # 9) entity state
+    bb.write_method_6(entity.get("entState", 0), Entity.const_316)
 
-    # Buffs
+    # 10) facing left
+    bb.write_bits(1 if entity.get("facing_left", False) else 0, 1)
+
+    # 11) HP delta
+    bb.write_signed_method_45(entity.get("health_delta", 0))
+
+    # ── MOUNTS & PETS ──
+    # The client only reads mounts/pets if it saw the initial mount flag (Game.const_526)
+    if entity.get('has_mount', False):
+        bb.write_bits(1, 1)  # signal “mounts/pets follow”
+        # mount flags (2 booleans), mount ID (7 bits), mount level (6 bits), mount type (7 bits)
+        bb.write_bits(1 if entity.get('is_local_player', False) else 0, 1)
+        bb.write_bits(1 if entity.get('uses_vanity_mount', False) else 0, 1)
+        bb.write_method_6(entity.get('mount_id', 0), class_7.const_19)
+        bb.write_method_6(entity.get('mount_level', 0), class_7.const_75)
+        bb.write_method_6(entity.get('mount_type', 0), class_20.const_297)
+        # pet-food slot (5 bits)
+        bb.write_method_6(entity.get('petfood_slot', 0), class_3.const_69)
+
+        # pets block
+        pets = entity.get('pets', [])  # list of up to 3 (pet_id, pet_level)
+        bb.write_bits(1 if pets else 0, 1)
+        for pet in pets:
+            bb.write_method_6(pet[0], class_7.const_19)
+            bb.write_method_6(pet[1], class_7.const_75)
+    else:
+        bb.write_bits(0, 1)  # no mounts/pets
+
+    # 12) buffs
     buffs = entity.get("buffs", [])
     bb.write_method_4(len(buffs))
-    #print(f"Send_Entity_Data: Wrote number of buffs: {len(buffs)}")
-
-    for i, buff in enumerate(buffs):
-        #print(f"Send_Entity_Data: Processing buff {i}")
+    for buff in buffs:
         bb.write_method_4(buff.get("type_id", 0))
-        #print(f"Send_Entity_Data: Wrote buff type ID: {buff.get('type_id', 0)}")
         bb.write_method_4(buff.get("param1", 0))
-        #print(f"Send_Entity_Data: Wrote buff param1: {buff.get('param1', 0)}")
         bb.write_method_4(buff.get("param2", 0))
-        #print(f"Send_Entity_Data: Wrote buff param2: {buff.get('param2', 0)}")
         bb.write_method_4(buff.get("param3", 0))
-        #print(f"Send_Entity_Data: Wrote buff param3: {buff.get('param3', 0)}")
         bb.write_method_4(buff.get("param4", 0))
-        #print(f"Send_Entity_Data: Wrote buff param4: {buff.get('param4', 0)}")
 
-        extra_data = buff.get("extra_data", [])
-        has_extra = len(extra_data) > 0
-        bb.write_bits(1 if has_extra else 0, 1)
-        #print(f"Send_Entity_Data: Wrote extra data flag for buff {i}: {has_extra}")
+        extra = buff.get("extra_data", [])
+        bb.write_bits(1 if extra else 0, 1)
+        if extra:
+            bb.write_method_4(len(extra))
+            for ed in extra:
+                bb.write_method_4(ed.get("id", 0))
+                vals = ed.get("values", [])
+                bb.write_method_4(len(vals))
+                for v in vals:
+                    bb.write_float(v)
 
-        if has_extra:
-            bb.write_method_4(len(extra_data))
-            #print(f"Send_Entity_Data: Wrote number of extra data entries for buff {i}: {len(extra_data)}")
-            for j, data in enumerate(extra_data):
-                #print(f"Send_Entity_Data: Processing extra data {j} for buff {i}")
-                bb.write_method_4(data.get("id", 0))
-                #print(f"Send_Entity_Data: Wrote extra data ID: {data.get('id', 0)}")
-                values = data.get("values", [])
-                bb.write_method_4(len(values))
-                #print(f"Send_Entity_Data: Wrote number of values for extra data {j}: {len(values)}")
-                for k, value in enumerate(values):
-                    bb.write_float(value)
-                    #print(f"Send_Entity_Data: Wrote value {k} for extra data {j}: {value}")
+    return bb.to_bytes()
 
-    # Finalize Packet
-    payload = bb.to_bytes()
-    #print(f"Send_Entity_Data: Finalized payload, length: {len(payload)} bytes")
-    #print(f"Send_Entity_Data: Debug log: {bb.get_debug_log()}")
-    return payload

@@ -43,31 +43,23 @@ class BitReader:
                 self.debug_log.append(f"align_to_byte=skipped {skip_bits} bits")
 
     def read_string(self) -> str:
-        self.align_to_byte()
         length = self.read_bits(16)
-        if self.bit_index + length * 8 > len(self.data) * 8:
-            raise ValueError("Not enough data to read string")
         result_bytes = bytearray()
         for _ in range(length):
             result_bytes.append(self.read_bits(8))
-        if self.debug:
-            self.debug_log.append(f"read_string={result_bytes.decode('utf-8', errors='replace')}, length={length}")
-        try:
-            return result_bytes.decode('utf-8')
-        except UnicodeDecodeError:
-            return result_bytes.decode('latin1')
+        return result_bytes.decode('utf-8', errors='replace')
 
     def read_float(self) -> float:
-        self.align_to_byte()
-        if self.bit_index + 32 > len(self.data) * 8:
-            raise ValueError("Not enough data to read float")
-        byte_index = self.bit_index // 8
-        float_bytes = self.data[byte_index:byte_index + 4]
-        self.bit_index += 32
-        result = struct.unpack('>f', float_bytes)[0]
-        if self.debug:
-            self.debug_log.append(f"read_float={result}")
-        return result
+        bits = self.read_bits(32)
+        bytes_val = struct.pack('>I', bits)
+        return struct.unpack('>f', bytes_val)[0]
+
+    def read_method_739(self) -> int:  # Add if needed
+        sign = self.read_bit()
+        prefix = self.read_bits(3)
+        bits_to_use = (prefix + 1) * 2
+        magnitude = self.read_bits(bits_to_use)
+        return -magnitude if sign else magnitude
 
     def read_method_4(self) -> int:
         prefix = self.read_bits(4)
@@ -86,6 +78,36 @@ class BitReader:
         if self.debug:
             self.debug_log.append(f"read_method_6={value}, bits={bit_count}")
         return value
+
+    def read_method_26(self) -> str:
+        # 1) read 16 bits for the length
+        length = self.read_bits(16)          # big-endian unsigned by design
+        # 2) read `length` bytes
+        raw = bytearray(self.read_bits(8) for _ in range(length))
+        # 3) decode as UTF-8
+        try:
+            return raw.decode('utf-8')
+        except UnicodeDecodeError:
+            # fallback if you ever have non-utf8 data
+            return raw.decode('latin-1', errors='replace')
+
+    def read_method_309(self) -> float:
+        return self.read_float()  # Reads 32-bit float
+
+    def read_method_706(self) -> int:
+        # 1) sign flag (1 bit)
+        is_negative = bool(self.read_bit())
+
+        # 2) read 3-bit “prefix” that encodes how many bits follow
+        prefix = self.read_bits(3)
+        #    prefix = (bit_length + (bit_length & 1)) / 2 - 1
+        # => bit_length = (prefix + 1) * 2
+        bit_length = (prefix + 1) * 2
+
+        # 3) read that many bits of the absolute value
+        value = self.read_bits(bit_length)
+
+        return -value if is_negative else value
 
     def read_method_9(self) -> int:
         prefix = self.read_bits(4)

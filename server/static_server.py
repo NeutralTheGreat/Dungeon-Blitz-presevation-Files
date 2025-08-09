@@ -12,5 +12,5 @@ def start_static_server(
             super().__init__(*args, directory=directory, **kwargs)
     httpd = HTTPServer((host, port), _Handler)
     threading.Thread(target=httpd.serve_forever, daemon=True).start()
-    print(f"[Static] Serving ./{directory} at http://{host}:{port}/")
+    #print(f"[Static] Serving ./{directory} at http://{host}:{port}/")
     return httpd

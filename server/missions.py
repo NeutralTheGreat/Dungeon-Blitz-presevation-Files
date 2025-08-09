@@ -1,4 +1,4 @@
-#mission.py
+
 import xml.etree.ElementTree as ET
 
 class MissionDef:

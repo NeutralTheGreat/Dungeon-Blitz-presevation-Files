@@ -2,175 +2,364 @@
   "TutorialBoat": [
     {
       "id": 1,
-      "name": "GrayGhostLord",
-      "x": 6694.25,
-      "y": 618.99,
-      "z": 10.0,
-      "team": 0,
+      "name": "NPCCaptainSteering",
+      "x": 6101,
+      "y": 519,
+      "z": 0,
+      "team": 1,
       "entState": 0,
       "untargetable": false,
-      "behavior_id": 1,
-      "behavior_speed": 1.0,
-      "level_str": "CraftTown",
-      "var_1958": "testing",
-      "var_1879": "the guard",
-      "level": 50,
-      "power_id": 2,
-      "facing_left": true,
-      "health_delta": 1,
-      "buffs": [],
-      "max_hp": 0,
-      "mount_id": 1,
-      "buff_icon": 1,
-      "is_player": false
-    }
-  ],
-  "NewbieRoad": [
-    {
-      "id": 1,
-      "name": "GreenKnightHard",
-      "x": 2971.200352619656,
-      "y": 536.5181209587174,
-      "z": 10.0,
-      "team": 0,
-      "entState": 0,
-      "untargetable": false,
-      "behavior_id": 1,
-      "behavior_speed": 1.0,
-      "level_str": "CraftTown",
-      "var_1958": "testing",
-      "var_1879": "the guard",
-      "level": 50,
-      "power_id": 2,
-      "facing_left": true,
-      "health_delta": 1,
-      "buffs": [],
-      "max_hp": 0,
-      "mount_id": 1,
-      "buff_icon": 1,
-      "is_player": false
-    }
-  ],
-  "CraftTown": [
-    {
-      "id": 1,
-      "name": "GrayGhostLord",
-      "x": 800.25,
-      "y": 1400.615,
-      "z": -10,
-      "team": 0,
-      "entState": 0,
-      "untargetable": false,
-      "behavior_id": 0,
+      "render_depth_offset": 0,
       "behavior_speed": 0.0,
-      "level_str": "CraftTown",
-      "var_1958": "testing",
-      "var_1879": "the guard",
-      "level": 0,
+      "level_str": "12213",
+      "var_1958": "213123",
+      "var_1879": "123123123",
+      "level": 50,
       "power_id": 0,
       "facing_left": true,
       "health_delta": 0,
       "buffs": [],
       "max_hp": 0,
       "mount_id": 0,
-      "buff_icon": 0,
-      "is_player": false
+      "buff_icon": 0
     },
     {
-      "id": 3,
-      "name": "IntroGoblinDagger",
-      "x": 1000.25,
-      "y": 1400.615,
-      "z": -10,
-      "team": 2,
-      "entState": 2,
+      "id": 2,
+      "name": "IntroParrot",
+      "x": 6165,
+      "y": 360,
+      "z": 5000,
+      "team": 0,
+      "entState": 0,
       "untargetable": false,
-      "behavior_id": 2,
+      "render_depth_offset": 0,
       "behavior_speed": 0.0,
-      "level_str": "CraftTown",
-      "var_1958": "testing",
-      "var_1879": "the guard",
-      "level": 0,
+      "level_str": "",
+      "var_1958": "",
+      "var_1879": "",
+      "level": 1,
       "power_id": 0,
       "facing_left": false,
       "health_delta": 0,
       "buffs": [],
       "max_hp": 0,
       "mount_id": 0,
-      "buff_icon": 0,
-      "is_player": false
+      "buff_icon": 0
+    },
+    {
+      "id": 3,
+      "name": "IntroGoblinDagger",
+      "x": 6788,
+      "y": 619,
+      "z": 0,
+      "team": 0,
+      "entState": 0,
+      "untargetable": false,
+      "render_depth_offset": 10,
+      "behavior_speed": 0.0,
+      "level_str": "enemy",
+      "var_1958": "enemy",
+      "var_1879": "enemy",
+      "level": 5,
+      "power_id": 0,
+      "facing_left": true,
+      "health_delta": 0,
+      "buffs": [],
+      "max_hp": 0,
+      "mount_id": 0,
+      "buff_icon": 0
     },
     {
       "id": 4,
-      "name": "IntroGoblinDagger",
-      "x": 1100.25,
-      "y": 1400.615,
-      "z": -10,
-      "team": 3,
-      "entState": 3,
+      "name": "IntroGoblinClub",
+      "x": 6725,
+      "y": 619,
+      "z": 0,
+      "team": 0,
+      "entState": 1,
       "untargetable": false,
-      "behavior_id": 3,
-      "behavior_speed": 0.0,
-      "level_str": "CraftTown",
-      "var_1958": "testing",
-      "var_1879": "the guard",
-      "level": 0,
-      "power_id": 0,
+      "render_depth_offset": 2,
+      "behavior_speed": 2220.0,
+      "level_str": "",
+      "var_1958": "",
+      "var_1879": "",
+      "level": 5,
+      "power_id": 2,
       "facing_left": true,
-      "health_delta": 0,
+      "health_delta": 2,
       "buffs": [],
-      "max_hp": 0,
-      "mount_id": 0,
-      "buff_icon": 0,
-      "is_player": false
+      "max_hp": 2,
+      "mount_id": 2,
+      "buff_icon": 0
     },
     {
       "id": 5,
-      "name": "IntroGoblinDagger",
-      "x": 1200.25,
-      "y": 1400.615,
-      "z": -10,
-      "team": 4,
-      "entState": 4,
+      "name": "IntroGoblinJumper",
+      "x": 6639,
+      "y": 619,
+      "z": 0,
+      "team": 0,
+      "entState": 1,
       "untargetable": false,
-      "behavior_id": 4,
+      "render_depth_offset": 2,
       "behavior_speed": 0.0,
-      "level_str": "CraftTown",
-      "var_1958": "testing",
-      "var_1879": "the guard",
-      "level": 0,
+      "level_str": "",
+      "var_1958": "",
+      "var_1879": "",
+      "level": 5,
       "power_id": 0,
       "facing_left": true,
       "health_delta": 0,
       "buffs": [],
       "max_hp": 0,
       "mount_id": 0,
-      "buff_icon": 0,
-      "is_player": false
+      "buff_icon": 0
     },
     {
       "id": 6,
       "name": "IntroGoblinDagger",
-      "x": 1300.25,
-      "y": 1400.615,
-      "z": -10,
-      "team": 1,
+      "x": 6593,
+      "y": 619,
+      "z": 0,
+      "team": 0,
       "entState": 0,
       "untargetable": false,
-      "behavior_id": 1,
+      "render_depth_offset": 3,
       "behavior_speed": 0.0,
-      "level_str": "CraftTown",
-      "var_1958": "testing",
-      "var_1879": "the guard",
-      "level": 0,
+      "level_str": "",
+      "var_1958": "",
+      "var_1879": "",
+      "level": 5,
       "power_id": 0,
       "facing_left": true,
       "health_delta": 0,
       "buffs": [],
       "max_hp": 0,
       "mount_id": 0,
-      "buff_icon": 0,
+      "buff_icon": 0
+    }
+  ],
+  "NewbieRoad": [
+    {
+      "id": 1,
+      "name": "FloatingMage",
+      "x": 1773,
+      "y": 743,
+      "z": 0,
+      "team": 1,
+      "entState": 1,
+      "untargetable": false,
+      "render_depth_offset": 1,
+      "behavior_speed": 1.0,
+      "level_str": "CraftTown",
+      "var_1958": "testing",
+      "var_1879": "the guard",
+      "level": 50,
+      "power_id": 2,
+      "facing_left": true,
+      "health_delta": 1,
+      "buffs": [],
+      "max_hp": 1000000,
+      "mount_id": 1,
+      "buff_icon": 1,
       "is_player": false
+    },
+    {
+      "id": 2,
+      "name": "NPCCaptain",
+      "x": 1601,
+      "y": 776,
+      "z": 0,
+      "team": 1,
+      "entState": 0,
+      "untargetable": false,
+      "render_depth_offset": 0,
+      "behavior_speed": 0.0,
+      "level_str": "CraftTown",
+      "var_1958": "testing",
+      "var_1879": "the guard",
+      "level": 2,
+      "power_id": 2,
+      "facing_left": true,
+      "health_delta": 1,
+      "buffs": [],
+      "max_hp": 100,
+      "mount_id": 1,
+      "buff_icon": 1,
+      "is_player": false
+    }
+  ],
+  "NewbieRoadHard": [
+    {
+      "id": 4,
+      "name": "SpiritLionPridemate",
+      "x": 1564.00,
+      "y": 747.00,
+      "z": 0,
+      "team": 0,
+      "entState": 1,
+      "untargetable": false,
+      "render_depth_offset": 1,
+      "behavior_speed": 0,
+      "level_str": "testing 1",
+      "var_1958": "testing 2",
+      "var_1879": "testing 3",
+      "NPClevel": 50,
+      "PlayerLevel": 50,
+      "power_id": 0,
+      "facing_left": true,
+      "health_delta": 0,
+      "buffs": [],
+      "max_hp": 0,
+      "mount_id": 0,
+      "model_id":  0,
+      "head_type_id": 0,
+      "buff_icon": 0,
+      "equippedGears": [
+        {
+          "gearID": 1168,
+          "tier": 1,
+          "runes": [
+            0,
+            0,
+            0
+          ],
+          "colors": [
+            0,
+            0
+          ]
+        },
+        {
+          "gearID": 1169,
+          "tier": 1,
+          "runes": [
+            0,
+            0,
+            0
+          ],
+          "colors": [
+            0,
+            0
+          ]
+        },
+        {
+          "gearID": 1170,
+          "tier": 1,
+          "runes": [
+            0,
+            0,
+            0
+          ],
+          "colors": [
+            0,
+            0
+          ]
+        },
+        {
+          "gearID": 1167,
+          "tier": 1,
+          "runes": [
+            0,
+            0,
+            0
+          ],
+          "colors": [
+            0,
+            0
+          ]
+        },
+        {
+          "gearID": 1165,
+          "tier": 1,
+          "runes": [
+            0,
+            0,
+            0
+          ],
+          "colors": [
+            0,
+            0
+          ]
+        },
+        {
+          "gearID": 1166,
+          "tier": 1,
+          "runes": [
+            0,
+            0,
+            0
+          ],
+          "colors": [
+            0,
+            0
+          ]
+        }
+      ],
+      "MasterClass": 4,
+      "Mastery": {
+        "4": {
+          "classID": 4,
+          "slots": [
+            {
+              "filled": true,
+              "points": 2,
+              "nodeIdx": 1
+            }
+          ]
+        },
+        "5": {
+          "classID": 5,
+          "slots": [
+            {
+              "filled": true,
+              "points": 2,
+              "nodeIdx": 1
+            }
+          ]
+        },
+        "6": {
+          "classID": 5,
+          "slots": [
+            {
+              "filled": true,
+              "points": 2,
+              "nodeIdx": 1
+            }
+          ]
+        }
+      }
+    }
+  ],
+     "CraftTown": [
+    {
+      "id": 1,
+      "name": "AncientDragonGoldMini",
+      "x": 1224.00,
+      "y": 1444.00,
+      "z": 0,
+      "team": 2,
+      "untargetable": false,
+      "render_depth_offset": 1,
+      "behavior_speed": 555,
+      "level_str": "CraftTown",
+      "var_1958": "testing",
+      "var_1879": "theguard",
+      "power_id": 1,
+      "entState": 0,
+      "level": 12,
+      "facing_left": true,
+      "health_delta": -5000,
+      "buffs": [{
+        "type_id": 0,
+        "param1": 2,
+        "param2": 2,
+        "param3": 3,
+        "param4":4
+      }],
+      "extra_data": [{
+        "id": 1,
+        "values": 50
+      }]
     }
   ],
   "AC_Mission1": [
@@ -183,7 +372,7 @@
       "team": 0,
       "entState": 0,
       "untargetable": false,
-      "behavior_id": 1,
+      "render_depth_offset": 1,
       "behavior_speed": 0.0,
       "level_str": "",
       "var_1958": "",
@@ -209,7 +398,7 @@
       "team": 0,
       "entState": 0,
       "untargetable": false,
-      "behavior_id": 1,
+      "render_depth_offset": 1,
       "behavior_speed": 0.0,
       "level_str": "",
       "var_1958": "",
@@ -235,7 +424,7 @@
       "team": 0,
       "entState": 0,
       "untargetable": false,
-      "behavior_id": 1,
+      "render_depth_offset": 1,
       "behavior_speed": 0.0,
       "level_str": "",
       "var_1958": "",
@@ -259,7 +448,7 @@
       "team": 0,
       "entState": 0,
       "untargetable": false,
-      "behavior_id": 1,
+      "render_depth_offset": 1,
       "behavior_speed": 0.0,
       "level_str": "",
       "var_1958": "",
@@ -283,7 +472,7 @@
       "team": 0,
       "entState": 0,
       "untargetable": false,
-      "behavior_id": 1,
+      "render_depth_offset": 1,
       "behavior_speed": 0.0,
       "level_str": "",
       "var_1958": "",
@@ -307,7 +496,7 @@
       "team": 0,
       "entState": 0,
       "untargetable": false,
-      "behavior_id": 1,
+      "render_depth_offset": 1,
       "behavior_speed": 0.0,
       "level_str": "",
       "var_1958": "",
@@ -331,7 +520,7 @@
       "team": 0,
       "entState": 0,
       "untargetable": false,
-      "behavior_id": 1,
+      "render_depth_offset": 1,
       "behavior_speed": 0.0,
       "level_str": "",
       "var_1958": "",

@@ -2,9 +2,11 @@
 
 import os
 import json
+import uuid
+
 from BitUtils import BitBuffer
 from Items import Starting_Mounts, Starting_Pets, Starting_Charms, Starting_Materials, Starting_Consumables, \
-    Active_master_Class, Starter_Weapons, Active_Abilities, Starting_Missions
+    Active_master_Class, Starter_Weapons, Active_Abilities, Starting_Missions, Buildings
 from constants import inventory_gears
 from default_abilities import default_learned_abilities
 from constants import Mastery_Class
@@ -30,9 +32,26 @@ from constants import Mastery_Class
         ]
     }
   ]
-   "magicForge": {
-           (Forge) (Keep) (Tower1)(Tower2)(Tower3)(Tome)(Barn)
-  "stats": [    1,    0,       0,      1,     1,     1,    1],
+  "magicForge": {
+  "stats_by_building": {
+          "1": 10, # "Tome"
+          "2": 10, # "Forge"
+          
+          "3": 10, # "JusticarTower"
+          "4": 10, # "SentinelTower"
+          "5": 10, # "TemplarTower"
+          
+          "6": 10, # "FrostwardenTower"
+          "7": 10, # "FlameseerTower"
+          "8": 10, # "NecromancerTower"
+          
+          "9": 10, # "ExecutionerTower"
+          "10": 10, # "ShadowwalkerTower"
+          "11": 10, # "SoulthiefTower"
+          
+          "12": 0, # "Keep"
+          "13": 10 # "Barn"
+        },
   "hasSession": true,    // 1bit: whether a forge session exists (controls reading the session block)
   "primary": 90,         // primary gem/charm type ID (6 bits)
   "secondary": 5,        // secondary buff ID (only read if status==2 and var_8==1)
@@ -141,13 +160,19 @@ def make_character_dict_from_tuple(character):
     Starting_Mastery = Mastery_Class.get(cls, [])
     starter_gear = Starter_Weapons.get(cls, [])
     Starting_Active_Abilities = Active_Abilities.get(cls, [])
+    Starting_Buildings = Buildings.get(cls, [])
 
     char_dict = {
-        "CurrentLevel": {"name": "CraftTown", "x": 360, "y": 1458.99},
-        "PreviousLevel": {"name": "NewbieRoad", "x": 0, "y": 0},
         "name": name,
         "class": class_name,
         "level": level,
+        "xp": 29116890,
+        "gold": 100000,
+        "craftXP": 100000,
+        "DragonOre": 100000,
+        "mammothIdols": 100000,
+        "DragonKeys": 100000,
+        "SilverSigils": 100000,
         "gender": gender or "Male",
         "headSet": head or "Head01",
         "hairSet": hair or "Hair01",
@@ -158,83 +183,21 @@ def make_character_dict_from_tuple(character):
         "shirtColor": shirt_color,
         "pantColor": pant_color,
         "equippedGears": starter_gear,
-        "xp": 10,
-        "gold": 100000,
-        "craftXP": 100000,
-        "DragonOre": 100000,
-        "mammothIdols": 100000,
-        "DragonKeys": 100000,
-        "SilverSigils": 100000,
-        "showHigher": True,
-        "MasterClass": starting_talent,
-        "Mastery": Starting_Mastery,
-        # =================
-        "magicForge": {
-            "stats": [
-                10,
-                0,
-                10,
-                10,
-                10,
-                10,
-                10
-            ],
-            "hasSession": False,
-            "primary": 0,
-            "secondary": 0,
-            "status": 0,
-            "duration": 0,
-            "_start_time": 0,
-            "var_8": 0,
-            "usedlist": 0,
-            "var_2675": 0,
-            "var_2316": 0,
-            "var_2434": False
-        },
-        # ===================
-        "activeAbilities": Starting_Active_Abilities,
-        "craftTalentPoints": [5, 5, 5, 5, 5],  # these are the Magic Forge upgrade points Max value is 10 each
-        "towerPoints": [50, 50, 50],  # Talent upgrade 50 Max each
-        "equippedMount": 5,
-        "equippedPetID": 1,
-        "petIteration": 0,
-        "activeConsumableID": 13,
-        "queuedConsumableID": 12,
-        "research": {
-            "abilityID": 0,
-            "ReadyTime": 0
-        },
-        "buildingResearch": {
-            "slotID": 0,
-            "finishTime": 0
-        },
-        "towerResearch": {
-            "masterClassID": 0,
-            "endTime": 0
-        },
-        "eggData": {
-            "typeID": 0,
-            "resetEndTime": 0
-        },
-        "eggPetIDs": [1, 2, 30, 27, 5, 35, 20, 17],
-        "activeEggCount": 8,
-        "restingPets": [
-            {"typeID": 1, "level": 1, "extraValue": 0},
-            {"typeID": 2, "level": 1, "extraValue": 0},
-            {"typeID": 30, "level": 1, "extraValue": 0},
-            {"typeID": 27, "level": 1, "extraValue": 0}
-        ],
-        "missions": Starting_Missions,
-        "learnedAbilities": starting_abilities,
+        "CurrentLevel": {"name": "CraftTown", "x": 360, "y": 1458.99},
+        "PreviousLevel": {"name": "BridgeTownHard", "x": 0, "y": 0},
         "inventoryGears": starting_inventory,
-        "lockboxes": [{"lockboxID": 1, "count": 100}],
-        "gearSets": [
-        ],
+        "gearSets": [],
         "mounts": Starting_Mounts,
         "pets": Starting_Pets,
         "charms": Starting_Charms,
         "materials": Starting_Materials,
+        "lockboxes": [{"lockboxID": 1, "count": 100}],
         "consumables": Starting_Consumables,
+        "missions": {
+            "5": {
+                "state": 0
+            }
+        },
         "friends": [
             {
                 "name": "Neutral",
@@ -261,16 +224,82 @@ def make_character_dict_from_tuple(character):
                 "stateVersion": 5
             }
         ],
+        "learnedAbilities": starting_abilities,
+        "activeAbilities": Starting_Active_Abilities,
+        "craftTalentPoints": [5, 5, 5, 5, 5],  # these are the Magic Forge upgrade points Max value is 10 each
+        "talentPoints": {
+            "1": 1,
+            "2": 1,
+            "3": 1
+        },  # Talent upgrade 50 Max each
+        # =================
+        "magicForge": {
+            "stats_by_building": Starting_Buildings,
+            "hasSession": False,
+            "primary": 0,
+            "secondary": 0,
+            "status": 0,
+            "duration": 0,
+            "_start_time": 0,
+            "var_8": 0,
+            "usedlist": 0,
+            "var_2675": 0,
+            "var_2316": 0,
+            "var_2434": False
+        },
+        # ===================
+        "research": {
+            "abilityID": 0,
+            "ReadyTime": 0,
+            "done": True
+        },
+        "buildingUpgrade": {
+            "buildingID": 0,
+            "rank": 0,
+            "ReadyTime": 0,
+            "done": True,
+            "isInstant": False
+        },
+        "talentResearch": {
+            "classIndex": None,
+            "ReadyTime": 0,
+            "done": True,
+            "isInstant": False
+        },
+        "EggHachery": {
+             "EggID": 0,
+             "ReadyTime": 0,
+             "done": True
+        },
+        "OwnedEggsID": [1, 2, 30, 27, 5, 35, 20, 17],
+        "activeEggCount": 5,
+        "restingPets": [
+            {
+                "typeID": 2
+            },
+            {
+                "typeID": 3
+            },
+            {
+                "typeID": 4
+            }
+        ],
+        "trainingPet": [
+            {
+                "typeID": 0,
+                "trainingTime": 0
+            }
+        ],
+        "MasterClass": starting_talent,
+        "Mastery": Starting_Mastery,
+        "equippedMount": 1,
+        "equippedPetID": 1,
+        "activeConsumableID": 13,
+        "queuedConsumableID": 12,
         "guild": {
             "name": "KnightsOfValor",
             "rank": 2,
             "onlineMembers": [
-                {
-                    "name": "Teggdel",
-                    "classID": 0,
-                    "level": 45,
-                    "status": 1
-                },
                 {
                     "name": "ProGooner",
                     "classID": 1,
@@ -278,88 +307,17 @@ def make_character_dict_from_tuple(character):
                     "status": 3
                 },
                 {
-                    "name": "Fitler",
-                    "classID": 2,
-                    "level": 47,
-                    "status": 3
-                },
-                {
-                    "name": "DrHouse",
-                    "classID": 2,
-                    "level": 22,
-                    "status": 3
-                },
-                {
                     "name": "FriendlyNephit",
                     "classID": 1,
                     "level": 43,
                     "status": 3
-                },
-                {
-                    "name": "SneakyMcStab",
-                    "classID": 1,
-                    "level": 48,
-                    "status": 1
-                },
-                {
-                    "name": "HolyTickler",
-                    "classID": 0,
-                    "level": 42,
-                    "status": 1
-                },
-                {
-                    "name": "WizzyMcFizzle",
-                    "classID": 2,
-                    "level": 46,
-                    "status": 0
-                },
-                {
-                    "name": "PwnyThePaladin",
-                    "classID": 0,
-                    "level": 40,
-                    "status": 1
-                },
-                {
-                    "name": "StabbyMcSneak",
-                    "classID": 1,
-                    "level": 44,
-                    "status": 0
-                },
-                {
-                    "name": "SparkleFart",
-                    "classID": 2,
-                    "level": 39,
-                    "status": 1
-                },
-                {
-                    "name": "SirGiggles",
-                    "classID": 0,
-                    "level": 41,
-                    "status": 2
-                },
-                {
-                    "name": "RogueyMcRoguface",
-                    "classID": 1,
-                    "level": 47,
-                    "status": 2
-                },
-                {
-                    "name": "MagicTickler",
-                    "classID": 2,
-                    "level": 43,
-                    "status": 1
-                },
-                {
-                    "name": "ShieldyMcBloop",
-                    "classID": 0,
-                    "level": 38,
-                    "status": 0
                 }
             ]
         },
 
     }
     return char_dict
+
 
 def build_paperdoll_packet(character_dict):
     buf = BitBuffer(debug=True)  # Enable debug for tracing
@@ -398,6 +356,7 @@ def build_paperdoll_packet(character_dict):
 
     return buf.to_bytes()
 
+
 def build_login_character_list_bitpacked(characters):
     """
     Builds the 0x15 login-character-list packet.
@@ -419,4 +378,3 @@ def build_login_character_list_bitpacked(characters):
     import struct
     header = struct.pack(">HH", 0x15, len(buf.to_bytes()))
     return header + buf.to_bytes()
-

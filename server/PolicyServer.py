@@ -20,12 +20,12 @@ def start_policy_server(host: str = "127.0.0.1", port: int = 843):
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         sock.bind((host, port))
         sock.listen(5)
-        print(f"[Policy] Listening on {host or '0.0.0.0'}:{port}")
+        #print(f"[Policy] Listening on {host or '0.0.0.0'}:{port}")
         while True:
             conn, addr = sock.accept()
             data = conn.recv(1024)
             if b"<policy-file-request/>" in data:
-                print(f"[Policy] Request from {addr}, sending policy")
+                #print(f"[Policy] Request from {addr}, sending policy")
                 conn.sendall(_policy)
             conn.close()
 

@@ -12,6 +12,22 @@ class BitBuffer:
             if self.debug:
                 self.debug_log.append("align_pad=0")
 
+    def write_method_309(self, val: float):
+        self.write_float(val)
+        if self.debug:
+            self.debug_log.append(f"method_309={val}")
+
+    def write_method_24(self, val: int):
+        """
+        Write a signed integer as a 1-bit sign flag followed by the magnitude via method_9.
+        - val: Signed integer to write.
+        """
+        sign = 1 if val < 0 else 0
+        self._append_bits(sign, 1)
+        self.write_method_9(abs(val))
+        if self.debug:
+            self.debug_log.append(f"method_24={val}, sign={sign}")
+
     def _append_bits(self, value, bit_count):
         if self.debug:
             self.debug_log.append(f"write_bits={value:0{bit_count}b} ({bit_count} bits)")
@@ -30,6 +46,22 @@ class BitBuffer:
         for b in data:
             self._append_bits(b, 8)
 
+    def write_method_26(self, val: str):
+        """
+        Write a UTF-8 encoded string with a 16-bit length prefix, capped at 65535.
+        - val: String to write (None or empty string treated as empty).
+        """
+        if val is None:
+            val = ""
+        encoded = val.encode('utf-8')
+        length = min(len(encoded), 65535)
+        self._append_bits(length, 16)
+        for byte in encoded[:length]:
+            self._append_bits(byte, 8)
+        if self.debug:
+            self.debug_log.append(f"method_26={val}, length={length}")
+
+
     def write_method_4(self, val: int):
         bits_needed = val.bit_length() if val > 0 else 1
         bits_to_use = max(2, (bits_needed + 1) & ~1)
@@ -40,9 +72,7 @@ class BitBuffer:
         if self.debug:
             self.debug_log.append(f"method_4={val}, prefix={prefix}, bits={bits_to_use}")
 
-    def write_method_45(self, val):
-        self.align_to_byte()
-        import struct
+    def write_method_45(self, val):  # If this is a float
         b = struct.pack(">f", float(val))
         for byte in b:
             self._append_bits(byte, 8)
@@ -68,6 +98,12 @@ class BitBuffer:
     def write_bits(self, value, nbits):
         for i in reversed(range(nbits)):
             self._append_bits((value >> i) & 1, 1)
+
+    def insert_bits(self, value, nbits):
+        for i in reversed(range(nbits)):
+            self._append_bits((value >> i) & 1, 1)
+        if self.debug:
+            self.debug_log.append(f"insert_bits={value:0{nbits}b} ({nbits} bits)")
 
     def write_uint48(self, value: int) -> None:
         if value < 0 or value > 0xFFFFFFFFFFFF:
@@ -128,12 +164,9 @@ class BitBuffer:
             self.debug_log.append(f"method_45={val}, sign={1 if val < 0 else 0}")
 
     def write_float(self, val: float):
-        self.align_to_byte()  # Ensure byte alignment for float
-        b = struct.pack(">f", val)  # Pack float as 4 bytes, big-endian
+        b = struct.pack(">f", val)
         for byte in b:
             self._append_bits(byte, 8)
-        if self.debug:
-            self.debug_log.append(f"write_float={val}")
 
     def get_debug_log(self):
         return self.debug_log if self.debug else []

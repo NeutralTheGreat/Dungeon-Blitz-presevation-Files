@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import math
 import os
 import random
 import json
@@ -12,20 +13,28 @@ from Character import (
     save_characters
 )
 from BitUtils import BitBuffer
-from Commands import handle_hotbar_packet, handle_masterclass_packet, handle_research_packet, handle_gear_packet, \
+from Commands import handle_hotbar_packet, handle_masterclass_packet, handle_gear_packet, \
     handle_apply_dyes, handle_rune_packet, handle_change_look, handle_create_gearset, handle_name_gearset, \
     handle_apply_gearset, handle_update_equipment, magic_forge_packet, collect_forge_charm, start_forge_packet, \
-    cancel_forge_packet, allocate_talent_points, tick_forge_status, use_forge_xp_consumable, handle_private_message, \
+    cancel_forge_packet, allocate_talent_points, use_forge_xp_consumable, handle_private_message, \
     handle_public_chat, handle_group_invite, handle_power_cast, handle_power_hit, \
-    handle_projectile_explode, handle_add_buff, handle_remove_buff, handle_entity_full_update, handle_position_sync, \
-    handle_entity_incremental_update, handle_packet_0x7C, handle_packet_0x41
-from constants import EntType, DyeType, Entity
+    handle_projectile_explode, handle_add_buff, handle_remove_buff, handle_entity_full_update, \
+    handle_entity_incremental_update, handle_packet_0x41, Start_Skill_Research, \
+    handle_research_claim, PaperDoll_Request, Skill_Research_Cancell_Request, Skill_SpeedUp, handle_building_upgrade, \
+    handle_speedup_request, handle_cancel_upgrade, handle_train_talent_point, handle_talent_speedup, \
+    handle_talent_claim, handle_clear_talent_research, handle_hp_increase_notice, handle_volume_enter, \
+    handle_change_offset_y, handle_start_skit, handle_change_max_speed, handle_lockbox_reward, handle_grant_reward, \
+    handle_linkupdater, handle_request_respawn, handle_respawn_ack, PKTTYPE_BUFF_TICK_DOT, handle_entity_destroy, \
+    handle_emote_begin, Client_Crash_Reports, handle_mount_equip_packet, handle_pet_info_packet, \
+    handle_collect_hatched_egg
+from constants import Entity
 from WorldEnter import build_enter_world_packet, Player_Data_Packet
 from bitreader import BitReader
 from PolicyServer import start_policy_server
 from static_server import start_static_server
 from entity import Send_Entity_Data, load_npc_data_for_level
 from level_config import DOOR_MAP, LEVEL_CONFIG, get_spawn_coordinates
+from scheduler import reschedule_for_session, set_active_session_resolver, schedule_research
 
 HOST = "127.0.0.1"
 PORTS = [8080]
@@ -34,96 +43,48 @@ all_sessions = []
 current_characters = {}
 used_tokens = {}
 
-def build_handshake_response(sid):
-    b = sid.to_bytes(2, "big")
-    h = hashlib.md5(b + b"815bfb010cd7b1b4e6aa90abc7679028").hexdigest()
-    payload = b + bytes.fromhex(h[:12])
-    return struct.pack(">HH", 0x12, len(payload)) + payload
+# This must match client.const_914
+SECRET_HEX = "815bfb010cd7b1b4e6aa90abc7679028"
+SECRET      = bytes.fromhex(SECRET_HEX)
+
+def send_login_challenge(conn):
+    # 1) pick a random 16-bit sid
+    sid = secrets.randbelow(1 << 16)
+    sid_bytes = sid.to_bytes(2, "big")
+
+    # 2) compute MD5(sid_bytes || SECRET) → take first 12 hex chars
+    digest = hashlib.md5(sid_bytes + SECRET).hexdigest()[:12]
+
+    # 3) build a single ASCII-hex string: 4 hex digits of sid + 12 hex digits of digest
+    #    e.g. "1A2B3c4d5e6f7a8b9c0d"
+    sid_hex = f"{sid:04x}"
+    challenge_str = sid_hex + digest  # total length = 16 chars
+
+    # 4) UTF-encode it with a 2-byte length prefix
+    utf_bytes = challenge_str.encode("utf-8")
+    payload = struct.pack(">H", len(utf_bytes)) + utf_bytes
+
+    # 5) prepend the 0x12 header
+    packet = struct.pack(">HH", 0x12, len(payload)) + payload
+
+    # 6) send to client
+    conn.sendall(packet)
+    print(f"→ Sent 0x12 login challenge sid={sid_hex} hash={digest}")
 
 def new_transfer_token():
     while (t := secrets.randbits(16)) in pending_world:
         pass
     return t
-                         # For testing purposes
-######################################################################################
-def broadcast_level_change(session, char_name, new_level):
-    """
-    Notify all other authenticated clients of a player's level change.
-    Sends a 0x2C packet with a custom message: "LEVEL_UPDATE:<char_name>:<new_level>".
-    """
-    message = f"LEVEL_UPDATE:{char_name}:{new_level}"
-    bb = BitBuffer()
-    bb.write_method_4(session.clientEntID or 0)  # Use clientEntID or 0 if not set
-    bb.write_method_13(message)
-    broadcast_payload = bb.to_bytes()
-    packet = struct.pack(">HH", 0x2C, len(broadcast_payload)) + broadcast_payload
-    for other_session in all_sessions:
-        if other_session != session and other_session.authenticated:
-            try:
-                other_session.conn.sendall(packet)
-                print(
-                    f"[{session.addr}] Broadcasted level change for {char_name} to {new_level} to {other_session.addr}")
-            except Exception as e:
-                print(f"[{session.addr}] Error broadcasting level change to {other_session.addr}: {e}")
 
-def broadcast_attack_dialogue(session, player_name, target_entity_id, target_name):
-    """
-    Broadcast scripted dialogue for a turn-based player-NPC conversation when the player attacks an NPC (e.g., ID 1).
-    Sends five 0x2C packets (alternating player and NPC) with a 2-second delay, for a scripted scene.
-    """
-    print(f"[{session.addr}] Checking dialogue trigger for NPC ID {target_entity_id}")
-    if target_entity_id != 999:
-        print(f"[{session.addr}] Dialogue skipped: target_entity_id {target_entity_id} is not 1")
-        return  # Only trigger for NPC ID 1
-    # Check for cooldown (30 seconds)
-    if hasattr(session, 'last_dialogue_time') and time.time() - session.last_dialogue_time < 90:
-        print(f"[{session.addr}] Dialogue skipped: on cooldown for {player_name}")
-        return
-    session.last_dialogue_time = time.time()
-    # Alternating dialogue: Player, NPC, Player, NPC, Player
-    dialogue_sequence = [
-        ("player", session.clientEntID, "Nephit! I finally found you."),
-        ("NPC", target_entity_id, "So, the flame still flickers in you... intriguing."),
-        ("player", session.clientEntID, "You knew this would end with us."),
-        ("NPC", target_entity_id, "Many have tried. All have knelt before the void."),
-        ("player", session.clientEntID, "I’m not like them. I’m not afraid."),
-        ("NPC", target_entity_id, "Then come. Let your courage be your curse."),
-        ("player", session.clientEntID, "I’ll tear through your illusions and take back the shard!"),
-        ("NPC", target_entity_id, "The shard belongs to the darkness now."),
-        ("player", session.clientEntID, "Then I’ll bring light to your darkness."),
-        ("NPC", target_entity_id, "Bold... and foolish. Let’s end this.")
-    ]
-    print(
-        f"[{session.addr}] Triggering turn-based dialogue for {player_name} and {target_name} (NPC ID {target_entity_id})")
+def find_active_session(user_id, char_name):
+    for s in all_sessions:
+        if getattr(s, 'user_id', None) == user_id and getattr(s, 'current_character', None) == char_name and s.authenticated:
+            return s
+    return None
 
-    def send_dialogue(line, delay, entity_id, entity_type):
-        """Helper to send a single dialogue line for player or NPC after a delay."""
-        try:
-            bb = BitBuffer()
-            bb.write_method_4(entity_id or 0)  # Use player or NPC entity ID
-            bb.write_method_13(line)  # Raw text for scripted scene
-            broadcast_payload = bb.to_bytes()
-            packet = struct.pack(">HH", 0x2C, len(broadcast_payload)) + broadcast_payload
-            print(
-                f"[{session.addr}] Constructed dialogue packet: type=0x2C, payload_len={len(broadcast_payload)}, line='{line}', entity_type={entity_type}")
-            # Broadcast to all clients in the same level, including self
-            for other_session in all_sessions:
-                if other_session.world_loaded and other_session.current_level == session.current_level:
-                    try:
-                        other_session.conn.sendall(packet)
-                        print(
-                            f"[{session.addr}] Broadcasted {entity_type} dialogue '{line}' via 0x2C to {other_session.addr} after {delay}s")
-                    except Exception as e:
-                        print(f"[{session.addr}] Error sending {entity_type} dialogue to {other_session.addr}: {e}")
-        except Exception as e:
-            print(f"[{session.addr}] Error constructing {entity_type} dialogue packet for '{line}': {e}")
+# register resolver
+set_active_session_resolver(find_active_session)
 
-    # Schedule dialogue at 0.1s, 2.1s, 4.1s, 6.1s, 8.1s
-    for i, (entity_type, entity_id, line) in enumerate(dialogue_sequence):
-        threading.Timer(0.1 + i * 2.0, send_dialogue, args=(line, 0.1 + i * 2.0, entity_id, entity_type)).start()
-
-
-######################################################################################
 class ClientSession:
     def __init__(self, conn, addr):
         self.conn = conn
@@ -189,15 +150,10 @@ class ClientSession:
         return tk
 
     def cleanup(self):
-
-        # Close the connection and remove the session
-        try:
-            self.conn.close()
-        except:
-            pass
+        try: self.conn.close()
+        except: pass
         if self in all_sessions:
             all_sessions.remove(self)
-
 
 def read_exact(conn, n):
     buf = b""
@@ -209,83 +165,108 @@ def read_exact(conn, n):
     return buf
 
 def handle_client(session: ClientSession):
-    def npc_update_loop():
-        while session.running and session.world_loaded:
-            session.Send_NPC_Updates()
-            time.sleep(1)  # Update every 1 second
-
-    def forge_tick_loop():
-        while session.running:
-            tick_forge_status(session)
-            time.sleep(1)
-
-    conn, addr = session.conn, session.addr
+    conn = session.conn
+    addr = session.addr
     print("Connected:", addr)
     conn.settimeout(300)
+
+    # On login, reschedule future research
+    if session.user_id:
+        now = int(time.time())
+        for char in session.char_list:
+            research = char.get("research")
+            if research and not research.get("done", False):
+                rt = research.get("ReadyTime", 0)
+                if rt > now:
+                    schedule_research(session.user_id, char["name"], rt)
+
+    buffer = bytearray()
     try:
-        # Start NPC update thread
-        threading.Thread(target=forge_tick_loop, daemon=True).start()
-        threading.Thread(target=npc_update_loop, daemon=True).start()
         while True:
-            hdr = read_exact(conn, 4)
-            if not hdr:
+            chunk = conn.recv(4096)
+            if not chunk:
+                print(f"[{addr}] Connection closed by client")
                 break
-            pkt_id, length = struct.unpack(">HH", hdr)
-            payload = read_exact(conn, length)
-            if payload is None:
-                break
-            data = hdr + payload
-            pkt = int(data.hex()[:4], 16)
+            buffer.extend(chunk)
 
-            if pkt == 0x11:
-                sid = int(data.hex()[8:12], 16) if len(data) >= 6 else 0
-                conn.sendall(build_handshake_response(sid))
+            # Try to extract complete packets
+            while len(buffer) >= 4:
+                # Peek header
+                pkt    = int.from_bytes(buffer[0:2], byteorder='big')
+                length = int.from_bytes(buffer[2:4], byteorder='big')
+                total  = 4 + length
 
-            elif pkt == 0x13:
-                payload = data[8:]
-                br = BitReader(payload)
+                # If we don’t yet have the full packet, wait for more data
+                if len(buffer) < total:
+                    break
+
+                # We have a full packet in buffer[0:total]
+                data    = bytes(buffer[:total])
+                payload = data[4:]
+                # Remove it from buffer
+                del buffer[:total]
+
+                # Debug‐print
+               # print(f"[{addr}] Framed pkt=0x{pkt:02X} length={length} payload_bytes={len(payload)}")
+
+                # Sanity check
+                if len(payload) != length:
+                    print(f"[{addr}] ⚠️ Length mismatch: header says {length} but payload is {len(payload)}")
+                    # continue
+
+            if pkt == 0x11:# Done
+                send_login_challenge(conn)
+                continue
+
+            elif pkt == 0x13:# Done
+                br = BitReader(data[8:], debug=True)
                 email = br.read_string().strip().lower()
                 session.user_id = get_or_create_user_id(email)
                 session.char_list = load_characters(session.user_id)
-                try:
-                    with open(f"saves/{session.user_id}.json", "r", encoding="utf-8") as f:
-                        session.player_data = json.load(f)
-                except FileNotFoundError:
-                    session.player_data = {}
                 session.authenticated = True
+                # reschedule research again after login
+                now = int(time.time())
+                for char in session.char_list:
+                    research = char.get("research")
+                    if research and not research.get("done", False):
+                        rt = research.get("ReadyTime", 0)
+                        if rt > now:
+                            schedule_research(session.user_id, char["name"], rt)
                 conn.sendall(build_login_character_list_bitpacked(session.char_list))
 
-            elif pkt == 0x14:
+            elif pkt == 0x14:# Done
                 br = BitReader(data[4:], debug=True)
                 try:
-                    _ = br.read_string()
-                    _ = br.read_string()
+                    _ = br.read_string()  # skip first string
+                    _ = br.read_string()  # skip second string
                     email = br.read_string().strip().lower()
-                    _ = br.read_string()
-                    _ = br.read_string()
+                    _ = br.read_string()  # skip next
+                    _ = br.read_string()  # skip next
                 except Exception as e:
                     print(f"[{session.addr}] [PKT0x14] Error parsing packet: {e}, raw payload={data[4:].hex()}")
                     continue
+
                 accounts = load_accounts()
                 user_id = accounts.get(email)
                 if not user_id:
                     print(f"[{session.addr}] [PKT0x14] Login failed—no account for {email}")
-                    err_packet = build_popup_packet("Account not found", disconnect=True)
-                    conn.sendall(err_packet)
+                    conn.sendall(build_popup_packet("Account not found", disconnect=True))
                     continue
+
                 session.user_id = user_id
                 try:
                     with open(os.path.join(_SAVES_DIR, f"{session.user_id}.json"), "r", encoding="utf-8") as f:
                         session.player_data = json.load(f)
                 except FileNotFoundError:
                     session.player_data = {"email": email, "characters": []}
+
                 session.char_list = session.player_data.get("characters", [])
                 session.authenticated = True
                 conn.sendall(build_login_character_list_bitpacked(session.char_list))
                 print(
                     f"[{session.addr}] [PKT0x14] Logged in {email} → user_id={user_id}, chars={len(session.char_list)}")
 
-            elif pkt == 0x17:
+            elif pkt == 0x17:# Done
                 if not session.authenticated:
                     err_packet = build_popup_packet("Please log in first", disconnect=True)
                     conn.sendall(err_packet)
@@ -335,15 +316,6 @@ def handle_client(session: ClientSession):
                 conn.sendall(popup)
                 print(f"[{session.addr}] [PKT0x17] Sent 0x1B popup message")
 
-            elif pkt == 0x19:
-                name = BitReader(data[4:]).read_string()
-                for c in session.char_list:
-                    if c["name"] == name:
-                        pd = build_paperdoll_packet(c)
-                        conn.sendall(struct.pack(">HH", 0x1A, len(pd)) + pd)
-                        break
-                else:
-                    conn.sendall(struct.pack(">HH", 0x1A, 0))
 
             elif pkt == 0x16:
                 name = BitReader(data[4:]).read_string()
@@ -356,7 +328,14 @@ def handle_client(session: ClientSession):
                         # Set default PreviousLevel if unset
                         prev_name = c.get("PreviousLevel", {}).get("name", "NewbieRoad")
                         tk = session.issue_token(c, target_level=current_level, previous_level=prev_name)
+
                         level_config = LEVEL_CONFIG.get(current_level, ("LevelsNR.swf/a_Level_NewbieRoad", 1, 1, False))
+
+                        # detect hard mode (Dread levels)
+                        is_hard = current_level.endswith("Hard")
+                        new_moment = "Hard" if is_hard else ""
+                        new_alter = "Hard" if is_hard else ""
+
                         pkt_out = build_enter_world_packet(
                             transfer_token=tk,
                             old_level_id=0,
@@ -370,8 +349,8 @@ def handle_client(session: ClientSession):
                             new_map_lvl=level_config[1],
                             new_base_lvl=level_config[2],
                             new_internal=current_level,
-                            new_moment="",
-                            new_alter="",
+                            new_moment=new_moment,
+                            new_alter=new_alter,
                             new_is_inst=level_config[3],
                             new_has_coord=False,
                             new_x=0,
@@ -434,8 +413,8 @@ def handle_client(session: ClientSession):
                 else:
                     session.char_list = [char]
                 save_characters(session.user_id, session.char_list)
-                print(
-                    f"[{session.addr}] Saved character {char['name']}: CurrentLevel={char['CurrentLevel']}, PreviousLevel={char.get('PreviousLevel')}")
+                #print(
+                    #f"[{session.addr}] Saved character {char['name']}: CurrentLevel={char['CurrentLevel']}, PreviousLevel={char.get('PreviousLevel')}")
 
                 session.current_level = target_level
                 session.current_character = char["name"]
@@ -444,7 +423,7 @@ def handle_client(session: ClientSession):
                 session.authenticated = True
                 session.entities[token] = {
                     "id": token,
-                    "x": 360.0,  # Temporary; will be overridden by Player_Data_Packet
+                    "x": 360.0,
                     "y": 1458.99,
                     "z": 0.0,
                     "entState": Entity.const_6,
@@ -465,7 +444,6 @@ def handle_client(session: ClientSession):
                     new_y=int(round(new_y)),
                     new_has_coord=new_has_coord,
                 )
-
                 conn.sendall(welcome)
                 session.clientEntID = token
                 print(
@@ -544,30 +522,49 @@ def handle_client(session: ClientSession):
                 session.current_level = level_name
                 session.world_loaded = False
                 # 10) For testing purposes only; uncomment to broadcast level change, remove after testing
-                broadcast_level_change(session, char["name"], level_name)
+                #broadcast_level_change(session, char["name"], level_name)
                 # 11) Issue the new transfer token
                 new_token = session.issue_token(
                     char,
                     target_level=level_name,
                     previous_level=old_level
                 )
-                # 12) Build and send the ENTER_WORLD packet
+
+                # 12) Build and send the ENTER_WORLD packet, including info about the level we just left
+                #    old_level     := the name of the level we departed
+                #    prev_rec      := char["PreviousLevel"] ⟶ {name, x, y}
+                #    old_swf       := its SWF path
+                #    old_has_coord := True if we have stored coords
+                old_name = old_level
+                prev_rec = char.get("PreviousLevel", {})
+                prev_x = prev_rec.get("x", 0)
+                prev_y = prev_rec.get("y", 0)
+                old_swf, _, _, old_is_inst = LEVEL_CONFIG.get(old_name, ("", 0, 0, False))
+                old_has_coord = ("x" in prev_rec and "y" in prev_rec)
+
                 swf_path, map_id, base_id, is_inst = LEVEL_CONFIG[level_name]
+                is_hard = level_name.endswith("Hard")
+                new_moment = "Hard" if is_hard else ""
+                new_alter = "Hard" if is_hard else ""
+
                 pkt_out = build_enter_world_packet(
                     transfer_token=new_token,
                     old_level_id=0,
-                    old_swf="",
-                    has_old_coord=False,
-                    old_x=0,
-                    old_y=0,
+                    # tell the client what we just left
+                    old_swf = old_swf,
+                    has_old_coord  = old_has_coord,
+                    old_x = int(round(prev_x)),
+                    old_y = int(round(prev_y)),
+
                     host="127.0.0.1",
                     port=8080,
+                    # New level the player is entering
                     new_level_swf=swf_path,
                     new_map_lvl=map_id,
                     new_base_lvl=base_id,
                     new_internal=level_name,
-                    new_moment="",
-                    new_alter="",
+                    new_moment=new_moment,
+                    new_alter=new_alter,
                     new_is_inst=is_inst,
                     new_has_coord=new_has_coord,
                     new_x=int(round(new_x)),
@@ -617,156 +614,220 @@ def handle_client(session: ClientSession):
                 else:
                     print(f"[{session.addr}] Error: No target for door {door_id} in level {session.current_level}")
 
-            elif pkt == 0x107:
-                CAT_BITS = 3
-                ID_BITS = 6
-                PACK_ID = 1
-                reward_map = {
-                    0: ("MountLockbox01L01", True),  # Mount
-                    1: ("Lockbox01L01", True),  # Pet
-                    # 2: ("GenericBrown", True),  # Egg
-                    # 3: ("CommonBrown", True),  # Egg
-                    # 4: ("OrdinaryBrown", True),  # Egg
-                    # 5: ("PlainBrown", True),  # Egg
-                    6: ("RarePetFood", True),  # Consumable
-                    7: ("PetFood", True),  # Consumable
-                    # 8: ("Lockbox01Gear", True),  # Gear (will crash if invalid)
-                    9: ("TripleFind", True),  # Charm
-                    10: ("DoubleFind1", True),  # Charm
-                    11: ("DoubleFind2", True),  # Charm
-                    12: ("DoubleFind3", True),  # Charm
-                    13: ("MajorLegendaryCatalyst", True),  # Consumable
-                    14: ("MajorRareCatalyst", True),  # Consumable
-                    15: ("MinorRareCatalyst", True),  # Consumable
-                    16: (None, False),  # Gold (3 000 000)
-                    17: (None, False),  # Gold (1 500 000)
-                    18: (None, False),  # Gold (750 000)
-                    19: ("DyePack01Legendary", True),  # Dye‐pack
-                }
-                idx, (name, needs_str) = random.choice(list(reward_map.items()))
-                bb = BitBuffer()
-                bb.write_method_6(PACK_ID, CAT_BITS)
-                bb.write_method_6(idx, ID_BITS)
-                bb.write_bits(1 if needs_str else 0, 1)
-                if needs_str:
-                    bb.write_utf_string(name)
-                payload = bb.to_bytes()
-                packet = struct.pack(">HH", 0x108, len(payload)) + payload
-                session.conn.sendall(packet)
-                print(f"Lockbox reward: idx={idx}, name={name}, needs_str={needs_str}")
 
-            elif pkt == 0xBA:
-                payload = data[4:]
-                br = BitReader(payload)
-                entity_id = br.read_method_4()
-                dyes_by_slot = {}
-                for slot in range(1, EntType.MAX_SLOTS):
-                    has_pair = br.read_bits(1)
-                    if has_pair:
-                        d1 = br.read_bits(DyeType.BITS)
-                        d2 = br.read_bits(DyeType.BITS)
-                        dyes_by_slot[slot - 1] = (d1, d2)
-                preview_only = bool(br.read_bits(1))
-                primary_dye = br.read_bits(DyeType.BITS) if br.read_bits(1) else None
-                secondary_dye = br.read_bits(DyeType.BITS) if br.read_bits(1) else None
-                print(f"[Dyes] entity={entity_id}, dyes={dyes_by_slot}, "
-                      f"preview={preview_only}, shirt={primary_dye}, pants={secondary_dye}")
-                handle_apply_dyes(session, entity_id, dyes_by_slot, preview_only, primary_dye, secondary_dye)
+            #Entity Update Related packets
+            ###################################
+            elif pkt == 0x07:# Done
+                handle_entity_incremental_update(session, data, all_sessions)
+            elif pkt == 0xA2:# Done
+                handle_linkupdater(session, data, all_sessions)
+            elif pkt == 0x09:# Done
+                handle_power_cast(session, data, all_sessions)
+            elif pkt == 0x08:  # Done
+                handle_entity_full_update(session, data, all_sessions)
 
-            elif pkt == 0x41:
-                handle_packet_0x41(session, data, conn)
-            elif pkt == 0x7C:
-                handle_packet_0x7C(session, data)
-            elif pkt == 0xA2:
-                handle_position_sync(session, data, all_sessions)
-
-            #TODO...
-            #elif pkt == 0x08:
-            #    handle_entity_full_update(session, data, all_sessions)
-            #####
-            elif pkt == 0x08:
-                if session.world_loaded:
-                    # print(f"[{session.addr}] World already loaded; skipping NPC spawn.")
-                    continue
+                # Force NPC load temporarily
                 try:
                     npcs = load_npc_data_for_level(session.current_level)
                     for npc in npcs:
-                        payload = Send_Entity_Data(npc, is_player=False)
+                        payload = Send_Entity_Data(npc)
                         conn.sendall(struct.pack(">HH", 0x0F, len(payload)) + payload)
                         session.entities[npc["id"]] = npc
                         session.spawned_npcs.append(npc)
-                    session.world_loaded = True
-                    session.Send_NPC_Updates()  # Send initial NPC updates
-                    # print(f"[{session.addr}] Spawned {len(npcs)} NPCs for level {session.current_level}")
+                    print(f"[{session.addr}] NPCs manually triggered after world update")
                 except Exception as e:
                     print(f"[{session.addr}] Error spawning NPCs: {e}")
+            ###################################
 
-            elif pkt == 0x07:
-                handle_entity_incremental_update(session, data, all_sessions)
-            elif pkt == 0x09:
-                handle_power_cast(session, data, all_sessions)
-            elif pkt == 0x0A:
+
+              # Combat Related packets
+            ############################################
+            elif pkt == 0x0D: # Done
+               handle_entity_destroy(session, data, all_sessions)
+            elif pkt == 0x79: # Done
+               PKTTYPE_BUFF_TICK_DOT(session, data, all_sessions)
+            elif pkt == 0x82: # Done
+               handle_respawn_ack(session, data, all_sessions)
+            elif pkt == 0x77:# Done
+                handle_request_respawn(session, data, all_sessions)
+            elif pkt == 0x2A:
+                handle_grant_reward(session, data, all_sessions)
+            elif pkt == 0x0A:# Done
                 handle_power_hit(session, data, all_sessions)
-            elif pkt == 0x0E:
+            elif pkt == 0x0E:# Done
                 handle_projectile_explode(session, data, all_sessions)
-            elif pkt == 0x0E:
-                handle_projectile_explode(session, data, all_sessions)
-            elif pkt == 0x0B:
+            elif pkt == 0x0B:# Done
                 handle_add_buff(session, data, all_sessions)
-            elif pkt == 0x0C:
+            elif pkt == 0x0C:# Done
                 handle_remove_buff(session, data, all_sessions)
-            elif pkt == 0xDE:
-                bb = BitBuffer()
-                bb.write_bits(1, 16)
-                bb.write_bits(2, 8)
-                bb.write_bits(0, 32)
-                payload = bb.to_bytes()
-                conn.sendall(struct.pack(">HH", 0xBF, len(payload)) + payload)
-                print(f"[{addr}] TEST: sent BUILDING-UPDATE 0xBF len={len(payload)}")
-            elif pkt == 0x65:
-                handle_group_invite(session, data, all_sessions)
-            elif pkt == 0x2C:
+            ############################################
+
+
+            #Login Screen
+            ############################################
+            elif pkt == 0x19:# Done
+                PaperDoll_Request(session, data, conn)
+            ############################################
+
+
+            #Chatting messages NPC talking Emotes etc...
+            ############################################
+            elif pkt == 0x2C:# Done
                 handle_public_chat(session, data, all_sessions)
-            elif pkt == 0x46:
+            elif pkt == 0xC5:# Done
+                handle_start_skit(session, data,all_sessions)# i think this is meant to be used during scripted events
+            elif pkt == 0x46:# Done
                 handle_private_message(session, data, all_sessions)
-            elif pkt == 0xC3:
-                handle_masterclass_packet(session, data)
-            elif pkt == 0xDF:
-                handle_research_packet(session, data)
-            elif pkt == 0x31:
-                handle_gear_packet(session, data)
-            elif pkt == 0x8E:
+            elif pkt == 0x7E:# Done
+               handle_emote_begin(session, data, all_sessions)
+            ############################################
+
+
+            # Group Related packets
+            ############################################
+            elif pkt == 0x65:# Done
+                handle_group_invite(session, data, all_sessions)
+            ############################################
+
+
+            # Skill Related packets
+            ############################################
+            elif pkt == 0xBD:# Done
+                handle_hotbar_packet(session, data)  # Equipped skills
+            elif pkt == 0xBE:# Done
+                Start_Skill_Research(session, data, conn)
+            elif pkt == 0xD1:# Done
+                handle_research_claim(session) # claim completed upgrade skills
+            elif pkt == 0xDD:# Done
+                Skill_Research_Cancell_Request(session)
+            elif pkt == 0xDE:# Done
+                Skill_SpeedUp(session, data)
+            ############################################
+
+
+            # Entity Visuals related packets
+            ############################################
+            elif pkt == 0x8E:# Done
                 handle_change_look(session, data, all_sessions)
-            elif pkt == 0xC7:
-                handle_create_gearset(session, data)
-            elif pkt == 0xC8:
+            elif pkt == 0xBA:# Done
+                payload = data[4:]
+                handle_apply_dyes(session, payload)
+            ############################################
+
+
+           # Barn and pets related packets
+            ############################################
+            elif pkt == 0xB2:# Done
+                handle_mount_equip_packet(session, data, all_sessions)
+            elif pkt == 0xB3:
+                handle_pet_info_packet(session, data, all_sessions)
+            elif pkt == 0xEA:
+                #handle_collect_hatched_egg(session, data)
+                pass
+            ############################################
+
+
+            # Gear Set Related Packets
+            ############################################
+            elif pkt == 0xC8:# Done
                 handle_name_gearset(session, data)
-            elif pkt == 0xC6:
+            elif pkt == 0xC7:# Done
+                handle_create_gearset(session, data)
+            elif pkt == 0xC6:# Done
                 handle_apply_gearset(session, data)
-            elif pkt == 0x30:
+            ############################################
+
+
+            # Gear Related packets
+            ############################################
+            elif pkt == 0xB0:# Done
+                handle_rune_packet(session, data) # equips runes on weapon slots
+            elif pkt == 0x31:# Done
+                handle_gear_packet(session, data)
+            elif pkt == 0x30:# Done
                 handle_update_equipment(session, data)
-            elif pkt == 0xBD:
-                handle_hotbar_packet(session, data)  # Active Skills
+            ############################################
+
+
+            #TODO...
+            # Forge related packets
+            ############################################
             elif pkt == 0xE2:
                 magic_forge_packet(session, data)
             elif pkt == 0xD0:
                 collect_forge_charm(session, data)
-            elif pkt == 0xB0:
-                handle_rune_packet(session, data)
             elif pkt == 0xB1:
                 start_forge_packet(session, data)
             elif pkt == 0xE1:
                 cancel_forge_packet(session, data)
-            elif pkt == 0xD3:
-                allocate_talent_points(session, data)
             elif pkt == 0x110:
                 use_forge_xp_consumable(session, data)
+            ############################################
 
+
+            #TODO...
+            # Talent Upgrade related packets
+            ############################################
+            elif pkt == 0xD6 :
+                handle_talent_claim(session, data)
+            elif pkt == 0xE0:
+                handle_talent_speedup(session, data)
+            elif pkt == 0xD4:
+                handle_train_talent_point(session, data)
+            elif pkt == 0xDF:
+                handle_clear_talent_research(session, data)
+            elif pkt == 0xD3:
+                allocate_talent_points(session, data)
+            ############################################
+
+
+            # LockBox related packets
+            ###################################
+            elif pkt == 0x107:
+                payload = data[4:]
+                handle_lockbox_reward(session)
+            ###################################
+
+
+            # Master class related packets
+            ############################################
+            elif pkt == 0xC3:# Done
+                handle_masterclass_packet(session, data)
+            ############################################
+
+
+            # client crash Reports
+            ############################################
+            elif pkt == 0x7C:
+                Client_Crash_Reports(session, data)
+            ############################################
+
+            elif pkt == 0x7D:
+                handle_change_offset_y(session, data)
+            elif pkt == 0xF0:
+                handle_volume_enter(session, data)
+            elif pkt == 0xBB:
+                #handle_hp_increase_notice(session, data)
+                pass
+            elif pkt == 0x78:
+                #handle_char_regen(session, data)
+                pass
+            elif pkt == 0x8A:
+                handle_change_max_speed(session, data, all_sessions)
+            elif pkt == 0xDB:
+                handle_cancel_upgrade(session, data)
+            elif pkt == 0xDC:
+                handle_speedup_request(session, data)
+            elif pkt == 0xD7:
+                handle_building_upgrade(session, data)
+            elif pkt == 0x41:
+                handle_packet_0x41(session, data, conn)
             elif pkt == 0xCC:
                 pass
             elif pkt == 0x10E:
                 pass
-
+            elif pkt == 0xD9:# the client sends this to acknowledge that the building has finishing upgrading
+                 pass
             else:
                 print(f"[{session.addr}] Unhandled packet type: 0x{pkt:02X}, raw payload = {data.hex()}")
     except Exception as e:

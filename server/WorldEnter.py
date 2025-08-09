@@ -19,7 +19,6 @@ from constants import (
     class_111_const_432,
     class_64_const_218,
     class_9_const_129,
-    class_66_const_571,
     class_16_const_167,
     class_7_const_19,
     NEWS_EVENTS,
@@ -29,14 +28,20 @@ from constants import (
     NUM_TALENT_SLOTS,
     GEARTYPE_BITS,
     Mission,
-    class_119, class_111,
+    class_119, class_111, class_9, class_66, MASTERCLASS_TO_BUILDING,
 )
 from missions import var_238
+
+CLASS_BUILD_ORDER = {
+    "paladin": [2, 12, 3, 4, 5, 1, 13],
+    "mage":    [2, 12, 6, 7, 8, 1, 13],
+    "rogue":   [2, 12, 9, 10,11, 1, 13],
+}
 def Player_Data_Packet(char: dict,
                       event_index: int = 1,
-                      transfer_token: int = 1,
-                      scaling_factor: int = 0,
-                      bonus_levels: int = 0,
+                      transfer_token: int = 0,
+                      scaling_factor: int = 0,# Unknown
+                      bonus_levels: int = 0,# this is to scale the players Level on dungeons if the player joins a friends dungeon who is higher level
                       target_level: str = None,
                       new_x: int = None,
                       new_y: int = None,
@@ -94,10 +99,12 @@ def Player_Data_Packet(char: dict,
     buf.write_method_4(char.get("craftXP", 0))  # Gems
     buf.write_method_4(char.get("DragonOre", 0))  # DragonOre
     buf.write_method_4(char.get("mammothIdols", 0))  # mammoth idols
-    buf._append_bits(int(char.get("showHigher", True)), 1)
+
+    buf._append_bits(int(char.get("showHigher", True)), 1)# Unknown
 
     # ────────────── (5) Quest-tracker ──────────────
-    quest_val = char.get("questTrackerState", None)
+    # updates the current percentage of the current Dungeon this was likely used when the player join a in progress dungeon
+    quest_val = char.get("questTrackerState", 0)
     if quest_val is not None:
         buf._append_bits(1, 1)
         buf.write_method_4(quest_val)
@@ -112,6 +119,7 @@ def Player_Data_Packet(char: dict,
         buf.write_signed_method_45(new_y)
     else:
         buf._append_bits(0, 1)
+
     # ────────────── (7) Extended‐data‐presence ──────────────
     buf._append_bits(1, 1)  # yes, sending extended data
 
@@ -155,6 +163,7 @@ def Player_Data_Packet(char: dict,
         for gear_id in slots:
             buf._append_bits(gear_id, GearType.GEARTYPE_BITSTOSEND)
 
+    # ────────────── (Keybinds) ──────────────
     buf._append_bits(0, 1)  # no keybinds
 
     # Mounts
@@ -170,7 +179,7 @@ def Player_Data_Packet(char: dict,
         type_id = pet.get("typeID", 0)
         iteration = pet.get("level", 0)
         attr1 = pet.get("xp", 0)
-        attr2 = pet.get("attr2", 0)
+        attr2 = pet.get("iteration", 0)
         type_id = max(0, min(type_id, 127))
         iteration = max(0, min(iteration, 63))
         buf.write_method_6(type_id, 7)  # Type ID (7 bits)
@@ -311,18 +320,25 @@ def Player_Data_Packet(char: dict,
     for i in range(5):
         packed_value |= (craft_talent_points[i] & 0xF) << (i * 4)
     buf.write_method_4(packed_value)
-    tower_points = char.get("towerPoints", [0, 0, 0])  # List of 3 values, each 0-63
-    for tp in tower_points:
-        buf.write_method_6(tp, 6)  # class_66_const_409 = 6
+
+    # (9)talentPoints dict
+    tp_dict = char.get("talentPoints", {})
+    # send exactly three 6‑bit values, one per class index 1,2,3
+    for class_idx in (1, 2, 3):
+        val = tp_dict.get(str(class_idx), 0)
+        buf.write_method_6(val, 6)  # 6‑bit field
 
     # Magic Forge Section
     mf = char.get("magicForge", {})
-
-    # 1) Stats flag + stats data
-    has_stats = bool(mf.get("stats", []))
+    stats_dict = mf.get("stats_by_building", {})
+    has_stats = bool(stats_dict)
     buf._append_bits(1 if has_stats else 0, 1)
     if has_stats:
-        for val in mf.get("stats", [0] * 7)[:7]:
+        cls = char.get("class", "").lower()
+        seq = CLASS_BUILD_ORDER.get(cls, CLASS_BUILD_ORDER["paladin"])
+        # write exactly 7 values in that order:
+        for bid in seq:
+            val = stats_dict.get(str(bid), 0)
             buf.write_method_6(val, class_9_const_28)
 
     # 2) Session flag
@@ -330,23 +346,16 @@ def Player_Data_Packet(char: dict,
     buf._append_bits(1 if has_session else 0, 1)
 
     if has_session:
-        # 2a) Read primary gem ID
+        # 2a) Primary gem ID
         primary = mf.get("primary", 0)
         buf.write_method_6(primary, class_1_const_254)
 
-        # 2b) In-progress or completed?
+        # 2b) In‑progress or completed?
         status = mf.get("status", class_111.const_509)
-        if status == class_111.const_286:  # in progress
-            # write “1” then the end-time
+        if status == class_111.const_286:  # in-progress
             buf._append_bits(1, 1)
-            now = int(time.time())
-            duration_ms = mf.get("duration", 60000)
-            duration_sec = (duration_ms + 999) // 1000
-            duration_sec = min(duration_sec, (2 ** 30) - 1)
-            end_ts = now + duration_sec
-            buf.write_method_4(end_ts)
+            buf.write_method_4(mf.get("ReadyTime", 0))
         else:
-            # write “0” then var_8 + secondary + usedlist
             buf._append_bits(0, 1)
             var_8 = mf.get("var_8", 0)
             buf.write_method_6(var_8, class_64_const_499)
@@ -354,7 +363,7 @@ def Player_Data_Packet(char: dict,
                 buf.write_method_6(mf.get("secondary", 0), class_64_const_218)
                 buf.write_method_6(mf.get("usedlist", 0), class_111_const_432)
 
-        # 2c) Only when there IS a session do we write these two
+        # 2c) Always send these two when a session exists
         buf.write_method_91(min(mf.get("var_2675", 0), 65535))
         buf.write_method_91(min(mf.get("var_2316", 0), 65535))
 
@@ -364,131 +373,87 @@ def Player_Data_Packet(char: dict,
     # ── Skill Research ──
     research = char.get("research")
     if research:
-        buf._append_bits(1, 1)  # flag: research in progress
-
-        # 1) ability ID
+        buf._append_bits(1, 1)
         buf.write_method_6(research["abilityID"], class_10_const_83)
 
-        # 2) build an end timestamp in seconds
-        now_sec = int(time.time())  # current time in seconds
-        ready_ms = research.get("ReadyTime", 0)  # e.g. 50000 ms
-        duration_sec = (ready_ms + 999) // 1000  # round up to seconds
+        end_sec = research.get("ReadyTime", 0)
 
-        # 3) cap to method_4’s safe range (~1B)
-        max_safe = (2 ** 30) - 1
-        duration_sec = min(duration_sec, max_safe)
-
-        # 4) compute absolute end time in seconds
-        end_sec = now_sec + duration_sec
-
-        # 5) write end time
-        buf.write_method_4(end_sec)
-
+        # If marked done, set time to 0 to signal "ready to collect"
+        if research.get("done"):
+            buf.write_method_4(0)
+        else:
+            buf.write_method_4(end_sec)
     else:
         buf._append_bits(0, 1)
 
     # (7) buildingResearch
-    bld = char.get("buildingResearch")
-    if bld:
-        buf._append_bits(1, 1)
-
-        # 1) write the building slot ID
-        buf.write_method_6(bld["slotID"], class_9_const_129)
-
-        # 2) calculate end time in seconds
-        now_sec = int(time.time())  # current Unix time (s)
-        finish_ms = bld.get("finishTime", 0)  # stored as milliseconds
-        duration_sec = (finish_ms + 999) // 1000  # round up to seconds
-
-        # 3) cap to method_4’s safe range (~1B)
-        max_safe = (2 ** 30) - 1
-        duration_sec = min(duration_sec, max_safe)
-
-        # 4) absolute finish time (s)
-        finish_sec = now_sec + duration_sec
-
-        # 5) write as a method_4 timestamp
-        buf.write_method_4(finish_sec)
-
+    bu = char.get("buildingUpgrade")
+    if bu and not bu.get("done", False):
+        buf._append_bits(1, 1)  # flag: upgrade in progress
+        buf.write_method_6(bu["buildingID"], class_9.const_129)  # 5‑bit field
+        buf.write_method_4(bu["ReadyTime"])  # 32‑bit (variable) field
     else:
         buf._append_bits(0, 1)
 
     # (8) towerResearch
-    tower = char.get("towerResearch")
-    if tower:
-        buf._append_bits(1, 1)
+    tr = char.get("talentResearch", {})
+    # present if there's an active or pending research
+    has_tr = isinstance(tr, dict) and not tr.get("done", False) and tr.get("ReadyTime", 0) > 0
+    buf._append_bits(1 if has_tr else 0, 1)
 
-        # 1) write the master class ID
-        buf.write_method_6(tower["masterClassID"], class_66_const_571)
-
-        # 2) calculate end time in seconds
-        now_sec = int(time.time())  # current Unix time (s)
-        end_ms = tower.get("endTime", 0)  # stored in milliseconds
-        duration_sec = (end_ms + 999) // 1000  # convert & round up to seconds
-
-        # 3) cap to method_4’s safe range (~1B)
-        max_safe = (2 ** 30) - 1
-        duration_sec = min(duration_sec, max_safe)
-
-        # 4) absolute finish time (s)
-        finish_sec = now_sec + duration_sec
-
-        # 5) write as a method_4 timestamp
-        buf.write_method_4(finish_sec)
-
-    else:
-        buf._append_bits(0, 1)
+    if has_tr:
+        # write the 2‑bit classIndex (use the same const the client does)
+        buf.write_bits(tr.get("classIndex", 0), class_66.const_571)
+        # then the 32‑bit ReadyTime
+        buf.write_method_4(tr.get("ReadyTime", 0))
 
     # “SetEggData” (egg type + reset timer)
-    egg_data = char.get("eggData")
+    egg_data = char.get("EggHachery")
     if egg_data:
-        buf._append_bits(1, 1)
+        buf._append_bits(1, 1)  # egg data present
+        buf.write_method_6(egg_data["EggID"], class_16_const_167)
 
-        # 1) egg type ID
-        buf.write_method_6(egg_data["typeID"], class_16_const_167)
+        if egg_data.get("done", False):
+            # Egg finished — client will show it as ready
+            buf.write_method_4(0)
+        else:
+            # Egg in progress — send remaining time
+            buf.write_method_4(egg_data.get("ReadyTime", 0))
 
-        # 2) calculate end time in seconds
-        now_sec = int(time.time())  # current Unix time (s)
-        reset_ms = egg_data.get("resetEndTime", 0)  # stored in milliseconds
-        duration_sec = (reset_ms + 999) // 1000  # convert & round up to seconds
-
-        # 3) cap to method_4’s safe range (~1B)
-        max_safe = (2 ** 30) - 1
-        duration_sec = min(duration_sec, max_safe)
-
-        # 4) absolute finish time (s)
-        finish_sec = now_sec + duration_sec
-
-        # 5) write as a method_4 timestamp
-        buf.write_method_4(finish_sec)
-
-    else:
-        buf._append_bits(0, 1)
-
-    # 2) Egg-ID list
-    eggPetIDs = char.get("eggPetIDs", [])
+    # ============ Owned Eggs  ========================
+    eggPetIDs = char.get("OwnedEggsID", [])
     buf.write_method_6(len(eggPetIDs), class_16_const_167)
     for eid in eggPetIDs:
         buf.write_method_6(eid, class_16_const_167)
 
-    # 3) Active-egg count
+    # ============ Active Egg Count ========================
     activeEggCount = char.get("activeEggCount", 0)
     buf.write_method_4(activeEggCount)
 
-   #TODO... _loc119_: null
-    # 4) Resting-pet loops (four distinct if-method_11() blocks)
-    rest_loops = char.get("restingPets", [])[:4]
+    # ============ Resting pets ========================
+    # Resting Pets (3 slots max)
+    rest = char.get("restingPets", [])[:3]
 
-    for i in range(4):
-        if i < len(rest_loops):
-            r = rest_loops[i]
+    for i in range(3):
+        if i < len(rest):
+            r = rest[i]
             buf._append_bits(1, 1)
             buf.write_method_6(r["typeID"], class_7_const_19)
-            buf.write_method_4(r["level"])
-            if i == 3 and "extraValue" in r:
-                buf.write_method_4(r["extraValue"])
+            buf.write_method_4(0)  # a value bigger than 0 will cause the pet not to show in the resting slot not sure what the actual function of this so im just going to leave it 0
         else:
             buf._append_bits(0, 1)
+
+    # ============ Training pets ========================
+    tp_list = char.get("trainingPet", [])
+    if tp_list and isinstance(tp_list, list) and len(tp_list) > 0:
+        tp = tp_list[0]
+        buf._append_bits(1, 1)
+        buf.write_method_6(tp["typeID"], class_7_const_19)
+        buf.write_method_4(0)  # a value bigger than 0 will cause the pet not to show in the training slot not sure what the actual function of this so im just going to leave it 0
+        buf.write_method_4(tp.get("trainingTime", 0))  # extra value
+    else:
+        buf._append_bits(0, 1)
+
 
     icon, headline, body, tooltip, ts = NEWS_EVENTS.get(
         event_index,
@@ -547,13 +512,17 @@ def Player_Data_Packet(char: dict,
         else:
             buf._append_bits(0, 1)
 
-    # TODO... the equipped Mounts and Pets are not showing not sure why yet
-    mount_id = char.get("equippedMount", 0)
-    buf.write_method_4(mount_id)
+    # 2. Equipped Mount
+    equipped = char.get("equippedMount", 0)
+    if equipped in mounts:
+        buf.write_method_4(equipped)
+    else:
+        buf.write_method_4(0)
+
     pet_type_id = char.get("equippedPetID", 0)
-    pet_iteration = char.get("petIteration", 0)
     buf.write_method_4(pet_type_id)
-    buf.write_method_4(pet_iteration)
+    buf.write_method_4(0)  # Always zero, no iteration data
+
     active_consumable_id = char.get("activeConsumableID", 0)
     queued_consumable_id = char.get("queuedConsumableID", 0)
     buf.write_method_4(active_consumable_id)
@@ -650,34 +619,74 @@ def build_enter_world_packet(
         buf.write_signed_method_45(new_x)
         buf.write_signed_method_45(new_y)
 
-    # 12) Extended data presence (_loc19_)
-    buf._append_bits(1, 1)  # Indicate we are sending building data
+    # --- SPECIAL CASE: only send building data when player loads/visits "CraftTown" ---
+    # determine if we are entering CraftTown (case-insensitive)
+    _is_crafttown = False
+    if new_level_swf and "crafttown" in new_level_swf.lower():
+        _is_crafttown = True
+    if new_internal and "crafttown" in new_internal.lower():
+        _is_crafttown = True
 
-    # 13) Buildings data block
-    # New level ID (_loc22_, same as transfer_token)
-    new_level_id = transfer_token
-    buf.write_method_4(new_level_id)
+    # 12) Extended data presence (_loc19_) -> only set when CraftTown
+    buf._append_bits(1 if _is_crafttown else 0, 1)
 
-    # Master class ID (_loc25_, 4 bits)
-    master_class_id = char.get("MasterClass", 0) if char else 0
-    buf.write_method_6(master_class_id, GAME_CONST_209)
+    if _is_crafttown:
+        # 13) Buildings data block
+        # New level ID (_loc22_, same as transfer_token)
+        new_level_id = transfer_token
+        buf.write_method_4(new_level_id)
 
-    # Building levels from magicForge stats (5 bits each)
-    stats = char.get("magicForge", {}).get("stats", [0] * 7) if char else [0] * 7
-    forge_level = stats[0]         # _loc26_, e.g., 10
-    keep_level = stats[1]          # _loc27_, e.g., 0
-    tower_level = stats[2]         # _loc28_, e.g., 10
-    tome_level = stats[3]          # _loc29_, e.g., 10
-    barn_level = stats[4]          # _loc30_, e.g., 10
-    scaffolding_level = stats[5]   # _loc31_, e.g., 10
+        # --- WRITE master class id so the client parses the following fields correctly ---
+        master_class_id = int(char.get("MasterClass", 0) if char else 0)
+        buf.write_method_6(master_class_id, GAME_CONST_209)
 
-    buf.write_method_6(forge_level, class_9_const_28)
-    buf.write_method_6(keep_level, class_9_const_28)
-    buf.write_method_6(tower_level, class_9_const_28)
-    buf.write_method_6(tome_level, class_9_const_28)
-    buf.write_method_6(barn_level, class_9_const_28)
-    buf.write_method_6(scaffolding_level, class_9_const_129)
+        # Map MasterClass -> building id for tower lookup (ensure MASTERCLASS_TO_BUILDING exists)
+        tower_building_id = MASTERCLASS_TO_BUILDING.get(master_class_id, 0)
+
+        # Get building stats from the new save structure
+        stats_by_building = {}
+        if char:
+            mf = char.get("magicForge", {})
+            # support both "stats" (old array) and "stats_by_building" (new dict)
+            if isinstance(mf, dict):
+                stats_by_building = mf.get("stats_by_building", {}) or {}
+            else:
+                # fallback if mf is provided in unexpected format
+                stats_by_building = {}
+
+        stats_by_building = char.get("magicForge", {}).get("stats_by_building", {}) if char else {}
+
+        def _stat(bid):
+            return int(stats_by_building.get(str(bid), stats_by_building.get(bid, 0) or 0))
+
+        # Mapping based on provided sample:
+        # 1: Tome, 2: Forge, 3..11: Towers, 12: Keep, 13: Barn
+        tome_level = _stat(1)   # _loc26_ in some examples; here we treat Tome as id 1
+        forge_level = _stat(2)  # forge
+        # Tower: choose the tower matching master_class_id if in tower range, fallback to first tower id 3
+        stats_by_building = char.get("magicForge", {}).get("stats_by_building", {})
+        tower_level = _stat(tower_building_id)
+        keep_level = _stat(12)
+        barn_level = _stat(13)
+
+        # scaffolding_level: use buildingUpgrade.buildingID if present (0 otherwise)
+        scaffolding_level = 0
+        if char:
+            bu = char.get("buildingUpgrade", {}) or {}
+            # if buildingUpgrade contains buildingID -> that is the building currently upgrading
+            scaffolding_level = int(bu.get("buildingID", 0) or 0)
+
+        # write building levels using the same bit sizes/constants the client expects
+        buf.write_method_6(forge_level, class_9_const_28)
+        buf.write_method_6(keep_level, class_9_const_28)
+        buf.write_method_6(tower_level, class_9_const_28)
+        buf.write_method_6(tome_level, class_9_const_28)
+        buf.write_method_6(barn_level, class_9_const_28)
+        buf.write_method_6(scaffolding_level, class_9_const_129)
+
 
     # Build final packet
     payload = buf.to_bytes()
     return struct.pack(">HH", 0x21, len(payload)) + payload
+
+
