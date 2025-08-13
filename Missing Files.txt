@@ -3,7 +3,9 @@
 - LevelsCH.swf
 - TalesSD.swf
 
-                             "055--------WOLFS END------------"
+ 
+         TalesNR.swf
+         "055--------WOLFS END------------"
 
          var_5["101NR_Tales1Keep"] = "TalesNR.swf/a_Level_NRTales1Keep 44 29 true";
          var_5["102NR_Tales2Anna"] = "TalesNR.swf/a_Level_NRTales2Anna 44 29 true";
@@ -13,14 +15,14 @@
 
 
 
-      LevelsLD.swf
+         LevelsLD.swf
          "205--------FELBRIDGE------------"
          var_5["251LDArena1"] = "LevelsLD.swf/a_Level_LDArena1 50 50 true";
 
 
 
          LevelsCH.swf
-                     "255--------CEMETERY HILL------------"
+         "255--------CEMETERY HILL------------"
          var_5["26CemeteryHill"] = "LevelsCH.swf/a_Level_CemeteryHill 11 11 false";
          var_5["26CemeteryHillHard"] = "LevelsCH.swf/a_Level_CemeteryHill 26 11 false Hard";
          var_5["27CH_Mission1"] = "LevelsCH.swf/a_Level_CHMission1 11 11 true";
@@ -59,7 +61,7 @@
          var_5["430CH_MiniMission9Hard"] = "LevelsCH.swf/a_Level_CHMini9 30 15 true Hard";
 
 
-TalesSD.swf
+         TalesSD.swf
          "687--------SHAZARI DESERT------------"
          var_5["751SD_Tales1Escort"] = "TalesSD.swf/a_Level_SDTales1Escort 44 29 true";
          var_5["752SD_Tales2Surprise"] = "TalesSD.swf/a_Level_SDTales2Surprise 44 29 true";
