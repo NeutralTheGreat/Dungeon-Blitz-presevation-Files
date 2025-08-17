@@ -12,6 +12,11 @@ def get_spawn_coordinates(char: dict, current_level: str, target_level: str) -> 
     if current_level == "SwampRoadNorthHard" and target_level == "NewbieRoadHard":
         return 20298.00, 639.00, True
 
+    if current_level == "SwampRoadConnection" and target_level == "SwampRoadNorth":
+        return 193, 511, True
+    if current_level == "SwampRoadConnectionHard" and target_level == "SwampRoadNorthHard":
+        return 193, 511, True
+
     if current_level == "EmeraldGlades" and target_level == "OldMineMountain":
         return 18552, 4021, True
     if current_level == "EmeraldGladesHard" and target_level == "OldMineMountainHard":
@@ -67,7 +72,9 @@ def get_spawn_coordinates(char: dict, current_level: str, target_level: str) -> 
         # new non-dungeon level → default spawn
         return int(round(spawn["x"])), int(round(spawn["y"])), True
 
-# Default Player Spawn Point for handle_entity_incremental_update
+# Default Player Spawn Point for handle_entity_incremental_update for tracking the players absolute coordinates
+# the client sends deltas for the movements not the full coordinates
+# the client will always send the players absolute coordinates with the 0x8 packet every time he changes levels but if that fails the server falls back to this
 SPAWN_POINTS = {
     "CraftTown":{"x": 360, "y": 1458.99},
     "--------WOLFS END------------": "",

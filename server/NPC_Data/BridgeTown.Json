@@ -1,0 +1,24 @@
+[
+
+      {
+      "id": 99,
+      "name": "NPCTraveller",
+      "x": 11241,
+      "y": 2199,
+      "z": 0,
+      "team": 3,
+      "untargetable": false,
+      "render_depth_offset": -15,
+      "behavior_speed": 0.0,
+      "Linked_Mission": "",
+      "drama_anim": "",
+      "sleep_anim": "",
+      "NPClevel": 0,
+      "power_id": 0,
+      "entState": 0,
+      "facing_left": true,
+      "health_delta": 0,
+      "buffs": []
+    }
+
+]

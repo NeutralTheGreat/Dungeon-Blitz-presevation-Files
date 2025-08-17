@@ -1,25 +1,90 @@
 import json
+import os
 
 from BitUtils import BitBuffer
-from constants import Entity, class_7, class_20, class_3, Game, CLASS_NAME_TO_ID, class_118, SLOT_BIT_WIDTHS, \
-    LinkUpdater, EntType, GearType, class_64, class_21, method_277, method_233
+from constants import Entity, class_7, class_20, class_3, Game, class_118, \
+    LinkUpdater, EntType, GearType, class_64, class_21, method_277
 from typing import Dict, Any
 
-def load_npc_data_for_level(level_name: str, json_path: str = r"data/npc_data.json") -> list:
+npc_cache = {}
+
+"""
+Hints NPCs data 
+"TutorialBoat": [
+    {
+      "id": 3,
+      "name": "NPCRuggedVillager02",
+      "x": 3317,
+      "y": 461,
+      "z": 0,
+      "team": 3,
+      "untargetable": false,
+      "render_depth_offset": -15,
+      "behavior_speed": 0.0,
+      "Linked_Mission": "NR_Mayor01", 
+      "drama_anim": "",
+      "sleep_anim": "",
+      "NPClevel": 0,
+      "power_id": 0,
+      "entState": 0,
+      "facing_left": true,
+      "health_delta": 0,
+      "buffs": []
+    }
+]
+
+
+- how to make the NPC interactable by the player
+- NPC will only become interactable if they have a "Linked_Mission" set and  "team" set to 3 
+
+- look at the "MissionTypes.Json" for these 2 lines on each mission : 
+
+"ContactName": "CaptainFink",
+"ReturnName": "NR_Mayor01", 
+
+For example the NPC with the "Linked_Mission": "NR_Mayor01",  will be linked to all the missions that have "ReturnName": "NR_Mayor01",  OR "ContactName": "NR_Mayor01",
+
+- this will also show the NPCs name under his feet "NR_Mayor01" is "Mayor Ristas"
+
+
+Team Types : 
+
+ const_531:uint = 0; # team type will be automatically chosen  its  used for a entity called "EmberBush" :/ but it will also give any other NPC team 2 (enemies)
+      
+ GOODGUY:uint = 1; #  players 
+      
+ BADGUY:uint = 2; # Enemies 
+      
+ NEUTRAL:uint = 3; # Friendly NPC
+ 
+ 
+entState : 
+ 
+ 0 = Active State
+ 
+ 1 = Sleep State
+ 
+ 2 = Drama State (used during cutscenes most likely) this will put the entity to sleep also make them untargetable 
+ 
+ 3 = Entity Dies when the game loads 
+ 
+"""
+
+
+def load_npc_data_for_level(level_name: str) -> list:
     """
     Args:
         level_name (str): The level identifier (e.g., 'TutorialBoat').
-        json_path (str): Path to the JSON file containing NPC data.
 
     Returns:
         list: List of dictionaries, each containing NPC data for the given level.
     """
+    json_path = os.path.join("NPC_Data", f"{level_name}.json")
     try:
         with open(json_path, 'r') as file:
-            npc_data = json.load(file)
-        return npc_data.get(level_name, [])
+            return json.load(file)
     except (FileNotFoundError, json.JSONDecodeError) as e:
-        print(f"Error loading NPC data: {e}")
+        print(f"Error loading NPC data for {level_name}: {e}")
         return []
 
 def scale_coordinates(x: float, y: float, z: float):
@@ -95,7 +160,7 @@ def Send_Entity_Data(entity: Dict[str, Any]) -> bytes:
         bb.write_bits(1 if talents else 0, 1)
         if talents:
             # client loops over const_43 slots
-            for slot_index in range(class_118.const_43):
+            for slot_index in range(class_118.NUM_TALENT_SLOTS):
                 matching = next((t for t in talents if t[0] == slot_index), None)
                 bb.write_bits(1 if matching else 0, 1)
                 if matching:
@@ -121,7 +186,7 @@ def Send_Entity_Data(entity: Dict[str, Any]) -> bytes:
         bb.write_bits(0, 1)
 
     # 6) optional strings
-    for key in ("level_str", "var_1958", "var_1879"):
+    for key in ("Linked_Mission", "drama_anim", "sleep_anim"):
         val = entity.get(key, "")
         bb.write_bits(1 if val else 0, 1)
         if val:

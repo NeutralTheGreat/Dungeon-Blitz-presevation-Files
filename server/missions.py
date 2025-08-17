@@ -1,328 +1,70 @@
+import json
+from typing import Optional, Dict
 
-import xml.etree.ElementTree as ET
+# cache
+_MISSION_DEFS_BY_ID: Optional[Dict[int, dict]] = None
+_MISSION_MAX_ID: int = 0
 
-class MissionDef:
-    def __init__(self, var_1775: bool, var_908: int, var_134: bool):
-        self.var_1775 = var_1775
-        self.var_908   = var_908
-        self.var_134   = var_134
+def _is_truthy(v) -> bool:
+    if isinstance(v, bool):
+        return v
+    if v is None:
+        return False
+    s = str(v).strip().lower()
+    return s in ("1","true","yes","y","t")
 
-MISSION_DEFS = [
-    MissionDef(var_1775=True, var_908=0, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=0, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=0, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=0, var_134=False),
-    MissionDef(var_1775=False, var_908=5, var_134=False),
-    MissionDef(var_1775=False, var_908=10, var_134=False),
-    MissionDef(var_1775=True, var_908=0, var_134=False),
-    MissionDef(var_1775=False, var_908=30, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=0, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=0, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=False, var_908=5, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=False, var_908=10, var_134=False),
-    MissionDef(var_1775=False, var_908=10, var_134=False),
-    MissionDef(var_1775=False, var_908=10, var_134=False),
-    MissionDef(var_1775=True, var_908=0, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=0, var_134=False),
-    MissionDef(var_1775=True, var_908=0, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=0, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=0, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=False, var_908=10, var_134=False),
-    MissionDef(var_1775=False, var_908=15, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=0, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=False, var_908=3, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=0, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=False, var_908=5, var_134=False),
-    MissionDef(var_1775=False, var_908=10, var_134=False),
-    MissionDef(var_1775=False, var_908=15, var_134=False),
-    MissionDef(var_1775=False, var_908=15, var_134=False),
-    MissionDef(var_1775=False, var_908=10, var_134=False),
-    MissionDef(var_1775=False, var_908=10, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=False, var_908=250, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=0, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=False, var_908=10, var_134=False),
-    MissionDef(var_1775=False, var_908=10, var_134=False),
-    MissionDef(var_1775=False, var_908=20, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=False, var_908=30, var_134=False),
-    MissionDef(var_1775=False, var_908=10, var_134=False),
-    MissionDef(var_1775=True, var_908=0, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=0, var_134=False),
-    MissionDef(var_1775=True, var_908=0, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=False, var_908=10, var_134=False),
-    MissionDef(var_1775=False, var_908=20, var_134=False),
-    MissionDef(var_1775=False, var_908=10, var_134=False),
-    MissionDef(var_1775=False, var_908=10, var_134=False),
-    MissionDef(var_1775=False, var_908=15, var_134=False),
-    MissionDef(var_1775=True, var_908=0, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=False, var_908=10, var_134=False),
-    MissionDef(var_1775=False, var_908=20, var_134=False),
-    MissionDef(var_1775=True, var_908=0, var_134=False),
-    MissionDef(var_1775=False, var_908=60, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=0, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=0, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=False, var_908=10, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=False, var_908=20, var_134=False),
-    MissionDef(var_1775=False, var_908=20, var_134=False),
-    MissionDef(var_1775=False, var_908=20, var_134=False),
-    MissionDef(var_1775=True, var_908=0, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=0, var_134=False),
-    MissionDef(var_1775=True, var_908=0, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=0, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=0, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=False, var_908=20, var_134=False),
-    MissionDef(var_1775=False, var_908=30, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=0, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=False, var_908=3, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=0, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=False, var_908=10, var_134=False),
-    MissionDef(var_1775=False, var_908=20, var_134=False),
-    MissionDef(var_1775=False, var_908=30, var_134=False),
-    MissionDef(var_1775=False, var_908=30, var_134=False),
-    MissionDef(var_1775=False, var_908=20, var_134=False),
-    MissionDef(var_1775=False, var_908=20, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=0, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=False, var_908=20, var_134=False),
-    MissionDef(var_1775=False, var_908=20, var_134=False),
-    MissionDef(var_1775=False, var_908=40, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=False, var_908=60, var_134=False),
-    MissionDef(var_1775=False, var_908=20, var_134=False),
-    MissionDef(var_1775=True, var_908=0, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=0, var_134=False),
-    MissionDef(var_1775=True, var_908=0, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=False, var_908=20, var_134=False),
-    MissionDef(var_1775=False, var_908=40, var_134=False),
-    MissionDef(var_1775=False, var_908=20, var_134=False),
-    MissionDef(var_1775=False, var_908=20, var_134=False),
-    MissionDef(var_1775=False, var_908=30, var_134=False),
-    MissionDef(var_1775=True, var_908=0, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=0, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=0, var_134=False),
-    MissionDef(var_1775=True, var_908=0, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=False, var_908=3, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=False, var_908=20, var_134=False),
-    MissionDef(var_1775=False, var_908=10, var_134=False),
-    MissionDef(var_1775=False, var_908=15, var_134=False),
-    MissionDef(var_1775=False, var_908=20, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=0, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=0, var_134=False),
-    MissionDef(var_1775=True, var_908=0, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=False, var_908=3, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=False, var_908=40, var_134=False),
-    MissionDef(var_1775=False, var_908=20, var_134=False),
-    MissionDef(var_1775=False, var_908=30, var_134=False),
-    MissionDef(var_1775=False, var_908=40, var_134=False),
-    MissionDef(var_1775=True, var_908=0, var_134=False),
-    MissionDef(var_1775=True, var_908=0, var_134=False),
-    MissionDef(var_1775=True, var_908=0, var_134=False),
-    MissionDef(var_1775=True, var_908=0, var_134=False),
-    MissionDef(var_1775=True, var_908=0, var_134=False),
-    MissionDef(var_1775=True, var_908=0, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=0, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=0, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-    MissionDef(var_1775=True, var_908=1, var_134=False),
-]
+def _parse_int(v, default=0) -> int:
+    try:
+        return int(v)
+    except Exception:
+        return default
 
+def load_mission_defs(path: str = "data/MissionTypes.json") -> None:
+    global _MISSION_DEFS_BY_ID, _MISSION_MAX_ID
+    if _MISSION_DEFS_BY_ID is not None:
+        return
 
-var_238 = MISSION_DEFS
+    with open(path, "r", encoding="utf-8") as f:
+        raw = json.load(f)
 
-def load_mission_defs(path: str):
-    tree = ET.parse(path)
-    root = tree.getroot()
-    defs = [None]  # index 0 unused
-    for node in root.findall('MissionType'):
-        mid   = int(node.findtext('MissionID', '0'))
-        ctr   = int(node.findtext('CompleteCount', '0'))
-        timed = node.find('Timed') is not None
-        oneshot = (ctr <= 1)
-        # ensure list grows to mid
-        while len(defs) <= mid:
-            defs.append(None)
-        defs[mid] = MissionDef(var_1775=oneshot, var_908=ctr, var_134=timed)
-    # fill any gaps up to the max ID with dummy
-    max_id = len(defs) - 1
-    for i in range(1, max_id+1):
-        if defs[i] is None:
-            defs[i] = MissionDef(False, 1, False)
-    return defs
+    defs: Dict[int, dict] = {}
+    max_id = 0
+
+    for row in raw:
+        mid = _parse_int(row.get("MissionID"))
+        if mid <= 0:
+            continue
+
+        # derive flags client checks
+        is_achievement = _is_truthy(row.get("Achievement"))
+        complete_count = max(1, _parse_int(row.get("CompleteCount", 1)))
+
+        # Timed/Ranked missions (client calls this Time)
+        is_timed = (
+                _is_truthy(row.get("Timed"))
+                or bool(row.get("Dungeon"))  # NEW — treat any Dungeon as timed/ranked
+        )
+
+        defs[mid] = {
+            "id": mid,
+            "Tier": is_achievement,     # achievement/special (one bit only)
+            "highscore":  complete_count,     # completion target
+            "Time":  is_timed,           # timed/ranked → client reads 3 extra fields
+        }
+        if mid > max_id:
+            max_id = mid
+
+    _MISSION_DEFS_BY_ID = defs
+    _MISSION_MAX_ID = max_id
+
+def get_mission_def(mid: int) -> dict:
+    # safe default: not achievement, not timed, count = 1
+    base = {"id": mid, "Tier": False, "highscore": 1, "Time": False}
+    if _MISSION_DEFS_BY_ID is None:
+        load_mission_defs()
+    return (_MISSION_DEFS_BY_ID or {}).get(mid, base)
+
+def get_total_mission_defs() -> int:
+    if _MISSION_DEFS_BY_ID is None:
+        load_mission_defs()
+    return _MISSION_MAX_ID

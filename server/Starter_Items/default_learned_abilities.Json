@@ -1,5 +1,4 @@
-
-default_learned_abilities = {
+{
     "paladin": [
         {
             "abilityID": 27,
@@ -7,155 +6,155 @@ default_learned_abilities = {
         },
         {
             "abilityID": 20,
-            "rank": 9
+            "rank": 10
         },
         {
             "abilityID": 21,
-            "rank": 1
+            "rank": 10
         },
         {
             "abilityID": 81,
-            "rank": 8
+            "rank": 10
         },
         {
             "abilityID": 22,
-            "rank": 1
+            "rank": 10
         },
         {
             "abilityID": 23,
-            "rank": 1
+            "rank": 10
         },
         {
             "abilityID": 19,
-            "rank": 1
+            "rank": 10
         },
         {
             "abilityID": 24,
-            "rank": 1
+            "rank": 10
         },
         {
             "abilityID": 25,
-            "rank": 1
+            "rank": 10
         },
         {
             "abilityID": 26,
-            "rank": 1
+            "rank": 10
         },
         {
             "abilityID": 48,
-            "rank": 1
+            "rank": 10
         },
         {
             "abilityID": 49,
-            "rank": 1
+            "rank": 10
         },
         {
             "abilityID": 50,
-            "rank": 1
+            "rank": 10
         },
         {
             "abilityID": 51,
-            "rank": 1
+            "rank": 10
         },
         {
             "abilityID": 52,
-            "rank": 1
+            "rank": 10
         },
         {
             "abilityID": 53,
-            "rank": 1
+            "rank": 10
         },
         {
             "abilityID": 54,
-            "rank": 1
+            "rank": 10
         },
         {
             "abilityID": 55,
-            "rank": 1
+            "rank": 10
         },
         {
             "abilityID": 56,
-            "rank": 1
+            "rank": 10
         },
         {
             "abilityID": 57,
-            "rank": 1
+            "rank": 10
         },
         {
             "abilityID": 78,
-            "rank": 1
+            "rank": 10
         },
         {
             "abilityID": 79,
-            "rank": 1
+            "rank": 10
         },
         {
             "abilityID": 80,
-            "rank": 1
+            "rank": 10
         },
         {
             "abilityID": 82,
-            "rank": 1
+            "rank": 10
         },
         {
             "abilityID": 83,
-            "rank": 1
+            "rank": 10
         },
         {
             "abilityID": 84,
-            "rank": 1
+            "rank": 10
         },
         {
             "abilityID": 85,
-            "rank": 1
+            "rank": 10
         },
         {
             "abilityID": 86,
-            "rank": 1
+            "rank": 10
         },
         {
             "abilityID": 87,
-            "rank": 1
+            "rank": 10
         },
         {
             "abilityID": 108,
-            "rank": 1
+            "rank": 10
         },
         {
             "abilityID": 109,
-            "rank": 1
+            "rank": 10
         },
         {
             "abilityID": 110,
-            "rank": 1
+            "rank": 10
         },
         {
             "abilityID": 111,
-            "rank": 1
+            "rank": 10
         },
         {
             "abilityID": 112,
-            "rank": 1
+            "rank": 10
         },
         {
             "abilityID": 113,
-            "rank": 1
+            "rank": 10
         },
         {
             "abilityID": 114,
-            "rank": 1
+            "rank": 10
         },
         {
             "abilityID": 115,
-            "rank": 1
+            "rank": 10
         },
         {
             "abilityID": 116,
-            "rank": 1
+            "rank": 10
         },
         {
             "abilityID": 117,
-            "rank": 1
+            "rank": 10
         }
     ],
     "rogue": [
@@ -475,5 +474,5 @@ default_learned_abilities = {
             "rank": 10
         }
 
-    ],
+    ]
 }

@@ -8,8 +8,8 @@ import time
 from Character import save_characters, build_paperdoll_packet
 from accounts import build_popup_packet
 from bitreader import BitReader
-from constants import GearType, EntType, class_64, class_1, DyeType, class_118, method_277, GAME_CONST_209, \
-    CLASS_118_CONST_127, class_111, class_1_const_254, class_8, class_3, \
+from constants import GearType, EntType, class_64, class_1, DyeType, class_118, method_277, \
+    class_111, class_1_const_254, class_8, class_3, \
     get_ability_info, load_building_data, find_building_data, class_66, LinkUpdater, PowerType, Entity, Game
 
 from BitUtils import BitBuffer
@@ -17,70 +17,73 @@ from constants import get_dye_color
 from level_config import SPAWN_POINTS, DOOR_MAP, LEVEL_CONFIG
 from scheduler import scheduler, _on_research_done_for, schedule_building_upgrade, _on_building_done_for, \
     schedule_forge, _on_talent_done_for, schedule_Talent_point_research
+from missions import _MISSION_DEFS_BY_ID
 
 SAVE_PATH_TEMPLATE = "saves/{user_id}.json"
 
-def handle_collect_hatched_egg(conn, char):
-    egg_data = char.get("EggHachery", {})
-    egg_id = egg_data.get("EggID", 0)
-
-    if egg_id > 0:
-        # Add egg as pet
-        new_pet = {
-            "PetTypeID": egg_id,
-            "Rank": 1,
-            # any other pet fields you use
-        }
-        char.setdefault("OwnedPets", []).append(new_pet)
-
-        # Clear hatchery
-        char["EggHachery"] = {"EggID": 0, "ReadyTime": 0, "done": False}
-
-        # Send updated hatchery state to client so it stops spamming 0xEA
-        buf = BitBuffer()
-        buf._append_bits(0, 1)  # no egg data
-        payload = buf.to_bytes()
-        conn.sendall(struct.pack(">HH", 0xe7, len(payload)) + payload)
-
-def handle_pet_info_packet(session, data, all_sessions):
-    """
-    Handle packet type 0xB3 for sending pet information to the server.
-    Parses the payload to extract pet type IDs and values for active and resting pets.
-    """
-    if data[:2] != b'\x00\xb3':
-        return
-
-    if not session.authenticated or not session.current_character:
-        print(f"[{session.addr}] [PKT0xB3] Ignored: not authenticated or no character")
-        return
-
-    payload = data[4:]  # Skip header (type: 00b3, length: 0007)
-    reader = BitReader(payload, debug=True)
+def handle_talk_to_npc(session, data, all_sessions):
+    payload = data[4:]
+    br = BitReader(payload)
 
     try:
-        # Parse four pets: active pet and three resting pets
-        pets = []
-        for _ in range(4):
-            pet_type_id = reader.read_method_6(7)  # 7-bit pet type ID
-            value = reader.read_method_4()         # Variable-length value
-            pets.append((pet_type_id, value))
-
-        # Extract pet information
-        active_pet_type, active_pet_value = pets[0]
-        resting_pet1_type, resting_pet1_value = pets[1]
-        resting_pet2_type, resting_pet2_value = pets[2]
-        resting_pet3_type, resting_pet3_value = pets[3]
-
-        # Print the parsed pet information
-        print(f"[{session.addr}] [PKT0xB3] Active pet: type={active_pet_type}, value={active_pet_value}")
-        print(f"[{session.addr}] [PKT0xB3] Resting pet 1: type={resting_pet1_type}, value={resting_pet1_value}")
-        print(f"[{session.addr}] [PKT0xB3] Resting pet 2: type={resting_pet2_type}, value={resting_pet2_value}")
-        print(f"[{session.addr}] [PKT0xB3] Resting pet 3: type={resting_pet3_type}, value={resting_pet3_value}")
-
+        npc_id = br.read_method_9()
     except Exception as e:
-        print(f"[{session.addr}] [PKT0xB3] Error parsing packet: {e}")
-        for line in reader.get_debug_log():
-            print(line)
+        print(f"[{session.addr}] [PKT0x7A] Failed to parse NPC ID: {e}")
+        return
+
+    # Look up in session.entities (where you already insert NPCs on spawn)
+    npc = session.entities.get(npc_id)
+    if not npc:
+        print(f"[{session.addr}] [PKT0x7A] Unknown NPC id={npc_id}")
+        return
+
+    npc_name = npc.get("name", f"NPC_{npc_id}")
+    print(f"[{session.addr}] [PKT0x7A] Talked to NPC {npc_id} ({npc_name})")
+"""
+    # ── case 1: Skit NPCs ──
+    if npc_name.startswith("Special_Halloween_Statue"):
+        if "First" in npc_name: skit_idx = 1
+        elif "Second" in npc_name: skit_idx = 2
+        elif "Third" in npc_name: skit_idx = 3
+        elif "Fourth" in npc_name: skit_idx = 4
+        else: skit_idx = 0
+
+        if skit_idx:
+            # Build a fake payload like handle_start_skit expects
+            bb = BitBuffer()
+            bb.write_method_4(npc_id)
+            bb.write_bits(1, 1)  # flag = True
+            bb.write_method_13(f"{npc_name} says hello!")  # placeholder line
+            handle_start_skit(session, struct.pack(">HH", 0xC5, len(bb.to_bytes())) + bb.to_bytes(), all_sessions)
+        return
+
+    # ── case 2: Quest-givers ──
+    missions = []
+    for mid, mission in _MISSION_DEFS_BY_ID.items():
+        row = mission.get("_raw")  # you’ll need to stash original mission row in loader
+        if not row:
+            continue
+
+        if row.get("ContactName") == npc_name or row.get("ReturnName") == npc_name:
+            missions.append((mid, row))
+
+    if missions:
+        for mid, row in missions:
+            state = session.save.missions.get(str(mid), {}).get("state", 0)
+            if state == 0:
+                dialog = row.get("OfferText", "")
+            elif state == 2:  # completed
+                dialog = row.get("ReturnText", "")
+            else:
+                dialog = row.get("PreReqText", "")
+
+            send_npc_dialog(session, npc_id, dialog)
+"""
+
+#TODO...
+def handle_collect_hatched_egg(conn, char):
+      pass
+
 
 
 REWARD_TYPES = ['gear', 'item', 'gold', 'chest', 'xp', 'potion']
@@ -291,12 +294,12 @@ def send_mastery_packet(session, entity_id):
     bb = BitBuffer()
     bb.write_method_4(entity_id)
 
-    total = class_118.const_43  # 27 slots
+    total = class_118.NUM_TALENT_SLOTS  # 27 slots
     for i in range(total):
         if i in slot_map and slot_map[i].get("filled"):
             slot = slot_map[i]
             bb.write_bits(1, 1)  # has this node
-            bb.write_method_6(slot["nodeIdx"], CLASS_118_CONST_127)
+            bb.write_method_6(slot["nodeIdx"], class_118.const_127)
             width = method_277(i)  # exactly method_277(i)
             bb.write_bits(slot["points"] - 1, width)
         else:
@@ -311,7 +314,7 @@ def handle_masterclass_packet(session, raw_data):
     payload = raw_data[4:]
     br = BitReader(payload)
     entity_id       = br.read_method_4()
-    master_class_id = br.read_method_6(GAME_CONST_209)
+    master_class_id = br.read_method_6(Game.const_209)
     print(f"[MasterClass] Player {session.user_id} → classID={master_class_id}")
 
     for char in session.char_list:
@@ -326,7 +329,7 @@ def handle_masterclass_packet(session, raw_data):
 
     bb = BitBuffer()
     bb.write_method_4(entity_id)
-    bb.write_method_6(master_class_id, GAME_CONST_209)
+    bb.write_method_6(master_class_id, Game.const_209)
     resp = struct.pack(">HH", 0xC3, len(bb.to_bytes())) + bb.to_bytes()
     session.conn.sendall(resp)
     print(f"[Reply 0xC3] entity={entity_id}, class={master_class_id}")
@@ -438,11 +441,16 @@ def handle_gear_packet(session, raw_data):
     print(f"[Reply 0x31] echoed equip update")
 
 def handle_apply_dyes(session, payload):
+    from copy import deepcopy
+
+    CHARGE_PER_SLOT = False  # set True if you want to charge once per slot (instead of per individual dye)
+
     br = BitReader(payload)
 
     try:
         entity_id = br.read_method_4()
         dyes_by_slot = {}
+        # Read gear-slot dye pairs (presence bit + two dye IDs)
         for slot in range(1, EntType.MAX_SLOTS):
             has_pair = br.read_bits(1)
             if has_pair:
@@ -450,6 +458,7 @@ def handle_apply_dyes(session, payload):
                 d2 = br.read_bits(DyeType.BITS)
                 dyes_by_slot[slot - 1] = (d1, d2)
 
+        # preview bit + optional shirt/pants (client uses presence bits)
         preview_only = bool(br.read_bits(1))
         primary_dye = br.read_bits(DyeType.BITS) if br.read_bits(1) else None
         secondary_dye = br.read_bits(DyeType.BITS) if br.read_bits(1) else None
@@ -457,63 +466,164 @@ def handle_apply_dyes(session, payload):
         print(f"[Dyes] ERROR parsing dye packet: {e}")
         return
 
-    print(f"[Dyes] entity={entity_id}, dyes={dyes_by_slot}, "
-          f"preview={preview_only}, shirt={primary_dye}, pants={secondary_dye}")
+    # Debug: raw parsed packet
+    print(f"[Dyes] entity={entity_id}, dyes_by_slot={dyes_by_slot}, preview={preview_only}, shirt={primary_dye}, pants={secondary_dye}")
 
+    # Find the active character record
     for char in session.char_list:
         if char.get("name") != session.current_character:
             continue
 
+        # Ensure gear/inventory lists exist
         eq = char.setdefault("equippedGears", [])
         inv = char.setdefault("inventoryGears", [])
 
-        # Apply gear dye colors
+        # Determine which "level" field to use that matches client.
+        level = int(char.get("level", char.get("mExpLevel", 1)) or 1)
+        # clamp index into cost tables (protect bounds)
+        per_gold_idx = min(max(level, 0), len(Entity.Dye_Gold_Cost) - 1)
+        per_idol_idx = min(max(level, 0), len(Entity.Dye_Idols_Cost) - 1)
+        per_gold = Entity.Dye_Gold_Cost[per_gold_idx]
+        per_idol = Entity.Dye_Idols_Cost[per_idol_idx]
+
+        # Load current dye info from equippedGears (keep missing slots default (0,0))
+        current_dyes_by_slot = {}
+        for idx, gear in enumerate(eq):
+            current_dyes_by_slot[idx] = tuple(gear.get("colors", [0, 0]))
+
+        # Count changes
+        slots_changed = 0              # number of gear slots where any dye changed
+        individual_dyes_changed = 0   # number of individual dye changes (0..2 per slot)
+
+        for slot, (new_d1, new_d2) in dyes_by_slot.items():
+            # Only count changes for slots that have an equipped gear (avoid charging for empty slots)
+            if slot >= len(eq):
+                # client may send pairs for empty slots — ignore them
+                continue
+            gear = eq[slot]
+            if not gear or gear.get("gearID", 0) == 0:
+                # nothing equipped in slot — ignore
+                continue
+            old_d1, old_d2 = current_dyes_by_slot.get(slot, (0, 0))
+            slot_diff = 0
+            if new_d1 != old_d1:
+                individual_dyes_changed += 1
+                slot_diff = 1
+            if new_d2 != old_d2:
+                individual_dyes_changed += 1
+                slot_diff = 1
+            if slot_diff:
+                slots_changed += 1
+
+        # Clothing (shirt/pant) changes are FREE — do not charge
+        # If you ever need to charge for them, remove these lines and include them in the counts.
+        # (Client appears to only charge gear slots.)
+        # If you want to include shirts/pants for some reason:
+        # if primary_dye and primary_dye != 0 and primary_dye != char.get("shirtColor", 0):
+        #     individual_dyes_changed += 1
+        # if secondary_dye and secondary_dye != 0 and secondary_dye != char.get("pantColor", 0):
+        #     individual_dyes_changed += 1
+
+        # Choose whether billing per-dye or per-slot
+        if CHARGE_PER_SLOT:
+            charge_units = slots_changed
+            unit_type = "slot(s)"
+        else:
+            charge_units = individual_dyes_changed
+            unit_type = "individual dye(s)"
+
+        gold_cost = per_gold * charge_units
+        idol_cost = per_idol * charge_units
+
+        print(f"[Dyes] Level={level}, per-dye cost={per_gold} gold / {per_idol} idols (indexes g={per_gold_idx}, i={per_idol_idx})")
+        print(f"[Dyes] slot_count_sent={len(dyes_by_slot)}, slots_changed={slots_changed}, "
+              f"individual_dyes_changed={individual_dyes_changed}, charge_units={charge_units} ({unit_type}), "
+              f"total_gold_cost={gold_cost}, total_idol_cost={idol_cost}")
+        print(f"[Dyes] Player balance before: gold={char.get('gold',0)}, idols={char.get('mammothIdols',0)}")
+
+        # If preview_only: send client the sync (so UI previews) but DO NOT persist or charge
+        if preview_only:
+            print("[Dyes] Preview only — sending sync, no charge or persistent save")
+            send_dye_sync_packet(
+                session,
+                entity_id,
+                dyes_by_slot,
+                char.get("shirtColor"),
+                char.get("pantColor")
+            )
+            return
+
+        # Charging: prefer gold, fall back to idols if not enough gold
+        if charge_units > 0:
+            if char.get("gold", 0) >= gold_cost:
+                char["gold"] = char.get("gold", 0) - gold_cost
+                payment_used = "gold"
+                payment_amount = gold_cost
+            elif char.get("mammothIdols", 0) >= idol_cost:
+                char["mammothIdols"] = char.get("mammothIdols", 0) - idol_cost
+                payment_used = "idols"
+                payment_amount = idol_cost
+            else:
+                print(f"[Dyes] ERROR: Not enough gold ({char.get('gold',0)}) or idols ({char.get('mammothIdols',0)}) "
+                      f"for {char['name']}. Required gold={gold_cost}, idols={idol_cost}. Cancelling.")
+                # Optionally you can send a popup packet to the client here
+                return
+            print(f"[Dyes] Charged {payment_amount} {payment_used} from {char['name']}")
+        else:
+            print("[Dyes] No charge required (nothing changed)")
+
+        # Apply gear dyes & mirror into inventory (persisted because not preview)
         for slot, (d1, d2) in dyes_by_slot.items():
             if slot < len(eq):
-                eq[slot]["colors"] = [d1, d2]
-                gear_id = eq[slot].get("gearID")
-
-                # Update matching item in inventory
+                eq_slot = eq[slot]
+                if not eq_slot or eq_slot.get("gearID", 0) == 0:
+                    continue
+                eq_slot["colors"] = [d1, d2]
+                gear_id = eq_slot.get("gearID")
+                # update inventory copy if present, otherwise add the equipped item to inventory for persistence
                 for g in inv:
                     if g.get("gearID") == gear_id:
                         g["colors"] = [d1, d2]
                         break
                 else:
-                    # Ensure we insert a full copy so dyes persist
-                    inv.append(eq[slot].copy())
+                    inv.append(eq_slot.copy())
 
-        # Handle clothes (shirt/pant) color conversion from dye ID
+        # Shirt/pants dyes (FREE)
         if primary_dye is not None:
             color = get_dye_color(primary_dye)
             if color is not None:
                 char["shirtColor"] = color
             else:
-                print(f"[Warning] Unknown primary dye ID: {primary_dye}")
+                print(f"[Dyes] Warning: unknown primary dye id {primary_dye}")
 
         if secondary_dye is not None:
             color = get_dye_color(secondary_dye)
             if color is not None:
                 char["pantColor"] = color
             else:
-                print(f"[Warning] Unknown secondary dye ID: {secondary_dye}")
+                print(f"[Dyes] Warning: unknown secondary dye id {secondary_dye}")
 
-        break
-    else:
-        print(f"[Dyes] ERROR: character {session.current_character} not found")
+        # persist
+        save_characters(session.user_id, session.char_list)
+        session.player_data["characters"] = session.char_list  # <-- IMPORTANT
+
+        print(f"[Save] Dye info applied for {session.current_character} and saved. New balances: "
+              f"gold={char.get('gold', 0)}, idols={char.get('mammothIdols', 0)}")
+
+        # send sync to client
+        char_data = next(c for c in session.char_list if c.get("name") == session.current_character)
+        send_dye_sync_packet(
+            session,
+            entity_id,
+            dyes_by_slot,
+            char_data.get("shirtColor"),
+            char_data.get("pantColor")
+        )
         return
 
-    session.player_data["characters"] = session.char_list
-    save_characters(session.user_id, session.char_list)
-    print(f"[Save] Dye info applied for {session.current_character} and saved")
+    print(f"[Dyes] ERROR: character {session.current_character} not found")
+    return
 
-    char_data = next(c for c in session.char_list if c.get("name") == session.current_character)
-    send_dye_sync_packet(
-        session,
-        entity_id,
-        dyes_by_slot,
-        char_data.get("shirtColor"),
-        char_data.get("pantColor")
-    )
 
 
 def send_dye_sync_packet(session, entity_id, dyes_by_slot, shirt_color=None, pant_color=None):
@@ -1588,25 +1698,7 @@ def Skill_SpeedUp(session, data):
 
     print(f"[{session.addr}] Speed-up complete: abilityID={research['abilityID']}, cost={idol_cost}")
 
-def PaperDoll_Request(session, data, conn):
-    """
-    Handles paperdoll request (0x19). Reads character name,
-    finds the character in session.char_list, and sends back
-    a 0x1A response with their paperdoll or empty if not found.
-    """
-    name = BitReader(data[4:]).read_string()
-    print(f"[{session.addr}] [PKT0x19] Request for paperdoll: {name}")
 
-    for c in session.char_list:
-        if c["name"] == name:
-            pd = build_paperdoll_packet(c)
-            conn.sendall(struct.pack(">HH", 0x1A, len(pd)) + pd)
-            print(f"[{session.addr}] [PKT0x19] Found and sent paperdoll for '{name}'")
-            break
-    else:
-        # Character not found, send empty packet
-        conn.sendall(struct.pack(">HH", 0x1A, 0))
-        print(f"[{session.addr}] [PKT0x19] Character '{name}' not found. Sent empty paperdoll.")
 
 def handle_building_upgrade(session, data):
     load_building_data()
@@ -1987,37 +2079,10 @@ def handle_talent_claim(session, data):
 
 
 def handle_hp_increase_notice(session, data):
-    """
-    Handle 0xBB: client reports maxHP increase (delta).
-    Payload: [header(4) | delta:int16]
-    """
-    if len(data) < 6:
-        print(f"[{session.addr}] [0xBB] malformed packet (len={len(data)})")
-        return
-
-    delta = struct.unpack(">h", data[4:6])[0]
-    print(f"[{session.addr}] [0xBB] Client reported maxHP increase: ΔHP = {delta}")
+       pass
 
 def handle_char_regen(session, data):
-    """
-    Handle 0x78 - PKTTYPE_CHAR_REGEN
-    Payload: uint32 (entity ID), int16 (HP delta)
-    """
-    if len(data) < 10:
-        print(f"[{session.addr}] [0x78] Malformed packet (len={len(data)})")
-        return
-
-    entity_id = struct.unpack(">I", data[4:8])[0]
-    hp_delta = struct.unpack(">h", data[8:10])[0]  # signed short
-
-    print(f"[{session.addr}] [0x78] Character regen: Entity {entity_id} gains {hp_delta} HP")
-
-    # Optional: apply regen to in-memory entity state if you track it
-    ent = session.get_entity_by_id(entity_id)
-    if ent:
-        ent.heal(hp_delta)
-    else:
-        print(f"[{session.addr}] Entity {entity_id} not found")
+      pass
 
 
 def handle_volume_enter(session, data):
@@ -2042,6 +2107,57 @@ def handle_change_offset_y(session, data):
     except Exception as e:
         print(f"[{session.addr}] [PKT125] Error parsing packet: {e}")
 
+def handle_request_respawn(session, data, all_sessions):
+    # 1) Validate header & auth
+    if data[:2] != b'\x00\x77' or not session.authenticated:
+        return
+
+    # 2) Parse use_potion flag
+    br = BitReader(data[4:], debug=False)
+    try:
+        use_potion = bool(br.read_bit())
+    except:
+        return
+
+    # 3) Deduct a potion server-side and update client inventory
+    if use_potion:
+        for char in session.char_list:
+            if char['name'] == session.current_character:
+                for item in char.get('consumables', []):
+                    if item.get('consumableID') == 9:
+                        if item['count'] > 0:
+                            item['count'] -= 1
+                            new_count = item['count']
+                            print(f"[{session.addr}] [PKT77] Used potion, new count={new_count}")
+                            # 3a) Persist save
+                            save_characters(session.user_id, session.char_list)
+                            # 3b) Inform client of new count
+                            send_consumable_update(session.conn, 9, new_count)
+                        # if count was zero, we silently proceed (client will handle empty)
+                        break
+                break
+
+    # 4) Send RESPAWN_COMPLETE (0x80)
+    #TODO....
+    # compute actual spawn location
+    spawn_pos = 0
+    bb = BitBuffer()
+    bb.write_signed_method_45(spawn_pos)
+    bb._append_bits(1 if use_potion else 0, 1)
+    body = bb.to_bytes()
+    session.conn.sendall(struct.pack(">HH", 0x80, len(body)) + body)
+
+    # 5) Immediately restore health via CHAR_REGEN (0x78)
+    heal_amount = 10000
+    bb2 = BitBuffer()
+    bb2.write_method_9(session.clientEntID or 0)
+    bb2.write_method_24(heal_amount)
+    body2 = bb2.to_bytes()
+    session.conn.sendall(struct.pack(">HH", 0x78, len(body2)) + body2)
+
+    print(f"[{session.addr}] [PKT77] Respawned at {spawn_pos}, potion_used={use_potion}")
+
+
 # Helpers
 #############################################
 
@@ -2054,8 +2170,96 @@ def send_consumable_update(conn, consumable_id: int, new_count: int):
     packet = struct.pack(">HH", 0x10C, len(body)) + body
     conn.sendall(packet)
 
+def send_npc_dialog(session, npc_id, text):
+    bb = BitBuffer()
+    bb.write_method_4(npc_id)
+    bb.write_method_13(text)
+    payload = bb.to_bytes()
+    packet = struct.pack(">HH", 0x76, len(payload)) + payload
+    session.conn.sendall(packet)
+    print(f"[DEBUG] Sent NPC dialog: {text}")
+
 #handled
 #############################################
+
+
+def PaperDoll_Request(session, data, conn):
+    """
+    Handles paperdoll request (0x19). Reads character name,
+    finds the character in session.char_list, and sends back
+    a 0x1A response with their paperdoll or empty if not found.
+    """
+    name = BitReader(data[4:]).read_string()
+    #print(f"[{session.addr}] [PKT0x19] Request for paperdoll: {name}")
+
+    for c in session.char_list:
+        if c["name"] == name:
+            pd = build_paperdoll_packet(c)
+            conn.sendall(struct.pack(">HH", 0x1A, len(pd)) + pd)
+            #print(f"[{session.addr}] [PKT0x19] Found and sent paperdoll for '{name}'")
+            break
+    else:
+        # Character not found, send empty packet
+        conn.sendall(struct.pack(">HH", 0x1A, 0))
+        #print(f"[{session.addr}] [PKT0x19] Character '{name}' not found. Sent empty paperdoll.")
+
+
+def handle_pet_info_packet(session, data, all_sessions):
+    """
+    Handle packet type 0xB3 (SendPetInfoToServer).
+    Updates the active pet (equippedPetID) and the restingPets list in the save file.
+    """
+    if data[:2] != b'\x00\xb3':
+        return
+
+    if not session.authenticated or not session.current_character:
+        print(f"[{session.addr}] [PKT0xB3] Ignored: not authenticated or no character")
+        return
+
+    payload = data[4:]  # Skip header (0x00b3 + length)
+    reader = BitReader(payload, debug=True)
+
+    try:
+        pets = []
+        for _ in range(4):  # 1 active + 3 resting
+            pet_type_id = reader.read_method_6(7)  # 7-bit pet type ID
+            value = reader.read_method_4()         # Variable-length value
+            pets.append((pet_type_id, value))
+
+        active_pet_type, active_pet_value = pets[0]
+        resting_pets_data = [
+            {"typeID": pets[1][0]},
+            {"typeID": pets[2][0]},
+            {"typeID": pets[3][0]}
+        ]
+
+        # Log for debug
+        print(f"[{session.addr}] [PKT0xB3] Active pet: type={active_pet_type}, value={active_pet_value}")
+        for i, pet in enumerate(resting_pets_data, 1):
+            print(f"[{session.addr}] [PKT0xB3] Resting pet {i}: type={pet['typeID']}, value={pets[i][1]}")
+
+        # --- Update save file ---
+        for char in session.char_list:
+            if char.get("name") != session.current_character:
+                continue
+
+            # Update equippedPetID
+            char["equippedPetID"] = active_pet_type
+
+            # Update restingPets list
+            char["restingPets"] = resting_pets_data
+
+            # Persist changes
+            save_characters(session.user_id, session.char_list)
+            print(f"[Save] Updated pets for {session.current_character} → activePetID={active_pet_type}, resting={resting_pets_data}")
+            break
+        else:
+            print(f"[{session.addr}] [PKT0xB3] ERROR: character {session.current_character} not found")
+
+    except Exception as e:
+        print(f"[{session.addr}] [PKT0xB3] Error parsing packet: {e}")
+        for line in reader.get_debug_log():
+            print(line)
 
 def handle_mount_equip_packet(session, data, all_sessions):
     """
@@ -2187,7 +2391,7 @@ def handle_entity_destroy(session, data, all_sessions):
                 print(f"[{session.addr}] [PKT0D] Error sending to {other.addr}: {e}")
 
 def PKTTYPE_BUFF_TICK_DOT(session, data, all_sessions):
-    # 0) Quick header/auth check
+
     if data[:2] != b'\x00\x79' or not session.authenticated:
         return
 
@@ -2195,12 +2399,11 @@ def PKTTYPE_BUFF_TICK_DOT(session, data, all_sessions):
     payload = data[4:]
     br = BitReader(payload, debug=False)
     try:
-        # ✔️ Make sure to CALL each read_method_*
-        target_id     = br.read_method_4()
-        source_id     = br.read_method_4()
-        power_type_id = br.read_method_4()
-        amount        = br.read_method_45()
-        flags         = br.read_method_6(Game.const_390)
+
+        target_id     = br.read_method_9()
+        source_id     = br.read_method_9()
+        power_type_id = br.read_method_9()
+        amount        = br.read_method_24()
     except Exception as e:
         print(f"[{session.addr}] [PKT79] Parse error: {e}, raw={payload.hex()}")
         return
@@ -2218,53 +2421,6 @@ def PKTTYPE_BUFF_TICK_DOT(session, data, all_sessions):
             except Exception as e:
                 print(f"[{session.addr}] [PKT79] Forward error to {other.addr}: {e}")
 
-def handle_request_respawn(session, data, all_sessions):
-    # 1) Validate header & auth
-    if data[:2] != b'\x00\x77' or not session.authenticated:
-        return
-
-    # 2) Parse use_potion flag
-    br = BitReader(data[4:], debug=False)
-    try:
-        use_potion = bool(br.read_bit())
-    except:
-        return
-
-    # 3) Deduct a potion server-side and update client inventory
-    if use_potion:
-        for char in session.char_list:
-            if char['name'] == session.current_character:
-                for item in char.get('consumables', []):
-                    if item.get('consumableID') == 9:
-                        if item['count'] > 0:
-                            item['count'] -= 1
-                            new_count = item['count']
-                            print(f"[{session.addr}] [PKT77] Used potion, new count={new_count}")
-                            # 3a) Persist save
-                            save_characters(session.user_id, session.char_list)
-                            # 3b) Inform client of new count
-                            send_consumable_update(session.conn, 9, new_count)
-                        # if count was zero, we silently proceed (client will handle empty)
-                        break
-                break
-
-    # 4) Send RESPAWN_COMPLETE (0x80)
-    spawn_pos = 0  # or compute actual spawn X
-    bb = BitBuffer()
-    bb.write_signed_method_45(spawn_pos)
-    bb._append_bits(1 if use_potion else 0, 1)
-    body = bb.to_bytes()
-    session.conn.sendall(struct.pack(">HH", 0x80, len(body)) + body)
-
-    # 5) Immediately restore health via CHAR_REGEN (0x78)
-    heal_amount = 10000
-    bb2 = BitBuffer()
-    bb2.write_method_9(session.clientEntID or 0)
-    bb2.write_method_24(heal_amount)
-    body2 = bb2.to_bytes()
-    session.conn.sendall(struct.pack(">HH", 0x78, len(body2)) + body2)
-
-    print(f"[{session.addr}] [PKT77] Respawned at {spawn_pos}, potion_used={use_potion}")
 
 def handle_respawn_ack(session, data, all_sessions):
     # 0x82: client confirms it has respawned
@@ -2962,7 +3118,7 @@ def handle_entity_incremental_update(session, data, all_sessions):
                     save_characters(session.user_id, session.char_list)
                     break
 
-        #print(f"[{session.addr}] [PKT07] Player moved to absolute=({new_x},{new_y}), state={ent_state}")
+        print(f"[{session.addr}] [PKT07] Player moved to absolute=({new_x},{new_y}), state={ent_state}")
 
         # 8) Broadcast raw packet to peers
         for other in all_sessions:

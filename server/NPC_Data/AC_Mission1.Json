@@ -1,0 +1,26 @@
+[
+    {
+      "id": 1,
+      "name": "SpiritWyrm",
+      "x": 1214,
+      "y": -2179,
+      "z": 0.0,
+      "team": 0,
+      "entState": 0,
+      "untargetable": false,
+      "render_depth_offset": 1,
+      "behavior_speed": 0.0,
+      "Linked_Mission": "",
+      "drama_anim": "",
+      "sleep_anim": "",
+      "level": 20,
+      "power_id": 0,
+      "facing_left": true,
+      "health_delta": 5,
+      "buffs": [],
+      "max_hp": 0,
+      "mount_id": 0,
+      "buff_icon": 0,
+      "is_player": false
+    }
+  ]

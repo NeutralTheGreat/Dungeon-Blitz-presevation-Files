@@ -1,0 +1,32 @@
+[
+    {
+      "id": 1,
+      "name": "AncientDragonGoldMini",
+      "x": 1224.00,
+      "y": 1444.00,
+      "z": 0,
+      "team": 2,
+      "untargetable": false,
+      "render_depth_offset": 1,
+      "behavior_speed": 555,
+      "Linked_Mission": "CraftTown",
+      "drama_anim": "testing",
+      "sleep_anim": "theguard",
+      "power_id": 1,
+      "entState": 0,
+      "level": 60,
+      "facing_left": true,
+      "health_delta": -500000,
+      "buffs": [{
+        "type_id": 0,
+        "param1": 2,
+        "param2": 2,
+        "param3": 3,
+        "param4":4
+      }],
+      "extra_data": [{
+        "id": 1,
+        "values": 50
+      }]
+    }
+  ]

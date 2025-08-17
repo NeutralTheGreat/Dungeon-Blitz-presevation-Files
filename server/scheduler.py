@@ -8,7 +8,7 @@ import struct
 
 from BitUtils import BitBuffer
 from Character import save_characters, load_characters, CHAR_SAVE_DIR
-from constants import BUILDING_ID_TO_STATS_INDEX, class_111, class_1_const_254, class_64_const_218
+from constants import class_111, class_64_const_218, class_1
 
 # Will be set by server.py to resolve (user_id, char_name) → ClientSession
 active_session_resolver = None
@@ -228,7 +228,7 @@ def _on_forge_done_for(user_id: str, char_name: str, primary: int, secondary: in
             # Build & send “forge complete” packet (0xCD or your chosen opcode)
             try:
                 bb = BitBuffer()
-                bb.write_method_6(primary,   class_1_const_254)
+                bb.write_method_6(primary,   class_1.const_254)
                 bb._append_bits(1 if secondary else 0, 1)
                 if secondary:
                     bb.write_method_6(secondary, class_64_const_218)

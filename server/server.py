@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-import math
 import os
-import random
 import json
 import socket, struct, hashlib, sys, time, secrets, threading
+
+from Brain import tick_npc_brains
 from accounts import get_or_create_user_id, load_accounts, _SAVES_DIR, is_character_name_taken, build_popup_packet
 from Character import (
     make_character_dict_from_tuple,
@@ -26,7 +26,7 @@ from Commands import handle_hotbar_packet, handle_masterclass_packet, handle_gea
     handle_change_offset_y, handle_start_skit, handle_change_max_speed, handle_lockbox_reward, handle_grant_reward, \
     handle_linkupdater, handle_request_respawn, handle_respawn_ack, PKTTYPE_BUFF_TICK_DOT, handle_entity_destroy, \
     handle_emote_begin, Client_Crash_Reports, handle_mount_equip_packet, handle_pet_info_packet, \
-    handle_collect_hatched_egg
+    handle_collect_hatched_egg, handle_talk_to_npc, handle_char_regen
 from constants import Entity
 from WorldEnter import build_enter_world_packet, Player_Data_Packet
 from bitreader import BitReader
@@ -34,16 +34,15 @@ from PolicyServer import start_policy_server
 from static_server import start_static_server
 from entity import Send_Entity_Data, load_npc_data_for_level
 from level_config import DOOR_MAP, LEVEL_CONFIG, get_spawn_coordinates
-from scheduler import reschedule_for_session, set_active_session_resolver, schedule_research
+from scheduler import set_active_session_resolver, schedule_research
 
 HOST = "127.0.0.1"
-PORTS = [8080]
+PORTS = [8080]# Developer mode Port : 7498
 pending_world = {}
 all_sessions = []
 current_characters = {}
 used_tokens = {}
 
-# This must match client.const_914
 SECRET_HEX = "815bfb010cd7b1b4e6aa90abc7679028"
 SECRET      = bytes.fromhex(SECRET_HEX)
 
@@ -51,25 +50,20 @@ def send_login_challenge(conn):
     # 1) pick a random 16-bit sid
     sid = secrets.randbelow(1 << 16)
     sid_bytes = sid.to_bytes(2, "big")
-
     # 2) compute MD5(sid_bytes || SECRET) → take first 12 hex chars
     digest = hashlib.md5(sid_bytes + SECRET).hexdigest()[:12]
-
     # 3) build a single ASCII-hex string: 4 hex digits of sid + 12 hex digits of digest
     #    e.g. "1A2B3c4d5e6f7a8b9c0d"
     sid_hex = f"{sid:04x}"
     challenge_str = sid_hex + digest  # total length = 16 chars
-
     # 4) UTF-encode it with a 2-byte length prefix
     utf_bytes = challenge_str.encode("utf-8")
     payload = struct.pack(">H", len(utf_bytes)) + utf_bytes
-
     # 5) prepend the 0x12 header
     packet = struct.pack(">HH", 0x12, len(payload)) + payload
-
     # 6) send to client
     conn.sendall(packet)
-    print(f"→ Sent 0x12 login challenge sid={sid_hex} hash={digest}")
+    #print(f"→ Sent 0x12 login challenge sid={sid_hex} hash={digest}")
 
 def new_transfer_token():
     while (t := secrets.randbits(16)) in pending_world:
@@ -104,30 +98,6 @@ class ClientSession:
         self.clientEntID = None
         self.running = True
 
-    def attack_entity(self, attacker_id, target_id, damage):
-        target_ent = self.entities.get(target_id)
-        if not target_ent:
-            print(f"[{self.addr}] [PKT0F] Target entity {target_id} not found")
-            return
-        target_ent["damage_taken"] = target_ent.get("damage_taken", 0) + damage
-        target_ent["health_delta"] = -damage
-        target_ent["attacker_id"] = attacker_id
-        print(
-            f"[{self.addr}] [PKT0F] NPC {target_id} attacked by {attacker_id}, damage={damage}, new HP {target_ent.get('hp', 0)}")
-        update_packet = Send_Entity_Data(target_ent, is_player=False)
-        for other_session in all_sessions:
-            if other_session.world_loaded and other_session.current_level == self.current_level:
-                other_session.conn.sendall(struct.pack(">HH", 0x0F, len(update_packet)) + update_packet)
-                print(f"[{self.addr}] [PKT0F] Broadcasted NPC {target_id} update to {other_session.addr}")
-
-    def Send_NPC_Updates(self):
-        for ent_id, entity in self.entities.items():
-            if not entity.get("is_player", False):
-                entity["entState"] = 0
-                update_packet = Send_Entity_Data(entity, is_player=False)
-                self.conn.sendall(struct.pack(">HH", 0x0F, len(update_packet)) + update_packet)
-                # print(f"[{self.addr}] [NPC Update] Sent 0x0F for NPC {ent_id}: state={entity['entState']}, pos=({entity['x']}, {entity['y']})")
-
     def stop(self):
         self.running = False
         self.cleanup()
@@ -146,7 +116,7 @@ class ClientSession:
                                                                                               "NewbieRoad")
         pending_world[tk] = (char, target_level, previous_level)
         self.active_tokens.add(tk)
-        print(f"[{self.addr}] Issued token {tk} for {char['name']} to {target_level}, previous={previous_level}")
+        #print(f"[{self.addr}] Issued token {tk} for {char['name']} to {target_level}, previous={previous_level}")
         return tk
 
     def cleanup(self):
@@ -169,7 +139,7 @@ def handle_client(session: ClientSession):
     addr = session.addr
     print("Connected:", addr)
     conn.settimeout(300)
-
+    tick_npc_brains(all_sessions)
     # On login, reschedule future research
     if session.user_id:
         now = int(time.time())
@@ -218,7 +188,7 @@ def handle_client(session: ClientSession):
                 send_login_challenge(conn)
                 continue
 
-            elif pkt == 0x13:# Done
+            elif pkt == 0x13:  # Done
                 br = BitReader(data[8:], debug=True)
                 email = br.read_string().strip().lower()
                 session.user_id = get_or_create_user_id(email)
@@ -234,7 +204,7 @@ def handle_client(session: ClientSession):
                             schedule_research(session.user_id, char["name"], rt)
                 conn.sendall(build_login_character_list_bitpacked(session.char_list))
 
-            elif pkt == 0x14:# Done
+            elif pkt == 0x14:  # Done
                 br = BitReader(data[4:], debug=True)
                 try:
                     _ = br.read_string()  # skip first string
@@ -245,21 +215,18 @@ def handle_client(session: ClientSession):
                 except Exception as e:
                     print(f"[{session.addr}] [PKT0x14] Error parsing packet: {e}, raw payload={data[4:].hex()}")
                     continue
-
                 accounts = load_accounts()
                 user_id = accounts.get(email)
                 if not user_id:
                     print(f"[{session.addr}] [PKT0x14] Login failed—no account for {email}")
                     conn.sendall(build_popup_packet("Account not found", disconnect=True))
                     continue
-
                 session.user_id = user_id
                 try:
                     with open(os.path.join(_SAVES_DIR, f"{session.user_id}.json"), "r", encoding="utf-8") as f:
                         session.player_data = json.load(f)
                 except FileNotFoundError:
                     session.player_data = {"email": email, "characters": []}
-
                 session.char_list = session.player_data.get("characters", [])
                 session.authenticated = True
                 conn.sendall(build_login_character_list_bitpacked(session.char_list))
@@ -288,14 +255,14 @@ def handle_client(session: ClientSession):
                         br.read_bits(24),  # pantColor
                         None  # equipped_gear
                     )
-                    print(
-                        f"[{session.addr}] [PKT0x17] Parsed character creation: name={tup[0]}, class={tup[1]}, gender={tup[3]}")
+                    #print(
+                       # f"[{session.addr}] [PKT0x17] Parsed character creation: name={tup[0]}, class={tup[1]}, gender={tup[3]}")
                 except Exception as e:
-                    print(f"[{session.addr}] [PKT0x17] Error parsing packet: {e}, raw payload={data[4:].hex()}")
+                    #print(f"[{session.addr}] [PKT0x17] Error parsing packet: {e}, raw payload={data[4:].hex()}")
                     continue
                 # Check for duplicate character name
                 if is_character_name_taken(tup[0]):
-                    print(f"[{session.addr}] [PKT0x17] Character name {tup[0]} is already taken")
+                    #print(f"[{session.addr}] [PKT0x17] Character name {tup[0]} is already taken")
                     err_packet = build_popup_packet("Character name is unavailable. Please choose a new name.",
                                                     disconnect=False)
                     conn.sendall(err_packet)
@@ -305,16 +272,16 @@ def handle_client(session: ClientSession):
                 save_characters(session.user_id, session.char_list)
                 # Send updated character list (0x15)
                 conn.sendall(build_login_character_list_bitpacked(session.char_list))
-                print(f"[{session.addr}] [PKT0x17] Sent 0x15 character list update")
+                #print(f"[{session.addr}] [PKT0x17] Sent 0x15 character list update")
                 # Send paperdoll packet (0x1A)
                 pd = build_paperdoll_packet(new_char)
                 conn.sendall(struct.pack(">HH", 0x1A, len(pd)) + pd)
-                print(
-                    f"[{session.addr}] [PKT0x17] Sent 0x1A paperdoll packet, len={len(pd)},")
+                #print(
+                    #f"[{session.addr}] [PKT0x17] Sent 0x1A paperdoll packet, len={len(pd)},")
                 # Send popup message (0x1B)
                 popup = build_popup_packet("Character Successfully Created", disconnect=False)
                 conn.sendall(popup)
-                print(f"[{session.addr}] [PKT0x17] Sent 0x1B popup message")
+                #print(f"[{session.addr}] [PKT0x17] Sent 0x1B popup message")
 
 
             elif pkt == 0x16:
@@ -365,9 +332,10 @@ def handle_client(session: ClientSession):
                                 session.char_list[i] = c
                                 break
                         save_characters(session.user_id, session.char_list)
-                        print(f"[{session.addr}] Transfer begin: {name}, tk={tk}, level={current_level}")
+                        #print(f"[{session.addr}] Transfer begin: {name}, tk={tk}, level={current_level}")
                         break
-
+            #TODO...
+            #the 0x1f and 0x1D needs to be rewritten and organised since the code is a mess
             elif pkt == 0x1f:
                 if len(data) < 6:
                     print(f"[{session.addr}] Error: Packet 0x1f too short, len={len(data)}")
@@ -444,10 +412,13 @@ def handle_client(session: ClientSession):
                     new_y=int(round(new_y)),
                     new_has_coord=new_has_coord,
                 )
+
                 conn.sendall(welcome)
                 session.clientEntID = token
-                print(
-                    f"[{session.addr}] Welcome: {char['name']} (token {token}) on level {session.current_level}, pos=({new_x},{new_y})")
+
+                #print(
+                    #f"[{session.addr}] Welcome: {char['name']} (token {token}) on level {session.current_level}, pos=({new_x},{new_y})")
+
 
             # Level Transfer request
             elif pkt == 0x1D:
@@ -458,7 +429,7 @@ def handle_client(session: ClientSession):
                 except Exception as e:
                     print(f"[{session.addr}] ERROR: Failed to parse 0x1D packet: {e}, raw payload = {data[4:].hex()}")
                     continue
-                print(f"[{session.addr}] TRANSFER_READY → {level_name}, old_token={_old_token}")
+                #print(f"[{session.addr}] TRANSFER_READY → {level_name}, old_token={_old_token}")
                 # 1) Pull the pending entry
                 entry = pending_world.pop(_old_token, None) or used_tokens.get(_old_token)
                 if not entry:
@@ -516,8 +487,8 @@ def handle_client(session: ClientSession):
                 else:
                     session.char_list.append(char)
                 save_characters(session.user_id, session.char_list)
-                print(f"[{session.addr}] Saved character {char['name']}: "
-                      f"CurrentLevel={char['CurrentLevel']}, PreviousLevel={char['PreviousLevel']}")
+                #print(f"[{session.addr}] Saved character {char['name']}: "
+                     # f"CurrentLevel={char['CurrentLevel']}, PreviousLevel={char['PreviousLevel']}")
                 # 9) Update session.current_level
                 session.current_level = level_name
                 session.world_loaded = False
@@ -529,7 +500,6 @@ def handle_client(session: ClientSession):
                     target_level=level_name,
                     previous_level=old_level
                 )
-
                 # 12) Build and send the ENTER_WORLD packet, including info about the level we just left
                 #    old_level     := the name of the level we departed
                 #    prev_rec      := char["PreviousLevel"] ⟶ {name, x, y}
@@ -572,8 +542,8 @@ def handle_client(session: ClientSession):
                     char=char,
                 )
                 session.conn.sendall(pkt_out)
-                print(
-                    f"[{session.addr}] Sent ENTER_WORLD with token {new_token} for level {level_name}, pos=({new_x},{new_y})")
+                #print(
+                    #f"[{session.addr}] Sent ENTER_WORLD with token {new_token} for level {level_name}, pos=({new_x},{new_y})")
 
             elif pkt == 0x2D:
                 br = BitReader(data[4:])
@@ -614,6 +584,13 @@ def handle_client(session: ClientSession):
                 else:
                     print(f"[{session.addr}] Error: No target for door {door_id} in level {session.current_level}")
 
+            # Level & Door related packets
+            ###################################
+            elif pkt == 0x41:
+                handle_packet_0x41(session, data, conn)
+            elif pkt == 0x7D:
+                handle_change_offset_y(session, data)
+            ###################################
 
             #Entity Update Related packets
             ###################################
@@ -626,7 +603,8 @@ def handle_client(session: ClientSession):
             elif pkt == 0x08:  # Done
                 handle_entity_full_update(session, data, all_sessions)
 
-                # Force NPC load temporarily
+                # Force NPC load temporarily For testing
+                # we will remove this and implement it properly once we are sure Send_Entity_Data is working properly
                 try:
                     npcs = load_npc_data_for_level(session.current_level)
                     for npc in npcs:
@@ -634,7 +612,8 @@ def handle_client(session: ClientSession):
                         conn.sendall(struct.pack(">HH", 0x0F, len(payload)) + payload)
                         session.entities[npc["id"]] = npc
                         session.spawned_npcs.append(npc)
-                    print(f"[{session.addr}] NPCs manually triggered after world update")
+
+                    #print(f"[{session.addr}] NPCs manually triggered after world update")
                 except Exception as e:
                     print(f"[{session.addr}] Error spawning NPCs: {e}")
             ###################################
@@ -660,6 +639,8 @@ def handle_client(session: ClientSession):
                 handle_add_buff(session, data, all_sessions)
             elif pkt == 0x0C:# Done
                 handle_remove_buff(session, data, all_sessions)
+            elif pkt == 0x8A:
+                handle_change_max_speed(session, data, all_sessions)
             ############################################
 
 
@@ -680,6 +661,12 @@ def handle_client(session: ClientSession):
                 handle_private_message(session, data, all_sessions)
             elif pkt == 0x7E:# Done
                handle_emote_begin(session, data, all_sessions)
+            elif pkt == 0x113:
+                #handle_alert_update(session, data)
+                pass
+            elif pkt == 0x7A:
+                handle_talk_to_npc(session, data, all_sessions)
+                pass
             ############################################
 
 
@@ -719,10 +706,10 @@ def handle_client(session: ClientSession):
             ############################################
             elif pkt == 0xB2:# Done
                 handle_mount_equip_packet(session, data, all_sessions)
-            elif pkt == 0xB3:
+            elif pkt == 0xB3:# Done
                 handle_pet_info_packet(session, data, all_sessions)
             elif pkt == 0xEA:
-                #handle_collect_hatched_egg(session, data)
+                handle_collect_hatched_egg(session, data)
                 pass
             ############################################
 
@@ -778,6 +765,8 @@ def handle_client(session: ClientSession):
                 handle_clear_talent_research(session, data)
             elif pkt == 0xD3:
                 allocate_talent_points(session, data)
+            elif pkt == 0xD9:# the client sends this to acknowledge that the building has finishing upgrading
+                 pass
             ############################################
 
 
@@ -802,32 +791,31 @@ def handle_client(session: ClientSession):
                 Client_Crash_Reports(session, data)
             ############################################
 
-            elif pkt == 0x7D:
-                handle_change_offset_y(session, data)
-            elif pkt == 0xF0:
-                handle_volume_enter(session, data)
-            elif pkt == 0xBB:
-                #handle_hp_increase_notice(session, data)
-                pass
-            elif pkt == 0x78:
-                #handle_char_regen(session, data)
-                pass
-            elif pkt == 0x8A:
-                handle_change_max_speed(session, data, all_sessions)
+
+            # Buildings Upgrade packets
+            ############################################
             elif pkt == 0xDB:
                 handle_cancel_upgrade(session, data)
             elif pkt == 0xDC:
                 handle_speedup_request(session, data)
             elif pkt == 0xD7:
                 handle_building_upgrade(session, data)
-            elif pkt == 0x41:
-                handle_packet_0x41(session, data, conn)
+            ############################################
+
+
+            elif pkt == 0xF0:
+                handle_volume_enter(session, data)
+            elif pkt == 0xBB:
+                handle_hp_increase_notice(session, data)
+                pass
+            elif pkt == 0x78:
+                handle_char_regen(session, data)
+                pass
             elif pkt == 0xCC:
                 pass
             elif pkt == 0x10E:
                 pass
-            elif pkt == 0xD9:# the client sends this to acknowledge that the building has finishing upgrading
-                 pass
+
             else:
                 print(f"[{session.addr}] Unhandled packet type: 0x{pkt:02X}, raw payload = {data.hex()}")
     except Exception as e:
@@ -871,6 +859,7 @@ if __name__ == "__main__":
     start_static_server(host="127.0.0.1", port=80, directory="content/localhost")
     servers = start_servers()
     print("For Browser running on : http://localhost/index.html")
+    #print("For Browser running on : http://localhost/DeveloperMode.html")
     print("For Flash Projector running on : http://localhost/p/cbv/DungeonBlitz.swf?fv=cbq&gv=cbv")
     try:
         while True:

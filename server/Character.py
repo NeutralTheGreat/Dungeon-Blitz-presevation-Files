@@ -2,24 +2,14 @@
 
 import os
 import json
-import uuid
-
 from BitUtils import BitBuffer
-from Items import Starting_Mounts, Starting_Pets, Starting_Charms, Starting_Materials, Starting_Consumables, \
-    Active_master_Class, Starter_Weapons, Active_Abilities, Starting_Missions, Buildings
-from constants import inventory_gears
-from default_abilities import default_learned_abilities
-from constants import Mastery_Class
+from Items import inventory_gears, default_learned_abilities, starting_dyes, \
+    Active_master_Class, Mastery_Class, Active_Abilities, Starting_Mounts, \
+    Starting_Pets, Starter_Weapons, Buildings, Starting_Charms, \
+    Starting_Materials, Starting_Consumables, Starting_Missions
 
 # Hints Do not delete
 """
-"research": {
-        "abilityID": 113,
-        "finishTime": 50
-      },
-"inventoryGears": [
-    # {"gearID": 1, "tier": 1, "runes": [1, 2, 3], "colors": [255, 0]}
-], 
   "gearSets": [
     {
       "name": "PvP Build",    
@@ -184,7 +174,7 @@ def make_character_dict_from_tuple(character):
         "pantColor": pant_color,
         "equippedGears": starter_gear,
         "CurrentLevel": {"name": "CraftTown", "x": 360, "y": 1458.99},
-        "PreviousLevel": {"name": "BridgeTownHard", "x": 0, "y": 0},
+        "PreviousLevel": {"name": "NewbieRoad", "x": 0, "y": 0},
         "inventoryGears": starting_inventory,
         "gearSets": [],
         "mounts": Starting_Mounts,
@@ -192,36 +182,49 @@ def make_character_dict_from_tuple(character):
         "charms": Starting_Charms,
         "materials": Starting_Materials,
         "lockboxes": [{"lockboxID": 1, "count": 100}],
+        "OwnedDyes": starting_dyes,
         "consumables": Starting_Consumables,
-        "missions": {
-            "5": {
-                "state": 0
-            }
-        },
+        "missions": Starting_Missions,
         "friends": [
             {
                 "name": "Neutral",
                 "className": "Paladin",
                 "level": 40,
-                "stateVersion": 5
+                "stateVersion": 5,
+                "isRequest": True,
+                "isOnline": True
             },
             {
                 "name": "Neo",
                 "className": "Mage",
                 "level": 20,
-                "stateVersion": 5
+                "stateVersion": 5,
+                "isRequest": True,
+                "isOnline": True
             },
             {
                 "name": "Tired",
                 "className": "Rogue",
                 "level": 23,
-                "stateVersion": 5
+                "stateVersion": 5,
+                "isRequest": False,
+                "isOnline": True
             },
             {
                 "name": "Telahair",
                 "className": "Mage",
                 "level": 23,
-                "stateVersion": 5
+                "stateVersion": 5,
+                "isRequest": False,
+                "isOnline": False
+            },
+            {
+                "name": "twig",
+                "className": "Rogue",
+                "level": 50,
+                "stateVersion": 5,
+                "isRequest": False,
+                "isOnline": True
             }
         ],
         "learnedAbilities": starting_abilities,

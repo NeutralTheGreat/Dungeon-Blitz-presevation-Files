@@ -1,8 +1,7 @@
 # constants.py
 import json
 import os
-
-quest_val = 95
+from typing import Optional, Dict
 
 FRAMEBITS_TO_CLASSKEY = {
         533: "executioner",
@@ -14,9 +13,7 @@ FRAMEBITS_TO_CLASSKEY = {
         479: "frostwarden",
         491: "flameseer",
         550: "necromancer",
-        # Add any others from the client as needed
     }
-
 
 def method_233(frame_bits: int) -> str:
     return FRAMEBITS_TO_CLASSKEY.get(frame_bits, "")
@@ -37,14 +34,12 @@ class_10_const_665 = 4
 ENT_MAX_SLOTS = 7
 GS_BITS = 2
 MAX_CHAR_LEVEL_BITS = 6
-Game_const_646     = 4
 EntType_MAX_SLOTS = 7
 class_21_const_763 = 250
 class_10_const_83  = 7
 class_66_const_409 = 6
 class_16_const_167 = 6
 class_7_const_19 = 7
-
 class_9_const_129 = 5
 class_66_const_571 = 2
 class_7_const_75 = 6
@@ -87,10 +82,17 @@ def method_277(idx: int) -> int:
     if x <= 5: w = 3
     return w
 
+class Bossfight:
+    const_1145 = 0
+    const_821 = 1
+    const_756 = 2
+    const_810 = 3
+
+
 class Mission:
-    const_213 = 0
-    const_58  = 1
-    const_72  = 2
+    const_213 = 0 # Mission in progress
+    const_58  = 1 # mission claimed
+    const_72  = 2 # mission is ready
 
 class class_119:
     const_1398 = 10
@@ -111,6 +113,7 @@ class class_119:
     const_490 = 810
     const_1418 = 560
 
+
 ENTITYSTATE_DEAD   = 2    # 3
 ENTITYSTATE_ALIVE  = 1  # 1
 
@@ -127,6 +130,7 @@ class class_9:
     const_214 = 10
     const_1404 = 0
     const_1390 = 1
+
 class class_10:
     const_83 = 7
     const_665 = 4
@@ -154,6 +158,13 @@ class Entity:
     const_78 = 0
     const_244 = 2
     MAX_CHAR_LEVEL_BITS = 6
+    Dye_Gold_Cost = [0, 455, 550, 595, 650, 735, 795, 890, 965, 1075, 1155, 1285, 1385, 1520, 1685, 1810, 1985, 2180,
+                        2380, 2600, 2845, 3090, 3375, 3710, 4025, 4410, 4790, 5225, 5705, 6215, 6750, 7340, 8020, 8690,
+                        9455, 10300, 11230, 12185, 13255, 14405, 15635, 17010, 18475, 20050, 21725, 23650, 25640, 27835,
+                        30165, 32730, 35540]
+    Dye_Idols_Cost = [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 4, 4,
+                         4, 5, 5, 5, 6, 6, 7, 7, 8, 8, 9, 10, 11, 11, 12, 13, 14, 16, 17]
+
 
 class PowerType :
     const_423 = 7
@@ -161,23 +172,16 @@ class LinkUpdater:
     VELOCITY_DEFLATE = 10000
     VELOCITY_INFLATE = 10000
 
-
-
-
-
 class Game :
     const_209 = 4
     const_526 = 0
     const_181 = 180
     const_703 = 1200
     const_390 = 5
-    # Sparse frameBits → classKey mapping (match client-side constants)
-
-
-
-
+    const_646 = 4
 
 class class_118 :
+    NUM_TALENT_SLOTS = 27
     const_43 = 27
     const_529 = [5, 2, 3, 5, 5, 3, 2, 3, 2, 5, 2, 3, 5, 5, 3, 2, 3, 2, 5, 2, 3, 5, 5, 3, 2, 3, 2]
     const_1304 = 90
@@ -188,10 +192,6 @@ class class_118 :
     ABILITY6_NODE_PREREQ  = 18
     ABILITY5_POINTS_PREREQ = 20
     ABILITY5_NODE_PREREQ = 8
-
-
-
-
 
 class class_111 :
     const_509 = 0
@@ -252,7 +252,7 @@ class class_66:
                       3781585, 4084112, 4410841, 4763708, 5144805, 5556389, 6000900, 6480972, 6999450, 7559406, 8164158,
                       8817291, 9522674, 10284488, 11107247, 11995827, 12955493, 13991932, 15111287, 16320190, 17625805,
                       19035869, 20558739, 22203438, 23979713, 25898090]
-    const_1002 = [0, 0, 2, 4, 6, 10, 14, 20, 28, 37, 41, 45, 51, 59, 68, 80, 95, 113, 122, 132, 145, 161, 181, 193, 204,
+    IDOL_COST = [0, 0, 2, 4, 6, 10, 14, 20, 28, 37, 41, 45, 51, 59, 68, 80, 95, 113, 122, 132, 145, 161, 181, 193, 204,
                   219, 225, 231, 238, 246, 254, 263, 273, 283, 291, 299, 308, 318, 329, 340, 352, 366, 380, 396, 412,
                   431, 450, 471, 494, 519, 545]
 
@@ -269,11 +269,11 @@ BUILDING_ID_TO_STATS_INDEX = {
 
 
 NEWS_EVENTS = {
-    1: ["a_NewsGoldIcon",      "Double Gold Event",     "While this event is in place all gold will be doubled world wide",       "http://www.dungeonblitz.com/", 1387602000],
-    2: ["a_NewsGearIcon",      "Double Gear Event",     "While this event is in place all gear drops will be doubled world wide",  "http://www.dungeonblitz.com/", 1387602000],
-    3: ["a_NewsMatsIcon",      "Double Material Event", "While this event is in place all material drops will be doubled world wide","http://www.dungeonblitz.com/",1387602000],
-    4: ["a_NewsXPIcon",        "Double XP Event",       "While this event is in place all XP gained will be doubled world wide",     "http://www.dungeonblitz.com/",1387602000],
-    5: ["a_NewsPetXPIcon",     "Double Pet XP Event",   "While this event is in place all pet XP gained will be doubled world wide", "http://www.dungeonblitz.com/",1387602000],
+    1: ["a_NewsGoldIcon",      "Double Gold Event",     "While this event is in place all gold will be doubled world wide",       "http://www.dungeonblitz.com/", 1786841238],
+    2: ["a_NewsGearIcon",      "Double Gear Event",     "While this event is in place all gear drops will be doubled world wide",  "http://www.dungeonblitz.com/", 1786841238],
+    3: ["a_NewsMatsIcon",      "Double Material Event", "While this event is in place all material drops will be doubled world wide","http://www.dungeonblitz.com/",1786841238],
+    4: ["a_NewsXPIcon",        "Double XP Event",       "While this event is in place all XP gained will be doubled world wide",     "http://www.dungeonblitz.com/",1786841238],
+    5: ["a_NewsPetXPIcon",     "Double Pet XP Event",   "While this event is in place all pet XP gained will be doubled world wide", "http://www.dungeonblitz.com/",1786841238],
 }
                #Loaders
 ################################################################
@@ -287,29 +287,6 @@ def get_dye_color(dye_id):
     if dye:
         return dye["color"]
     return None
-
-
-def load_gear_data(class_name):
-    path = os.path.join("data", f"{class_name.lower()}_gears.json")
-    try:
-        with open(path, "r") as f:
-            return json.load(f)
-    except Exception as e:
-        print(f"Failed to load {class_name} gear data: {e}")
-        return []
-
-inventory_gears = {
-    "paladin": load_gear_data("paladin"),
-    "mage": load_gear_data("mage"),
-    "rogue": load_gear_data("rogue"),
-}
-
-with open("data/MasteryClass.json", "r", encoding="utf-8") as f:
-    Mastery_Class = json.load(f)
-
-def get_starting_mastery(cls):
-    return Mastery_Class.get(cls, [])
-
 
 def load_ability_data():
     try:
@@ -356,26 +333,6 @@ def find_building_data(building_id: int, rank: int):
             return b
     return None
 
-"""
-# ─── Mission loader (runs on startup) ───
-DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
-with open(os.path.join(DATA_DIR, "MissionTypes.json"), "r", encoding="utf-8") as f:
-    defs = json.load(f)
-
-assert len(defs) == 293, "Need all 293 definitions!"
-
-mission_defs = {
-    m["MissionID"]: {
-        # instant_complete (var_1775) is only for that special 1‑bit missions list,
-        # so keep it False unless you know the client marks some as instant.
-        "var_1775": False,
-
-        # has_progress (var_134) = CompleteCount > 0
-        "has_progress": int(m.get("CompleteCount", 0)) > 0,
-    }
-    for m in defs
-}
-"""
 
 
 

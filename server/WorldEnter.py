@@ -1,14 +1,14 @@
 # WorldEnter.py
+from typing import Dict
+
 from BitUtils import BitBuffer
 import struct
 import time
 from constants import (
     GS_BITS,
     MAX_CHAR_LEVEL_BITS,
-    Game_const_646,
     class_10_const_83,
     GearType,
-    class_21_const_763,
     class_10_const_665,
     CLASS_NAME_TO_ID,
     ENTITY_CONST_244,
@@ -27,18 +27,19 @@ from constants import (
     SLOT_BIT_WIDTHS,
     NUM_TALENT_SLOTS,
     GEARTYPE_BITS,
-    Mission,
-    class_119, class_111, class_9, class_66, MASTERCLASS_TO_BUILDING,
+    class_119, class_111, class_9, class_66, MASTERCLASS_TO_BUILDING, class_21, Game, Mission,
+
 )
-from missions import var_238
+from missions import get_total_mission_defs, get_mission_def
 
 CLASS_BUILD_ORDER = {
     "paladin": [2, 12, 3, 4, 5, 1, 13],
     "mage":    [2, 12, 6, 7, 8, 1, 13],
     "rogue":   [2, 12, 9, 10,11, 1, 13],
 }
+
 def Player_Data_Packet(char: dict,
-                      event_index: int = 1,
+                      event_index: int = 0,
                       transfer_token: int = 0,
                       scaling_factor: int = 0,# Unknown
                       bonus_levels: int = 0,# this is to scale the players Level on dungeons if the player joins a friends dungeon who is higher level
@@ -46,9 +47,10 @@ def Player_Data_Packet(char: dict,
                       new_x: int = None,
                       new_y: int = None,
                       new_has_coord: bool = True) -> bytes:
+
     buf = BitBuffer()
 
-    # ────────────── (1) Preamble ──────────────
+    # ──────────────(Preamble)──────────────
     buf.write_method_4(transfer_token)  # _loc2_
     current_game_time = int(time.time())  # seconds
     buf.write_method_4(current_game_time)
@@ -58,7 +60,7 @@ def Player_Data_Packet(char: dict,
     bonus_levels = max(0, min(bonus_levels, 0xFFFFFFFF))  # Clamp to uint32
     buf.write_method_4(bonus_levels)  # _loc5_
 
-    # ────────────── (2) Customization ──────────────
+    # ──────────────(Customization)──────────────
     buf.write_utf_string(char.get("name", "") or "")
     buf._append_bits(1, 1)  # hasCustomization
     buf.write_utf_string(char.get("class", "") or "")
@@ -72,7 +74,7 @@ def Player_Data_Packet(char: dict,
     buf._append_bits(char.get("shirtColor", 0), 24)
     buf._append_bits(char.get("pantColor", 0), 24)
 
-    # ────────────── (3) Gear Slots ──────────────
+    # ──────────────(Gear Slots)──────────────
     gear_list = char.get("equippedGears", [])
     for gear in gear_list:
         gear_id = gear.get("gearID", 0)
@@ -91,7 +93,7 @@ def Player_Data_Packet(char: dict,
         else:
             buf._append_bits(0, 1)  # no item in this slot
 
-    # ────────────── (4) Numeric fields ──────────────
+    # ──────────────(Numeric fields)──────────────
     char_level = char.get("level", 1) or 1
     buf.write_method_6(char_level, MAX_CHAR_LEVEL_BITS)
     buf.write_method_4(char.get("xp", 0))  # xp
@@ -100,9 +102,11 @@ def Player_Data_Packet(char: dict,
     buf.write_method_4(char.get("DragonOre", 0))  # DragonOre
     buf.write_method_4(char.get("mammothIdols", 0))  # mammoth idols
 
+
+
     buf._append_bits(int(char.get("showHigher", True)), 1)# Unknown
 
-    # ────────────── (5) Quest-tracker ──────────────
+    # ──────────────(Quest-tracker)──────────────
     # updates the current percentage of the current Dungeon this was likely used when the player join a in progress dungeon
     quest_val = char.get("questTrackerState", 0)
     if quest_val is not None:
@@ -111,7 +115,7 @@ def Player_Data_Packet(char: dict,
     else:
         buf._append_bits(0, 1)
 
-    # ────────────── (6) Position‐presence ──────────────
+    # ──────────────(Position‐presence)──────────────
     #buf._append_bits(0, 1)  # no door/teleport update
     if new_has_coord and target_level and new_x is not None and new_y is not None:
         buf._append_bits(1, 1)
@@ -120,11 +124,13 @@ def Player_Data_Packet(char: dict,
     else:
         buf._append_bits(0, 1)
 
-    # ────────────── (7) Extended‐data‐presence ──────────────
+    # ──────────────(Extended‐data‐presence)──────────────
     buf._append_bits(1, 1)  # yes, sending extended data
 
-    # ────────────── (8) Extended data block ──────────────
-    # Inventory Gears
+    # ──────────────(Extended data block)──────────────
+
+
+    # ──────────────(Inventory Gears)──────────────
     inventory_gears = char.get("inventoryGears", [])
     buf.write_method_6(len(inventory_gears), GearType.GEARTYPE_BITSTOSEND)  # Number of gears (11 bits)
     for gear in inventory_gears:
@@ -153,7 +159,8 @@ def Player_Data_Packet(char: dict,
                 if color_present:
                     buf._append_bits(color, 8)  # Color value (8 bits)
 
-    # Gear Sets
+
+    # ──────────────(Gear Sets)──────────────
     gear_sets = char.get("gearSets", [])
     buf.write_method_6(len(gear_sets), GearType.const_348)
     for gs in gear_sets:
@@ -163,16 +170,18 @@ def Player_Data_Packet(char: dict,
         for gear_id in slots:
             buf._append_bits(gear_id, GearType.GEARTYPE_BITSTOSEND)
 
-    # ────────────── (Keybinds) ──────────────
+    #TODO...
+    #no point on working on this :/
+    # ──────────────(Keybinds)──────────────
     buf._append_bits(0, 1)  # no keybinds
 
-    # Mounts
+    # ──────────────(Mounts)──────────────
     mounts = char.get("mounts", [])
     buf.write_method_4(len(mounts))  # Number of mounts
     for mount_id in mounts:
         buf.write_method_4(mount_id)
 
-    # Pets
+    # ──────────────(Pets)──────────────
     pets = char.get("pets", [])
     buf.write_method_4(len(pets))  # Number of pets
     for pet in pets:
@@ -187,7 +196,8 @@ def Player_Data_Packet(char: dict,
         buf.write_method_4(attr1)  # Attribute 1
         buf.write_method_4(attr2)  # Attribute 2
 
-    # Charms
+
+    # ──────────────(Charms)──────────────
     charms = char.get("charms", [])
     for charm in charms:
         charm_id = charm.get("charmID", 0)
@@ -201,7 +211,7 @@ def Player_Data_Packet(char: dict,
             buf._append_bits(0, 1)
     buf._append_bits(0, 1)  # no more charms
 
-    # Materials
+    # ──────────────(Materials)──────────────
     materials = char.get("materials", [])
     for mat in materials:
         mat_id = mat.get("materialID", 0)
@@ -215,7 +225,8 @@ def Player_Data_Packet(char: dict,
             buf._append_bits(0, 1)
     buf._append_bits(0, 1)  # no more materials
 
-    # Lockboxes
+
+    # ──────────────(Lockboxes)──────────────
     lockboxes = char.get("lockboxes", [])
     for box in lockboxes:
         box_id = box.get("lockboxID", 0)
@@ -225,11 +236,24 @@ def Player_Data_Packet(char: dict,
         buf.write_method_4(count)
     buf._append_bits(0, 1)  # no more lockboxes
 
+    # ──────────────(lockboxKeys) and (royalSigils)──────────────
     buf.write_method_4(char.get("DragonKeys", 0))  # lockboxKeys
     buf.write_method_4(char.get("SilverSigils", 0))  # royalSigils
-    buf.write_method_6(1, Game_const_646)  # alert state = 0
-    for _ in range(1, class_21_const_763 + 1):  # dyes
-        buf._append_bits(1, 1)
+
+
+    # this just effects the tutorial tips value 0 will show the "Dyeing Gear available" tip although im not exactly  sure if this is working correctly
+    buf.write_method_6(10, Game.const_646)  # alert state = 0
+
+
+    # ──────────────(dyes)──────────────
+    owned_dyes = set(char.get("OwnedDyes", []))  # fast membership checking
+
+    for dye_id in range(1, class_21.const_763 + 1):
+        has_dye = 1 if dye_id in owned_dyes else 0
+        buf._append_bits(has_dye, 1)
+
+
+    # ──────────────(consumables)──────────────
     consumables = char.get("consumables", [])
     for item in consumables:
         cid = item.get("consumableID", 0)
@@ -239,68 +263,84 @@ def Player_Data_Packet(char: dict,
         buf.write_method_4(count)
     buf._append_bits(0, 1)  # no more consumables
 
-    missions = char.get("missions", {})
 
-    # 1) total number of mission definitions
-    total_defs = len(var_238) - 1
-    buf.write_method_4(total_defs)
+    # ──────────────(Missions)──────────────
+    missions_state: Dict[str, dict] = char.get("missions", {}) or {}
 
-    # 2) for each mission ID, in order
+    total_defs = get_total_mission_defs()
+    buf.write_method_4(total_defs)  # _loc56_
+
     for mid in range(1, total_defs + 1):
-        mdef = var_238[mid]
-        mstate = missions.get(str(mid))
+        mdef = get_mission_def(mid)
+        mstate = missions_state.get(str(mid))
 
-        # outer presence bit
-        has_state = mstate is not None
-        buf._append_bits(1 if has_state else 0, 1)
-        if not has_state:
-            continue
-
-        # one‐shot missions: write an extra “ready” bit
-        if mdef.var_1775:
-            ready = (mstate.get("state") == Mission.const_72)  # 2
+        if mdef["Tier"]:
+            # Achievement/special → exactly one bit: 1 means create Mission(id, READY, 0)
+            ready = (mstate is not None) and (mstate.get("state") == Mission.const_72)
             buf._append_bits(1 if ready else 0, 1)
             continue
 
-        # multi-step missions:
+        # Regular missions
+        has_entry = mstate is not None
+        buf._append_bits(1 if has_entry else 0, 1)  # presence bit
+        if not has_entry:
+            continue
 
-        # inner bit #1: “ready vs in-progress”
-        ready = (mstate.get("state") == Mission.const_72)
-        buf._append_bits(1 if ready else 0, 1)
+        state = mstate.get("state", Mission.const_213)
 
-        if not ready:
-            # in-progress: currCount if >1
-            if mdef.var_908 > 1:
-                buf.write_method_4(mstate.get("currCount", 0))
+        # Second bit: ready vs. not-ready
+        is_ready = (state == Mission.const_72)
+        buf._append_bits(1 if is_ready else 0, 1)
+
+        if not is_ready:
+            # In-progress path: if CompleteCount > 1, send currCount
+            if mdef["highscore"] > 1:
+                buf.write_method_4(int(mstate.get("currCount", 0)))
         else:
-            # inner bit #2: “reward claimed?”
-            claimed = (mstate.get("state") == Mission.const_58)  # 1
-            buf._append_bits(1 if claimed else 0, 1)
+            # Third bit: 1 → READY (turn-in), 0 → CLAIMED (already collected)
+            # (client uses this to choose const_72 vs const_58)
+            is_turnin = 1 if state == Mission.const_72 else 0
+            buf._append_bits(is_turnin, 1)
 
-            # timed-mission extras
-            if mdef.var_134:
-                buf._append_bits(mstate.get("var_588", 0), class_119.const_228)
-                buf.write_method_4(mstate.get("var_1745", 0))
-                buf.write_method_4(mstate.get("var_2806", 0))
+            # Timed/Ranked extras — only if the *client’s* def has Time set (we mirror that here)
+            if mdef["Time"]:
+                # Tier 1 to 7 is bronze tier 8 to 9 is silver tier 10 is gold tier
+                buf._append_bits(int(mstate.get("Tier", 0)), class_119.const_228)
+                buf.write_method_4(int(mstate.get("highscore", 0)))
+                buf.write_method_4(int(mstate.get("Time", 0)))
 
-    # Friends
+    # ──────────────(Friends)──────────────
     friends = char.get("friends", [])
-    buf.write_method_4(len(friends))  # count
-    for f in friends:
-        buf.write_utf_string(f["name"])
-        buf._append_bits(1 if f.get("isRequest", False) else 0, 1)
-        online = f.get("isOnline", False)
+
+    # 1) Friend count
+    buf.write_method_4(len(friends))
+
+    # 2) Friend entries
+    for friend in friends:
+        # var_207 → account name
+        buf.write_utf_string(friend["name"])
+
+        # var_276 → isRequest
+        buf._append_bits(1 if friend.get("isRequest", False) else 0, 1)
+
+        # bOnline
+        online = friend.get("isOnline", False)
         buf._append_bits(1 if online else 0, 1)
+
         if online:
-            custom_name = f.get("charName", "") != f["name"]
+            # Has custom char name?
+            custom_name = friend.get("name", "") != friend["name"]
             buf._append_bits(1 if custom_name else 0, 1)
             if custom_name:
-                buf.write_utf_string(f["charName"])
-            cls_id = CLASS_NAME_TO_ID.get(f.get("className", ""), 0)
-            buf._append_bits(cls_id, ENTITY_CONST_244)
-            buf._append_bits(f.get("level", 1), MAX_CHAR_LEVEL_BITS)
+                buf.write_utf_string(friend["name"])
 
-    # Learned Abilities
+            # Class + Level
+            class_id = CLASS_NAME_TO_ID.get(friend.get("className", ""), 0)
+            buf._append_bits(class_id, ENTITY_CONST_244)
+            buf._append_bits(friend.get("level", 1), MAX_CHAR_LEVEL_BITS)
+
+
+    # ──────────────(Abilities)──────────────
     learned_abilities = char.get("learnedAbilities", [])
     buf.write_method_6(len(learned_abilities), class_10_const_83)
     for ability in learned_abilities:
@@ -309,26 +349,28 @@ def Player_Data_Packet(char: dict,
         buf.write_method_6(ability_id, class_10_const_83)
         buf.write_method_6(rank, class_10_const_665)
 
+    # ──────────────(activeAbilities)──────────────
     active_slots = char.get("activeAbilities", [0, 0, 0])
     while len(active_slots) < 3:
         active_slots.append(0)
     for slot_id in active_slots[:3]:
         buf.write_method_6(slot_id, class_10_const_83)
 
+    # ──────────────(craftTalentPoints)──────────────
     craft_talent_points = char.get("craftTalentPoints", [0, 0, 0, 0, 0])  # List of 5 values, each 0-15
     packed_value = 0
     for i in range(5):
         packed_value |= (craft_talent_points[i] & 0xF) << (i * 4)
     buf.write_method_4(packed_value)
 
-    # (9)talentPoints dict
+    # ──────────────(talentPoints)──────────────
     tp_dict = char.get("talentPoints", {})
     # send exactly three 6‑bit values, one per class index 1,2,3
     for class_idx in (1, 2, 3):
         val = tp_dict.get(str(class_idx), 0)
         buf.write_method_6(val, 6)  # 6‑bit field
 
-    # Magic Forge Section
+    # ──────────────(magicForge)──────────────
     mf = char.get("magicForge", {})
     stats_dict = mf.get("stats_by_building", {})
     has_stats = bool(stats_dict)
@@ -370,7 +412,8 @@ def Player_Data_Packet(char: dict,
     # 3) Final continuation flag (var_2434)
     buf._append_bits(1 if mf.get("var_2434", False) else 0, 1)
 
-    # ── Skill Research ──
+
+    # ──────────────(Skill Research)──────────────
     research = char.get("research")
     if research:
         buf._append_bits(1, 1)
@@ -386,7 +429,8 @@ def Player_Data_Packet(char: dict,
     else:
         buf._append_bits(0, 1)
 
-    # (7) buildingResearch
+
+    # ──────────────(buildingResearch)──────────────
     bu = char.get("buildingUpgrade")
     if bu and not bu.get("done", False):
         buf._append_bits(1, 1)  # flag: upgrade in progress
@@ -395,7 +439,8 @@ def Player_Data_Packet(char: dict,
     else:
         buf._append_bits(0, 1)
 
-    # (8) towerResearch
+
+    # ──────────────(towerResearch)──────────────
     tr = char.get("talentResearch", {})
     # present if there's an active or pending research
     has_tr = isinstance(tr, dict) and not tr.get("done", False) and tr.get("ReadyTime", 0) > 0
@@ -407,6 +452,7 @@ def Player_Data_Packet(char: dict,
         # then the 32‑bit ReadyTime
         buf.write_method_4(tr.get("ReadyTime", 0))
 
+    # ──────────────(EggHachery)──────────────
     # “SetEggData” (egg type + reset timer)
     egg_data = char.get("EggHachery")
     if egg_data:
@@ -420,17 +466,18 @@ def Player_Data_Packet(char: dict,
             # Egg in progress — send remaining time
             buf.write_method_4(egg_data.get("ReadyTime", 0))
 
-    # ============ Owned Eggs  ========================
+    # ──────────────(Owned Eggs)──────────────
     eggPetIDs = char.get("OwnedEggsID", [])
     buf.write_method_6(len(eggPetIDs), class_16_const_167)
     for eid in eggPetIDs:
         buf.write_method_6(eid, class_16_const_167)
 
-    # ============ Active Egg Count ========================
+    # ──────────────(Active Egg Count)──────────────
     activeEggCount = char.get("activeEggCount", 0)
     buf.write_method_4(activeEggCount)
 
-    # ============ Resting pets ========================
+
+    # ──────────────(Resting pets)──────────────
     # Resting Pets (3 slots max)
     rest = char.get("restingPets", [])[:3]
 
@@ -443,7 +490,8 @@ def Player_Data_Packet(char: dict,
         else:
             buf._append_bits(0, 1)
 
-    # ============ Training pets ========================
+
+    # ──────────────(Training pets)──────────────
     tp_list = char.get("trainingPet", [])
     if tp_list and isinstance(tp_list, list) and len(tp_list) > 0:
         tp = tp_list[0]
@@ -454,33 +502,18 @@ def Player_Data_Packet(char: dict,
     else:
         buf._append_bits(0, 1)
 
-
-    icon, headline, body, tooltip, ts = NEWS_EVENTS.get(
+    # ──────────────(Event News)──────────────
+    icon, url, body, tooltip, start_ts = NEWS_EVENTS.get(
         event_index,
         ["", "", "", "", 0]
     )
-    buf.write_utf_string(icon)
-    buf.write_utf_string(headline)
-    buf.write_utf_string(body)
-    buf.write_utf_string(tooltip)
+    buf.write_utf_string(icon)  # a_NewsGoldIcon, etc.
+    buf.write_utf_string(url)  # e.g. "http://www.dungeonblitz.com/"
+    buf.write_utf_string(body)  # "Double Gold Event"
+    buf.write_utf_string(tooltip)  # "While this event is in place ..."
+    buf.write_method_4(start_ts)  # Epoch timestamp
 
-    # 1) current time in seconds
-    now_sec = int(time.time())
-
-    # 2) event duration (5 days) in milliseconds → seconds
-    five_days_ms = 12 * 24 * 60 * 60 * 1000
-    duration_sec = (five_days_ms + 999) // 1000  # round up to seconds
-
-    # 3) cap to method_4’s safe range (~1B)
-    max_safe = (2 ** 30) - 1
-    duration_sec = min(duration_sec, max_safe)
-
-    # 4) compute future end timestamp in seconds
-    event_end_sec = now_sec + duration_sec
-
-    # 5) write it as a method_4 value
-    buf.write_method_4(event_end_sec)
-
+    # ──────────────(MasterClass)──────────────
     selected = str(char.get("MasterClass", 0))
     mastery_data = char.get("Mastery", {}).get(selected, {"classID": 0, "slots": []})
 
@@ -501,7 +534,8 @@ def Player_Data_Packet(char: dict,
         else:
             buf._append_bits(0, 1)
 
-    # Equipped Gears
+
+    # ──────────────(Equipped Gears)──────────────
     equip = char.get("equippedGears", [])
     for slot_id in range(1, 7):  # Slots 1 to 6
         gear = equip[slot_id - 1] if slot_id - 1 < len(equip) else {}
@@ -512,23 +546,24 @@ def Player_Data_Packet(char: dict,
         else:
             buf._append_bits(0, 1)
 
-    # 2. Equipped Mount
-    equipped = char.get("equippedMount", 0)
-    if equipped in mounts:
-        buf.write_method_4(equipped)
-    else:
-        buf.write_method_4(0)
 
+    # ──────────────(Equipped Mount)──────────────
+    equipped = char.get("equippedMount", 0)
+    buf.write_method_4(equipped)
+
+    # ──────────────(equippedPetID)──────────────
     pet_type_id = char.get("equippedPetID", 0)
     buf.write_method_4(pet_type_id)
     buf.write_method_4(0)  # Always zero, no iteration data
 
+    # ──────────────(activeConsumableID and queuedConsumableID)──────────────
     active_consumable_id = char.get("activeConsumableID", 0)
     queued_consumable_id = char.get("queuedConsumableID", 0)
     buf.write_method_4(active_consumable_id)
     buf.write_method_4(queued_consumable_id)
 
-    # ──── (10) Guild‐panel data (method_933) ────
+
+    # ──────────────(Guild‐panel data)──────────────
     guild = char.get("guild", None)
     in_guild = guild is not None
     buf._append_bits(1 if in_guild else 0, 1)
@@ -553,6 +588,40 @@ def Player_Data_Packet(char: dict,
 
     payload = buf.to_bytes()
     return struct.pack(">HH", 0x10, len(payload)) + payload
+
+
+#TODO... all this does is just update the building visuals when the player join the game from a saved account nothing important
+# it should be send as a response on (0x1f) packet
+def send_building_update(session, char):
+    mf_stats = char.get("magicForge", {}).get("stats_by_building", {})
+
+    def _stat(bid):
+        return int(mf_stats.get(str(bid), mf_stats.get(bid, 0) or 0))
+
+    master_class_id = int(char.get("MasterClass", 0))
+    tower_building_id = MASTERCLASS_TO_BUILDING.get(master_class_id, 3)
+
+    # First building: current tower building type & its level
+    first_building_id = tower_building_id
+    first_building_level = _stat(tower_building_id)
+
+    # Second building: maybe same as first but with target upgrade level
+    second_building_id = tower_building_id
+    second_building_level = first_building_level  # Could be higher if upgrading
+
+    scaffolding_id = int(char.get("buildingUpgrade", {}).get("buildingID", 0) or 0)
+
+    buf = BitBuffer()
+    buf.write_method_6(first_building_id, class_9_const_129)
+    buf.write_method_6(first_building_level, class_9_const_28)
+    buf.write_method_6(second_building_id, class_9_const_129)
+    buf.write_method_6(second_building_level, class_9_const_28)
+    buf.write_method_6(scaffolding_id, class_9_const_129)
+
+    pkt = struct.pack(">HH", 0xDA, len(buf.to_bytes())) + buf.to_bytes()
+    session.conn.sendall(pkt)
+
+
 
 def build_enter_world_packet(
     transfer_token: int,
@@ -683,7 +752,6 @@ def build_enter_world_packet(
         buf.write_method_6(tome_level, class_9_const_28)
         buf.write_method_6(barn_level, class_9_const_28)
         buf.write_method_6(scaffolding_level, class_9_const_129)
-
 
     # Build final packet
     payload = buf.to_bytes()
