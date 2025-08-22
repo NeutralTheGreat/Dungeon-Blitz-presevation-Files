@@ -10,20 +10,20 @@ npc_cache = {}
 
 """
 Hints NPCs data 
-"TutorialBoat": [
+[
     {
       "id": 3,
       "name": "NPCRuggedVillager02",
       "x": 3317,
       "y": 461,
-      "z": 0,
+      "v": 0,
       "team": 3,
       "untargetable": false,
       "render_depth_offset": -15,
       "behavior_speed": 0.0,
       "Linked_Mission": "NR_Mayor01", 
-      "drama_anim": "",
-      "sleep_anim": "",
+      "DramaAnim": "",
+      "SleepAnim": "",
       "NPClevel": 0,
       "power_id": 0,
       "entState": 0,
@@ -33,7 +33,7 @@ Hints NPCs data
     }
 ]
 
-
+======== Intercatible NPCs Tips =====================
 - how to make the NPC interactable by the player
 - NPC will only become interactable if they have a "Linked_Mission" set and  "team" set to 3 
 
@@ -45,6 +45,9 @@ Hints NPCs data
 For example the NPC with the "Linked_Mission": "NR_Mayor01",  will be linked to all the missions that have "ReturnName": "NR_Mayor01",  OR "ContactName": "NR_Mayor01",
 
 - this will also show the NPCs name under his feet "NR_Mayor01" is "Mayor Ristas"
+
+
+===============
 
 
 Team Types : 
@@ -68,6 +71,34 @@ entState :
  
  3 = Entity Dies when the game loads 
  
+ 
+ 
+ =============== how to use "DramaAnim" and "SleepAnim" ===============
+ 
+ for "DramaAnim" to activate you have to set the "entState" to 2  
+ 
+ for "SleepAnim" to activate you have to set the "entState" to 1 
+ 
+ you can find which entity uses "DramaAnim" and "SleepAnim" at EntTypes.json some entities have "DramaAnim" or "SleepAnim" defined 
+ 
+ Example : 
+      
+     # goblin will spawn in the boarding ship animation 
+     {
+      "name": "IntroGoblinJumper",
+      "DramaAnim": "board",
+      "SleepAnim": "",
+      "entState": 2,
+    }
+    
+    # the eye will spawn closed 
+    {
+      "name": "NephitCrownEye",
+      "DramaAnim": "Sleep",
+      "SleepAnim": "",
+      "entState": 1,
+    }
+
 """
 
 
@@ -101,18 +132,18 @@ def Send_Entity_Data(entity: Dict[str, Any]) -> bytes:
     bb.write_method_13(entity['name'])
 
     # 3) Player Appearance block
-    if entity.get("hasCustomization", False):
+    if entity.get("is_player", False):
         bb.write_bits(1, 1)  # send visuals block
-        bb.write_method_13(entity.get("class", "Mage"))
+        bb.write_method_13(entity.get("class", ""))
         bb.write_method_13(entity.get("gender", ""))
-        bb.write_method_13(entity.get("headSet", "basic"))
-        bb.write_method_13(entity.get("hairSet", "short"))
-        bb.write_method_13(entity.get("mouthSet", "default"))
-        bb.write_method_13(entity.get("faceSet", "neutral"))
-        bb.write_bits(entity.get("hairColor", 19940), 24)
-        bb.write_bits(entity.get("skinColor", 16764057), 24)
-        bb.write_bits(entity.get("shirtColor", 15263971), 24)
-        bb.write_bits(entity.get("pantColor", 15263971), 24)
+        bb.write_method_13(entity.get("headSet", ""))
+        bb.write_method_13(entity.get("hairSet", ""))
+        bb.write_method_13(entity.get("mouthSet", ""))
+        bb.write_method_13(entity.get("faceSet", ""))
+        bb.write_bits(entity.get("hairColor", 0), 24)
+        bb.write_bits(entity.get("skinColor", 0), 24)
+        bb.write_bits(entity.get("shirtColor", 0), 24)
+        bb.write_bits(entity.get("pantColor", 0), 24)
         equipped = entity.get('equippedGears', [])
         for slot in range(1, EntType.MAX_SLOTS):
             idx = slot - 1
@@ -134,10 +165,10 @@ def Send_Entity_Data(entity: Dict[str, Any]) -> bytes:
     else:
         bb.write_bits(0, 1)  # skip entire visuals section
 
-    # 4) Position + rotation
+    # 4) Position + Velocity
     bb.write_signed_method_45(int(entity['x']))  # x
     bb.write_signed_method_45(int(entity['y']))  # y
-    bb.write_signed_method_45(int(entity['z']))  # rotation
+    bb.write_signed_method_45(int(entity['v']))  # Velocity
     # 4) team
     bb.write_method_6(entity.get('team', 0), Entity.TEAM_BITS)
 
@@ -145,12 +176,12 @@ def Send_Entity_Data(entity: Dict[str, Any]) -> bytes:
     #  leading to the player level reading wrong and some other things  if Player branches are off(False) the NPCs spawn properly
     #  (at least i think so...)
     # ── PLAYER VS NPC BRANCH ──
-    if entity.get('is_player', False):
+    if entity.get("is_player", False):
         # 5a) Signal “yes, player data follows”
         bb.write_bits(1, 1)
 
         # 5b) Player level (6 bits on client)
-        bb.write_method_6(entity.get('PlayerLevel', 1), Entity.MAX_CHAR_LEVEL_BITS)
+        bb.write_method_6(entity.get('PlayerLevel', 0), Entity.MAX_CHAR_LEVEL_BITS)
 
         # 5c)
         bb.write_method_6(entity.get('game_mode', 0), Game.const_209)
@@ -178,15 +209,15 @@ def Send_Entity_Data(entity: Dict[str, Any]) -> bytes:
 
     bb.write_method_739(entity.get("render_depth_offset", 0))
 
-    speed = entity.get("behavior_speed", 0.0)
+    speed = entity.get("behavior_speed", 0)
     if speed > 0:
         bb.write_bits(1, 1)
         bb.write_method_4(int(speed * LinkUpdater.VELOCITY_INFLATE))
     else:
         bb.write_bits(0, 1)
 
-    # 6) optional strings
-    for key in ("Linked_Mission", "drama_anim", "sleep_anim"):
+
+    for key in ("Linked_Mission", "DramaAnim", "SleepAnim"):
         val = entity.get(key, "")
         bb.write_bits(1 if val else 0, 1)
         if val:
@@ -209,8 +240,10 @@ def Send_Entity_Data(entity: Dict[str, Any]) -> bytes:
     bb.write_bits(1 if entity.get("facing_left", False) else 0, 1)
 
     # 11) HP delta
-    bb.write_signed_method_45(entity.get("health_delta", 0))
+    value = int(round(entity.get("health_delta", 0)))
+    bb.write_signed_method_45(value)
 
+    #this is likely meant to be used when a player has a mount or a pet equipped
     # ── MOUNTS & PETS ──
     # The client only reads mounts/pets if it saw the initial mount flag (Game.const_526)
     if entity.get('has_mount', False):
@@ -229,7 +262,7 @@ def Send_Entity_Data(entity: Dict[str, Any]) -> bytes:
         bb.write_bits(1 if pets else 0, 1)
         for pet in pets:
             bb.write_method_6(pet[0], class_7.const_19)
-            bb.write_method_6(pet[1], class_7.const_75)
+            bb.write_method_6(pet[0], class_7.const_75)
     else:
         bb.write_bits(0, 1)  # no mounts/pets
 

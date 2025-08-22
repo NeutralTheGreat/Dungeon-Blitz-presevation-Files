@@ -243,7 +243,7 @@ def handle_client(session: ClientSession):
                     tup = (
                         br.read_string(),  # name
                         br.read_string(),  # class
-                        50,  # level
+                        20,  # level
                         br.read_string(),  # gender
                         br.read_string(),  # head
                         br.read_string(),  # hair

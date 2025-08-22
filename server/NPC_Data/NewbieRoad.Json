@@ -4,15 +4,15 @@
       "name": "NPCCaptain",
       "x": 1623,
       "y": 771,
-      "z": 0,
+      "v": 0,
       "team": 3,
       "entState": 0,
       "untargetable": false,
       "render_depth_offset": 20,
       "behavior_speed": 0.0,
       "Linked_Mission": "CaptainFink",
-      "drama_anim": "",
-      "sleep_anim": "",
+      "DramaAnim": "",
+      "SleepAnim": "",
       "level": 2,
       "power_id": 2,
       "facing_left": true,
@@ -28,15 +28,15 @@
       "name": "NPCRuggedVillager02",
       "x": 3317,
       "y": 461,
-      "z": 0,
+      "v": 0,
       "team": 3,
       "entState": 0,
       "untargetable": false,
       "render_depth_offset": -15,
       "behavior_speed": 0.0,
       "Linked_Mission": "NR_Mayor01",
-      "drama_anim": "",
-      "sleep_anim": "",
+      "DramaAnim": "",
+      "SleepAnim": "",
       "level": 2,
       "power_id": 2,
       "facing_left": true,
@@ -52,15 +52,15 @@
       "name": "NPCElric",
       "x": 2919,
       "y": 599,
-      "z": 0,
+      "v": 0,
       "team": 3,
       "entState": 0,
       "untargetable": false,
       "render_depth_offset": -30,
       "behavior_speed": 0.0,
       "Linked_Mission": "Ehric NPC is supposed to be here",
-      "drama_anim": "",
-      "sleep_anim": "",
+      "DramaAnim": "",
+      "SleepAnim": "",
       "level": 2,
       "power_id": 2,
       "facing_left": true,
@@ -76,15 +76,15 @@
       "name": "NPCRuggedVillager04",
       "x": 9709,
       "y": 579,
-      "z": 0,
+      "v": 0,
       "team": 3,
       "untargetable": false,
       "render_depth_offset": -50,
       "behavior_speed": 0.0,
       "Linked_Mission": "NR_Villager03",
-      "drama_anim": "",
-      "sleep_anim": "",
-      "NPClevel": 50,
+      "DramaAnim": "",
+      "SleepAnim": "",
+      "level": 50,
       "power_id": 2,
       "entState": 0,
       "facing_left": true,
@@ -96,15 +96,15 @@
       "name": "NPCRuggedVillager03",
       "x": 12853,
       "y": 2299,
-      "z": 0,
+      "v": 0,
       "team": 3,
       "untargetable": false,
       "render_depth_offset": -170,
       "behavior_speed": 0.0,
       "Linked_Mission": "NR_Villager02",
-      "drama_anim": "",
-      "sleep_anim": "",
-      "NPClevel": 50,
+      "DramaAnim": "",
+      "SleepAnim": "",
+      "level": 50,
       "power_id": 2,
       "entState": 0,
       "facing_left": true,
@@ -116,16 +116,16 @@
       "name": "NPCVillager03a",
       "x": 10723,
       "y": 539,
-      "z": 0,
+      "v": 0,
       "team": 3,
       "entState": 0,
       "untargetable": false,
       "render_depth_offset": -18,
       "behavior_speed": 0,
       "Linked_Mission": "NR_CartGuy",
-      "drama_anim": "",
-      "sleep_anim": "",
-      "NPClevel": 50,
+      "DramaAnim": "",
+      "SleepAnim": "",
+      "level": 50,
       "power_id": 0,
       "facing_left": true,
       "health_delta": 0,
@@ -141,16 +141,16 @@
       "name": "NPCRuggedVillager04a",
       "x": 15559,
       "y": 292,
-      "z": 0,
+      "v": 0,
       "team": 3,
       "entState": 0,
       "untargetable": false,
       "render_depth_offset": -26,
       "behavior_speed": 0,
       "Linked_Mission": "NR_Hermit",
-      "drama_anim": "",
-      "sleep_anim": "",
-      "NPClevel": 50,
+      "DramaAnim": "",
+      "SleepAnim": "",
+      "level": 50,
       "power_id": 0,
       "facing_left": true,
       "health_delta": 0,
@@ -166,16 +166,16 @@
       "name": "NPCVillager04",
       "x": 3741,
       "y": 588,
-      "z": 0,
+      "v": 0,
       "team": 3,
       "entState": 0,
       "untargetable": false,
       "render_depth_offset": -20,
       "behavior_speed": 0,
       "Linked_Mission": "",
-      "drama_anim": "",
-      "sleep_anim": "",
-      "NPClevel": 50,
+      "DramaAnim": "",
+      "SleepAnim": "",
+      "level": 50,
       "power_id": 0,
       "facing_left": true,
       "health_delta": 0,
@@ -191,16 +191,16 @@
       "name": "NPCVillager02",
       "x": 3924,
       "y": 479,
-      "z": 0,
+      "v": 0,
       "team": 3,
       "entState": 0,
       "untargetable": false,
       "render_depth_offset": -20,
       "behavior_speed": 0,
       "Linked_Mission": "",
-      "drama_anim": "",
-      "sleep_anim": "",
-      "NPClevel": 50,
+      "DramaAnim": "",
+      "SleepAnim": "",
+      "level": 50,
       "power_id": 0,
       "facing_left": true,
       "health_delta": 0,
@@ -216,16 +216,16 @@
       "name": "NPCOdem",
       "x": 4242,
       "y": 630,
-      "z": 0,
+      "v": 0,
       "team": 3,
       "entState": 0,
       "untargetable": false,
       "render_depth_offset": -20,
       "behavior_speed": 0,
       "Linked_Mission": "",
-      "drama_anim": "",
-      "sleep_anim": "",
-      "NPClevel": 50,
+      "DramaAnim": "",
+      "SleepAnim": "",
+      "level": 50,
       "power_id": 0,
       "facing_left": false,
       "health_delta": 0,
@@ -241,16 +241,16 @@
       "name": "NPCAffric",
       "x": 4362,
       "y": 640,
-      "z": 0,
+      "v": 0,
       "team": 3,
       "entState": 0,
       "untargetable": false,
       "render_depth_offset": -20,
       "behavior_speed": 0,
       "Linked_Mission": "",
-      "drama_anim": "",
-      "sleep_anim": "",
-      "NPClevel": 50,
+      "DramaAnim": "",
+      "SleepAnim": "",
+      "level": 50,
       "power_id": 0,
       "facing_left": false,
       "health_delta": 0,
@@ -266,16 +266,16 @@
       "name": "GoblinClub",
       "x": 5850,
       "y": 961,
-      "z": 0,
+      "v": 0,
       "team": 2,
       "entState": 1,
       "untargetable": false,
       "render_depth_offset": -40,
       "behavior_speed": 0,
       "Linked_Mission": "",
-      "drama_anim": "",
-      "sleep_anim": "",
-      "NPClevel": 0,
+      "DramaAnim": "",
+      "SleepAnim": "",
+      "level": 0,
       "power_id": 0,
       "facing_left": true,
       "health_delta": 0,
@@ -291,16 +291,16 @@
       "name": "GoblinDagger",
       "x": 5950,
       "y": 966,
-      "z": 0,
+      "v": 0,
       "team": 2,
       "entState": 1,
       "untargetable": false,
       "render_depth_offset": 5,
       "behavior_speed": 0,
       "Linked_Mission": "",
-      "drama_anim": "",
-      "sleep_anim": "",
-      "NPClevel": 0,
+      "DramaAnim": "",
+      "SleepAnim": "",
+      "level": 0,
       "power_id": 0,
       "facing_left": false,
       "health_delta": 0,
@@ -316,16 +316,16 @@
       "name": "GoblinClub",
       "x": 6067,
       "y": 972,
-      "z": 0,
+      "v": 0,
       "team": 2,
       "entState": 1,
       "untargetable": false,
       "render_depth_offset": -20,
       "behavior_speed": 0,
       "Linked_Mission": "",
-      "drama_anim": "",
-      "sleep_anim": "",
-      "NPClevel": 0,
+      "DramaAnim": "",
+      "SleepAnim": "",
+      "level": 0,
       "power_id": 0,
       "facing_left": true,
       "health_delta": 0,
@@ -341,16 +341,16 @@
       "name": "GoblinDagger",
       "x": 6154,
       "y": 976,
-      "z": 0,
+      "v": 0,
       "team": 2,
       "entState": 1,
       "untargetable": false,
       "render_depth_offset": 5,
       "behavior_speed": 0,
       "Linked_Mission": "",
-      "drama_anim": "",
-      "sleep_anim": "",
-      "NPClevel": 0,
+      "DramaAnim": "",
+      "SleepAnim": "",
+      "level": 0,
       "power_id": 0,
       "facing_left": true,
       "health_delta": 0,
@@ -369,16 +369,16 @@
       "name": "GoblinDagger",
       "x": 7433,
       "y": 731,
-      "z": 0,
+      "v": 0,
       "team": 2,
       "entState": 1,
       "untargetable": false,
       "render_depth_offset": -90,
       "behavior_speed": 0,
       "Linked_Mission": "",
-      "drama_anim": "",
-      "sleep_anim": "",
-      "NPClevel": 0,
+      "DramaAnim": "",
+      "SleepAnim": "",
+      "level": 0,
       "power_id": 0,
       "facing_left": false,
       "health_delta": 0,
@@ -394,16 +394,16 @@
       "name": "GoblinClub",
       "x": 7505,
       "y": 719,
-      "z": 0,
+      "v": 0,
       "team": 2,
       "entState": 1,
       "untargetable": false,
       "render_depth_offset": -110,
       "behavior_speed": 0,
       "Linked_Mission": "",
-      "drama_anim": "",
-      "sleep_anim": "",
-      "NPClevel": 0,
+      "DramaAnim": "",
+      "SleepAnim": "",
+      "level": 0,
       "power_id": 0,
       "facing_left": true,
       "health_delta": 0,
@@ -419,16 +419,16 @@
       "name": "GoblinDagger",
       "x": 7571,
       "y": 708,
-      "z": 0,
+      "v": 0,
       "team": 2,
       "entState": 1,
       "untargetable": false,
       "render_depth_offset": -75,
       "behavior_speed": 0,
       "Linked_Mission": "",
-      "drama_anim": "",
-      "sleep_anim": "",
-      "NPClevel": 0,
+      "DramaAnim": "",
+      "SleepAnim": "",
+      "level": 0,
       "power_id": 0,
       "facing_left": false,
       "health_delta": 0,
@@ -444,16 +444,16 @@
       "name": "GoblinDagger",
       "x": 7665,
       "y": 692,
-      "z": 0,
+      "v": 0,
       "team": 2,
       "entState": 1,
       "untargetable": false,
       "render_depth_offset": -75,
       "behavior_speed": 0,
       "Linked_Mission": "",
-      "drama_anim": "",
-      "sleep_anim": "",
-      "NPClevel": 0,
+      "DramaAnim": "",
+      "SleepAnim": "",
+      "level": 0,
       "power_id": 0,
       "facing_left": true,
       "health_delta": 0,
@@ -474,16 +474,16 @@
       "name": "GoblinArmorSword",
       "x": 8232,
       "y": 2299,
-      "z": 0,
+      "v": 0,
       "team": 2,
       "entState": 1,
       "untargetable": false,
       "render_depth_offset": -50,
       "behavior_speed": 0,
       "Linked_Mission": "",
-      "drama_anim": "",
-      "sleep_anim": "",
-      "NPClevel": 0,
+      "DramaAnim": "",
+      "SleepAnim": "",
+      "level": 0,
       "power_id": 0,
       "facing_left": true,
       "health_delta": 0,
@@ -499,16 +499,16 @@
       "name": "GoblinDagger",
       "x": 8301,
       "y": 2299,
-      "z": 0,
+      "v": 0,
       "team": 2,
       "entState": 1,
       "untargetable": false,
       "render_depth_offset": -90,
       "behavior_speed": 0,
       "Linked_Mission": "",
-      "drama_anim": "",
-      "sleep_anim": "",
-      "NPClevel": 0,
+      "DramaAnim": "",
+      "SleepAnim": "",
+      "level": 0,
       "power_id": 0,
       "facing_left": false,
       "health_delta": 0,
@@ -524,16 +524,16 @@
       "name": "GoblinBrute",
       "x": 8356,
       "y": 2299,
-      "z": 0,
+      "v": 0,
       "team": 2,
       "entState": 1,
       "untargetable": false,
       "render_depth_offset": -125,
       "behavior_speed": 0,
       "Linked_Mission": "",
-      "drama_anim": "",
-      "sleep_anim": "",
-      "NPClevel": 0,
+      "DramaAnim": "",
+      "SleepAnim": "",
+      "level": 0,
       "power_id": 0,
       "facing_left": true,
       "health_delta": 0,
@@ -549,16 +549,16 @@
       "name": "GoblinDagger",
       "x": 8448,
       "y": 2299,
-      "z": 0,
+      "v": 0,
       "team": 2,
       "entState": 1,
       "untargetable": false,
       "render_depth_offset": -75,
       "behavior_speed": 0,
       "Linked_Mission": "",
-      "drama_anim": "",
-      "sleep_anim": "",
-      "NPClevel": 0,
+      "DramaAnim": "",
+      "SleepAnim": "",
+      "level": 0,
       "power_id": 0,
       "facing_left": true,
       "health_delta": 0,
@@ -574,16 +574,16 @@
       "name": "GoblinArmorSword",
       "x": 8523,
       "y": 2299,
-      "z": 0,
+      "v": 0,
       "team": 2,
       "entState": 1,
       "untargetable": false,
       "render_depth_offset": -40,
       "behavior_speed": 0,
       "Linked_Mission": "",
-      "drama_anim": "",
-      "sleep_anim": "",
-      "NPClevel": 0,
+      "DramaAnim": "",
+      "SleepAnim": "",
+      "level": 0,
       "power_id": 0,
       "facing_left": false,
       "health_delta": 0,
@@ -599,16 +599,16 @@
       "name": "GoblinClub",
       "x": 8613,
       "y": 2299,
-      "z": 0,
+      "v": 0,
       "team": 2,
       "entState": 1,
       "untargetable": false,
       "render_depth_offset": -90,
       "behavior_speed": 0,
       "Linked_Mission": "",
-      "drama_anim": "",
-      "sleep_anim": "",
-      "NPClevel": 0,
+      "DramaAnim": "",
+      "SleepAnim": "",
+      "level": 0,
       "power_id": 0,
       "facing_left": true,
       "health_delta": 0,
@@ -618,10 +618,407 @@
       "model_id":  0,
       "head_type_id": 0,
       "buff_icon": 0
-    }
+  },
+  {
+    "is_player": true,
+    "id": 150,
+    "name": "Neutral",
+    "class": "Paladin",
+    "gender": "Male",
+    "headSet": "Long",
+    "hairSet": "Do01",
+    "mouthSet": "M01",
+    "faceSet": "F01",
+    "hairColor": 9841,
+    "skinColor": 16764057,
+    "shirtColor": 13489881,
+    "pantColor": 13489881,
+    "equippedGears": [
+        {
+          "gearID": 1000,
+          "tier": 1,
+          "runes": [
+            70,
+            60,
+            90
+          ],
+          "colors": [
+            29,
+            18
+          ]
+        },
+        {
+          "gearID": 733,
+          "tier": 1,
+          "runes": [
+            70,
+            60,
+            90
+          ],
+          "colors": [
+            29,
+            18
+          ]
+        },
+        {
+          "gearID": 995,
+          "tier": 1,
+          "runes": [
+            70,
+            60,
+            90
+          ],
+          "colors": [
+            29,
+            18
+          ]
+        },
+        {
+          "gearID": 916,
+          "tier": 1,
+          "runes": [
+            70,
+            59,
+            90
+          ],
+          "colors": [
+            29,
+            18
+          ]
+        },
+        {
+          "gearID": 988,
+          "tier": 1,
+          "runes": [
+            70,
+            59,
+            90
+          ],
+          "colors": [
+            29,
+            18
+          ]
+        },
+        {
+          "gearID": 812,
+          "tier": 1,
+          "runes": [
+            70,
+            59,
+            90
+          ],
+          "colors": [
+            29,
+            18
+          ]
+        }
+      ],
+      "x": 3134,
+      "y": 479,
+      "v": 0,
+      "team": 1
 
+  },
+  {
+    "is_player": true,
+    "id": 151,
+    "name": "Raziel",
+    "class": "Rogue",
+    "gender": "Male",
+      "headSet": "MaleHead",
+      "hairSet": "Do01",
+      "mouthSet": "Mouth01",
+      "faceSet": "Face01",
+      "hairColor": 20177,
+      "skinColor": 16764057,
+      "shirtColor": 800947,
+      "pantColor": 2437039,
+      "equippedGears": [
+        {
+          "gearID": 0,
+          "tier": 0,
+          "runes": [
+            0,
+            0,
+            0
+          ],
+          "colors": [
+            0,
+            0
+          ]
+        },
+        {
+          "gearID": 0,
+          "tier": 0,
+          "runes": [
+            0,
+            0,
+            0
+          ],
+          "colors": [
+            0,
+            0
+          ]
+        },
+        {
+          "gearID": 0,
+          "tier": 0,
+          "runes": [
+            0,
+            0,
+            0
+          ],
+          "colors": [
+            0,
+            0
+          ]
+        },
+        {
+          "gearID": 0,
+          "tier": 0,
+          "runes": [
+            0,
+            0,
+            0
+          ],
+          "colors": [
+            0,
+            0
+          ]
+        },
+        {
+          "gearID": 27,
+          "tier": 0,
+          "runes": [
+            0,
+            0,
+            0
+          ],
+          "colors": [
+            0,
+            0
+          ]
+        },
+        {
+          "gearID": 39,
+          "tier": 0,
+          "runes": [
+            0,
+            0,
+            0
+          ],
+          "colors": [
+            0,
+            0
+          ]
+        }
+      ],
+      "x": 3577,
+      "y": 579,
+      "v": 0,
+      "team": 1
 
+  },
+  {
+    "is_player": true,
+    "id": 152,
+    "name": "Raynare",
+    "class": "Mage",
+    "gender": "Male",
+      "headSet": "Head03",
+      "hairSet": "Do04",
+      "mouthSet": "M03",
+      "faceSet": "F13",
+      "hairColor": 12591,
+      "skinColor": 16764057,
+      "shirtColor": 13489881,
+      "pantColor": 13489881,
+      "equippedGears": [
+        {
+          "gearID": 699,
+          "tier": 1,
+          "runes": [
+            0,
+            0,
+            0
+          ],
+          "colors": [
+            18,
+            18
+          ]
+        },
+        {
+          "gearID": 972,
+          "tier": 1,
+          "runes": [
+            0,
+            0,
+            0
+          ],
+          "colors": [
+            1,
+            0
+          ]
+        },
+        {
+          "gearID": 1055,
+          "tier": 1,
+          "runes": [
+            0,
+            0,
+            0
+          ],
+          "colors": [
+            18,
+            18
+          ]
+        },
+        {
+          "gearID": 708,
+          "tier": 1,
+          "runes": [
+            0,
+            0,
+            0
+          ],
+          "colors": [
+            18,
+            0
+          ]
+        },
+        {
+          "gearID": 1135,
+          "tier": 1,
+          "runes": [
+            0,
+            0,
+            0
+          ],
+          "colors": [
+            24,
+            18
+          ]
+        },
+        {
+          "gearID": 961,
+          "tier": 1,
+          "runes": [
+            0,
+            0,
+            0
+          ],
+          "colors": [
+            67,
+            18
+          ]
+        }
+      ],
+      "x": 4127,
+      "y": 487,
+      "v": 0,
+      "team": 1
 
+  },
+  {
+    "is_player": true,
+    "id": 153,
+      "name": "Viawizee",
+      "class": "Rogue",
+      "gender": "Female",
+      "headSet": "FemaleHead",
+      "hairSet": "FDo17",
+      "mouthSet": "FMouth04",
+      "faceSet": "FFace04",
+      "hairColor": 13315072,
+      "skinColor": 16764057,
+      "shirtColor": 466983,
+      "pantColor": 466983,
+      "equippedGears": [
+        {
+          "gearID": 1028,
+          "tier": 1,
+          "runes": [
+            0,
+            0,
+            0
+          ],
+          "colors": [
+            0,
+            0
+          ]
+        },
+        {
+          "gearID": 1032,
+          "tier": 1,
+          "runes": [
+            0,
+            0,
+            0
+          ],
+          "colors": [
+            0,
+            0
+          ]
+        },
+        {
+          "gearID": 1025,
+          "tier": 1,
+          "runes": [
+            0,
+            0,
+            0
+          ],
+          "colors": [
+            0,
+            0
+          ]
+        },
+        {
+          "gearID": 1035,
+          "tier": 1,
+          "runes": [
+            0,
+            0,
+            0
+          ],
+          "colors": [
+            0,
+            0
+          ]
+        },
+        {
+          "gearID": 1017,
+          "tier": 1,
+          "runes": [
+            0,
+            0,
+            0
+          ],
+          "colors": [
+            0,
+            0
+          ]
+        },
+        {
+          "gearID": 1021,
+          "tier": 1,
+          "runes": [
+            0,
+            0,
+            0
+          ],
+          "colors": [
+            0,
+            0
+          ]
+        }
+      ],
+      "x": 2762,
+      "y": 599,
+      "v": 0,
+      "team": 1
+
+  }
 
 
   ]
