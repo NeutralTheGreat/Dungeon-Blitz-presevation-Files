@@ -63,11 +63,7 @@
 > ⚠️ Chromium disables Flash by default. You must manually enable it in settings.
 
 ---
-
 ## 📜 Legal Notice
 
 This project is for **archival** and **educational purposes only**. All assets remain the property of their original creators. No monetization, redistribution, or alteration of copyrighted material.
-
-If you are a rights holder and wish this project removed, please open an issue.
-
 ---
