@@ -2,6 +2,8 @@
 
 ### Reviving the original Dungeon Blitz experience for archival and preservation purposes.
 
+:paw_prints: The project [Contributors](../../contributors)
+
 ---
 
 ## ⚡ How to Play
